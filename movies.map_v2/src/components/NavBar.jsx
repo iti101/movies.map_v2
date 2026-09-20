@@ -2,8 +2,10 @@ import { useEffect, useState } from 'react'
 import './NavBar.css'
 import loginIcon from '../assets/login_opsz24.svg'
 import logoutIcon from '../assets/logout_opsz24.svg'
+import lightModeIcon from '../assets/light_mode_opsz24.svg'
+import darkModeIcon from '../assets/dark_mode_opsz24.svg'
 
-function NavBar({ isLoggedIn, onToggleAuth }) {
+function NavBar({ isLoggedIn, theme, onToggleAuth, onToggleTheme }) {
   const [menuOpen, setMenuOpen] = useState(false)
 
   useEffect(() => {
@@ -51,18 +53,35 @@ function NavBar({ isLoggedIn, onToggleAuth }) {
           <span className="navbar-hamburger-bar navbar-hamburger-bar-3" />
         </button>
 
-        <button
-          className="navbar-auth"
-          type="button"
-          onClick={onToggleAuth}
-          aria-label={isLoggedIn ? 'Log out' : 'Log in'}
-        >
-          <img
-            src={isLoggedIn ? logoutIcon : loginIcon}
-            alt=""
-            className="navbar-auth-icon"
-          />
-        </button>
+        <div className="navbar-actions">
+          <button
+            className="navbar-theme"
+            type="button"
+            onClick={() => onToggleTheme()}
+            aria-pressed={theme === 'dark'}
+            aria-label={theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
+            title={theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
+          >
+            <img
+              src={theme === 'dark' ? lightModeIcon : darkModeIcon}
+              alt=""
+              className="navbar-icon"
+            />
+          </button>
+
+          <button
+            className="navbar-auth"
+            type="button"
+            onClick={onToggleAuth}
+            aria-label={isLoggedIn ? 'Log out' : 'Log in'}
+          >
+            <img
+              src={isLoggedIn ? logoutIcon : loginIcon}
+              alt=""
+              className="navbar-icon"
+            />
+          </button>
+        </div>
       </header>
 
       <nav

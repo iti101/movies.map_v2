@@ -9,9 +9,11 @@ body,
 #root {
   margin: 0;
   height: 100%;
-  overflow: hidden;
+  overscroll-behavior: none;
 }
 
 body {
   font-family: system-ui, sans-serif;
+  background: var(--color-bg);
+  color: var(--color-text);
 }

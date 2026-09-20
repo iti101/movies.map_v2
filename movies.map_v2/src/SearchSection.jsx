@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 
 const TMDB_SEARCH_URL = 'https://api.themoviedb.org/3/search/movie'
 const POSTER_BASE = 'https://image.tmdb.org/t/p/w185'
@@ -49,6 +49,30 @@ function SearchSection() {
   const [status, setStatus] = useState('idle')
   const [error, setError] = useState('')
   const [searchedQuery, setSearchedQuery] = useState('')
+  const resultsRef = useRef(null)
+
+  useEffect(() => {
+    const resultsEl = resultsRef.current
+    if (!resultsEl) return
+
+    function onWheel(event) {
+      const canScroll = resultsEl.scrollHeight > resultsEl.clientHeight
+      if (!canScroll) return
+
+      const scrollingDown = event.deltaY > 0
+      const atTop = resultsEl.scrollTop <= 0
+      const atBottom =
+        resultsEl.scrollTop + resultsEl.clientHeight >= resultsEl.scrollHeight - 1
+
+      if ((scrollingDown && atBottom) || (!scrollingDown && atTop)) return
+
+      event.preventDefault()
+      resultsEl.scrollTop += event.deltaY
+    }
+
+    resultsEl.addEventListener('wheel', onWheel, { passive: false })
+    return () => resultsEl.removeEventListener('wheel', onWheel)
+  }, [status])
 
 /*handleSubmit runs when the form is submitted (button click or Enter).*/
   async function handleSubmit(event) {
@@ -101,7 +125,7 @@ If anything throws, clear results, set status to error, and show the error messa
         </button>
       </form>
 
-      <div className="search-results" aria-live="polite">
+      <div className="search-results" ref={resultsRef} aria-live="polite">
         {status === 'idle' && (
           <p className="search-message">Search for a movie title to get started.</p>
         )}
