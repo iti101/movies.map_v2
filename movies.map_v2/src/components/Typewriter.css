@@ -1,0 +1,228 @@
+.intro {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: clamp(4rem, 12vw, 7rem);
+  width: min(100%, 52rem);
+}
+
+.typewriter {
+  display: inline;
+  margin: 0;
+  font: inherit;
+  font-weight: inherit;
+  line-height: 1.2;
+  white-space: nowrap;
+  color: inherit;
+}
+
+.typewriter__cursor {
+  display: inline-block;
+  margin-left: 0.02em;
+  font-weight: 200;
+  font-size: 1.12em;
+  line-height: 1;
+  color: currentColor;
+  animation: tw-blink 0.7s infinite;
+}
+
+@keyframes tw-blink {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0;
+  }
+}
+
+.intro__lockup {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+}
+
+/*
+  Brand is centered as a flex row. Icon lands on the cursor spot first;
+  as the wordmark clip opens, the row grows and the icon slides left so
+  the final icon + wordmark lockup stays centered.
+*/
+.intro__brand {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  max-width: 100%;
+}
+
+.intro__icon {
+  position: relative;
+  z-index: 2;
+  width: clamp(4.5rem, 14vw, 7.5rem);
+  height: auto;
+  aspect-ratio: 1;
+  object-fit: contain;
+  flex-shrink: 0;
+  animation: intro-icon-in 0.5s ease both;
+}
+
+/* Resting styles match the animation end state so nothing jumps when it finishes */
+.intro__wordmark-clip {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  grid-template-columns: 1fr;
+  margin-left: clamp(0.35rem, 1.2vw, 0.7rem);
+  animation: intro-wordmark-open 0.95s cubic-bezier(0.22, 1, 0.36, 1) 0.28s both;
+}
+
+.intro__wordmark-inner {
+  min-width: 0;
+  overflow: hidden;
+}
+
+.intro__wordmark {
+  display: block;
+  height: clamp(2.6rem, 8vw, 4.5rem);
+  width: auto;
+  max-width: min(58vw, 24rem);
+  object-fit: contain;
+  object-position: left center;
+}
+
+[data-theme='dark'] .intro__icon,
+[data-theme='dark'] .intro__wordmark {
+  filter: invert(1);
+}
+
+@keyframes intro-icon-in {
+  from {
+    opacity: 0;
+    transform: scale(0.88);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+/* Clip opens from the icon outward; centered flex pushes the icon left */
+@keyframes intro-wordmark-open {
+  from {
+    grid-template-columns: 0fr;
+    margin-left: 0;
+  }
+  to {
+    grid-template-columns: 1fr;
+    margin-left: clamp(0.35rem, 1.2vw, 0.7rem);
+  }
+}
+
+/* Absolutely positioned so mounting the CTA never shifts the brand */
+.intro__cta {
+  position: absolute;
+  top: calc(100% + clamp(2.75rem, 8vw, 4.5rem));
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: clamp(0.7rem, 2vw, 1rem);
+  width: max-content;
+}
+
+.intro__arrow {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.48rem;
+  color: currentColor;
+  animation: intro-fade-down 0.55s ease 0.14s both;
+}
+
+.intro__arrow-bar {
+  display: block;
+  height: 0.36rem;
+  border-radius: 0;
+  background: currentColor;
+}
+
+.intro__arrow-bar:nth-child(1) {
+  width: 6rem;
+}
+
+.intro__arrow-bar:nth-child(2) {
+  width: 4.35rem;
+}
+
+.intro__arrow-bar:nth-child(3) {
+  width: 2.7rem;
+}
+
+.intro__arrow-bar:nth-child(4) {
+  width: 1.15rem;
+}
+
+.intro__start {
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: none;
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: clamp(1.15rem, 3.2vw, 1.65rem);
+  letter-spacing: 0.06em;
+  color: currentColor;
+  cursor: pointer;
+  line-height: 1.2;
+  animation: intro-fade-down 0.55s ease both;
+}
+
+.intro__start:hover,
+.intro__start:focus-visible {
+  opacity: 0.78;
+}
+
+.intro__start:focus-visible {
+  outline: 2px solid var(--color-focus-ring);
+  outline-offset: 4px;
+}
+
+@keyframes intro-fade-down {
+  from {
+    opacity: 0;
+    transform: translateY(-0.95rem);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .typewriter__cursor {
+    display: none;
+    animation: none;
+  }
+
+  .intro__icon,
+  .intro__wordmark-clip,
+  .intro__arrow,
+  .intro__start {
+    animation: none;
+  }
+}
+
+@media (max-width: 480px) {
+  .typewriter {
+    white-space: normal;
+  }
+
+  .intro__wordmark {
+    max-width: min(52vw, 14rem);
+  }
+}

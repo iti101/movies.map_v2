@@ -1,5 +1,7 @@
 :root {
   --navbar-height: 3.5rem;
+  --font-display: system-ui, sans-serif;
+  --color-focus-ring: var(--color-text);
 }
 
 html[data-theme='dark'] {
@@ -60,7 +62,10 @@ html[data-theme='light'] {
 }
 
 .snap-section-1 {
+  position: relative;
+  overflow: hidden;
   background: var(--color-bg);
+  font-size: clamp(2.25rem, 6.5vw, 5.5rem);
 }
 
 .snap-section-2 {

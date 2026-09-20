@@ -1,6 +1,7 @@
 import { useLayoutEffect, useState } from 'react'
 import './App.css'
 import NavBar from './components/NavBar.jsx'
+import Typewriter from './components/Typewriter.jsx'
 import SearchSection from './SearchSection.jsx'
 
 function getStoredAuth() {
@@ -53,7 +54,7 @@ function App() {
       />
       <main className="snap-container">
         <section id="home" className="snap-section snap-section-1">
-          Hero page
+          <Typewriter />
         </section>
         <section id="search" className="snap-section snap-section-2">
           <SearchSection />
