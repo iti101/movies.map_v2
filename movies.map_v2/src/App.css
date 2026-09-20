@@ -1,0 +1,154 @@
+.snap-container {
+  height: 100%;
+  overflow-y: auto;
+  scroll-snap-type: y mandatory;
+  scroll-behavior: smooth;
+}
+
+.snap-section {
+  height: 100%;
+  scroll-snap-align: start;
+  scroll-snap-stop: always;
+  display: grid;
+  place-items: center;
+  font-size: clamp(4rem, 12vw, 10rem);
+  font-weight: 700;
+  color: #f4f4f5;
+}
+
+.snap-section-1 {
+  background: #18181b;
+}
+
+.snap-section-2 {
+  background: #27272a;
+  display: flex;
+  align-items: stretch;
+  justify-content: stretch;
+  padding: 1.5rem;
+  font-size: 1rem;
+  font-weight: 400;
+}
+
+.snap-section-3 {
+  background: #3f3f46;
+}
+
+.search-section {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  width: min(100%, 960px);
+  height: 100%;
+  margin-inline: auto;
+}
+
+.search-form {
+  display: flex;
+  gap: 0.75rem;
+  flex-shrink: 0;
+}
+
+.search-input {
+  flex: 1;
+  min-width: 0;
+  padding: 0.85rem 1rem;
+  border: 1px solid #52525b;
+  border-radius: 0.75rem;
+  background: #18181b;
+  color: #f4f4f5;
+  font: inherit;
+}
+
+.search-input::placeholder {
+  color: #a1a1aa;
+}
+
+.search-input:focus {
+  outline: 2px solid #a1a1aa;
+  outline-offset: 2px;
+}
+
+.search-button {
+  padding: 0.85rem 1.25rem;
+  border: none;
+  border-radius: 0.75rem;
+  background: #f4f4f5;
+  color: #18181b;
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.search-button:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+.search-results {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+.search-message {
+  margin: 0;
+  color: #d4d4d8;
+}
+
+.search-message-error {
+  color: #fca5a5;
+}
+
+.search-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: 1rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.search-card {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  background: #18181b;
+  border-radius: 0.75rem;
+  overflow: hidden;
+}
+
+.search-poster {
+  display: block;
+  width: 100%;
+  aspect-ratio: 2 / 3;
+  object-fit: cover;
+  background: #3f3f46;
+}
+
+.search-poster-fallback {
+  display: grid;
+  place-items: center;
+  color: #a1a1aa;
+  font-size: 0.85rem;
+  text-align: center;
+  padding: 0.5rem;
+}
+
+.search-card-meta {
+  padding: 0 0.75rem 0.75rem;
+}
+
+.search-card-title {
+  margin: 0;
+  font-size: 0.95rem;
+  font-weight: 600;
+  line-height: 1.3;
+}
+
+.search-card-year {
+  margin: 0.25rem 0 0;
+  color: #a1a1aa;
+  font-size: 0.85rem;
+}
