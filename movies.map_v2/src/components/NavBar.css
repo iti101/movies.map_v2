@@ -1,0 +1,100 @@
+.navbar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 20;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: var(--navbar-height);
+  padding: 0 1rem;
+  background: #18181b;
+  border-bottom: 1px solid #52525b;
+}
+
+.navbar-hamburger,
+.navbar-auth {
+  display: grid;
+  place-items: center;
+  width: 2.5rem;
+  height: 2.5rem;
+  padding: 0;
+  border: none;
+  background: transparent;
+  color: #f4f4f5;
+  cursor: pointer;
+}
+
+.navbar-hamburger {
+  position: relative;
+}
+
+.navbar-hamburger-bar {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 1.4rem;
+  height: 2px;
+  background: currentColor;
+  transform: translate(-50%, -50%);
+  transition: transform 0.2s ease, opacity 0.2s ease;
+}
+
+.navbar-hamburger-bar-1 {
+  transform: translate(-50%, calc(-50% - 6px));
+}
+
+.navbar-hamburger-bar-3 {
+  transform: translate(-50%, calc(-50% + 6px));
+}
+
+.navbar-hamburger.is-open .navbar-hamburger-bar-1 {
+  transform: translate(-50%, -50%) rotate(45deg);
+}
+
+.navbar-hamburger.is-open .navbar-hamburger-bar-2 {
+  opacity: 0;
+}
+
+.navbar-hamburger.is-open .navbar-hamburger-bar-3 {
+  transform: translate(-50%, -50%) rotate(-45deg);
+}
+
+.navbar-auth-icon {
+  width: 24px;
+  height: 24px;
+  filter: invert(1);
+}
+
+.navbar-menu {
+  position: fixed;
+  inset: 0;
+  z-index: 10;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1.5rem;
+  background: #18181b;
+}
+
+.navbar-menu[hidden] {
+  display: none;
+}
+
+.navbar-menu button {
+  padding: 0.25rem;
+  border: none;
+  background: transparent;
+  color: #f4f4f5;
+  font: inherit;
+  font-size: clamp(1.5rem, 4vw, 2.25rem);
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.navbar-menu button:hover,
+.navbar-menu button:focus-visible {
+  color: #a1a1aa;
+}

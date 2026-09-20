@@ -1,3 +1,7 @@
+:root {
+  --navbar-height: 3.5rem;
+}
+
 .snap-container {
   height: 100%;
   overflow-y: auto;
@@ -7,6 +11,7 @@
 
 .snap-section {
   height: 100%;
+  padding-top: var(--navbar-height);
   scroll-snap-align: start;
   scroll-snap-stop: always;
   display: grid;
@@ -25,7 +30,7 @@
   display: flex;
   align-items: stretch;
   justify-content: stretch;
-  padding: 1.5rem;
+  padding: calc(var(--navbar-height) + 1.5rem) 1.5rem 1.5rem;
   font-size: 1rem;
   font-weight: 400;
 }

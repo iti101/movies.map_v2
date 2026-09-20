@@ -82,6 +82,8 @@ If anything throws, clear results, set status to error, and show the error messa
       setError(err.message || 'Something went wrong.')
     }
   }
+/*this is the code that actually gets rendered to the DOM */ 
+
 
   return (
     <div className="search-section">
