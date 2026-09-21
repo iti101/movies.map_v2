@@ -61,6 +61,80 @@ export function getSearchLabel({ query, year }) {
   return query?.trim() || year || ''
 }
 
+function normalizeTitle(value) {
+  return String(value ?? '')
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/&/g, 'and')
+    .replace(/^(the|a|an)\s+/g, '')
+    .replace(/[^a-z0-9]+/g, ' ')
+    .trim()
+}
+
+function levenshtein(a, b) {
+  if (a === b) return 0
+  if (!a) return b.length
+  if (!b) return a.length
+
+  const prev = Array.from({ length: b.length + 1 }, (_, i) => i)
+  const curr = new Array(b.length + 1)
+
+  for (let i = 1; i <= a.length; i++) {
+    curr[0] = i
+    for (let j = 1; j <= b.length; j++) {
+      const cost = a[i - 1] === b[j - 1] ? 0 : 1
+      curr[j] = Math.min(prev[j] + 1, curr[j - 1] + 1, prev[j - 1] + cost)
+    }
+    for (let j = 0; j <= b.length; j++) prev[j] = curr[j]
+  }
+
+  return prev[b.length]
+}
+
+export function getDidYouMeanSuggestion(query, items) {
+  const q = normalizeTitle(query)
+  if (q.length < 3 || !items?.length) return null
+
+  const titles = items.map((item) => item.title).filter(Boolean)
+  if (titles.some((title) => normalizeTitle(title) === q)) return null
+
+  const maxDist = Math.max(1, Math.round(q.length * 0.34))
+  let bestTitle = null
+  let bestDist = Infinity
+
+  for (const title of titles.slice(0, 10)) {
+    const n = normalizeTitle(title)
+    if (!n || n.startsWith(`${q} `) || q.startsWith(`${n} `)) continue
+
+    const dist = levenshtein(q, n)
+    if (dist > 0 && dist <= maxDist && dist < bestDist) {
+      bestTitle = title
+      bestDist = dist
+    }
+  }
+
+  return bestTitle
+}
+
+export async function getSearchSuggestion({ query, type, year, items }) {
+  const fromItems = getDidYouMeanSuggestion(query, items)
+  if (fromItems || items?.length) return fromItems ?? null
+
+  const trimmed = query?.trim() ?? ''
+  if (trimmed.length < 5) return null
+
+  const stub = trimmed.slice(0, Math.max(4, trimmed.length - 2))
+  if (stub.length < 3 || stub.toLowerCase() === trimmed.toLowerCase()) return null
+
+  try {
+    const fallback = await searchTmdb({ query: stub, type, year })
+    return getDidYouMeanSuggestion(trimmed, fallback.items)
+  } catch {
+    return null
+  }
+}
+
 export function applySearchFilters(items, { type, year, genre }) {
   let next = items
   if (genre) {

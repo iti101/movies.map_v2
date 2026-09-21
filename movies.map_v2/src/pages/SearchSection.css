@@ -129,3 +129,8 @@
   background: var(--color-search);
 }
 
+.search-results .search-message,
+.search-results .did-you-mean {
+  text-align: center;
+}
+

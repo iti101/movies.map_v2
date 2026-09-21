@@ -44,6 +44,10 @@
   font-size: 1rem;
 }
 
+.results-page .did-you-mean {
+  text-align: left;
+}
+
 .results-page__grid {
   grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
 }

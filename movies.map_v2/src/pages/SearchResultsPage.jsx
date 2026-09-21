@@ -1,33 +1,48 @@
 import { useEffect, useState } from 'react'
 import Button from '../components/Button.jsx'
+import DidYouMean from '../components/DidYouMean.jsx'
 import SearchCard from '../components/SearchCard.jsx'
-import { getSearchLabel, searchTmdbAll } from '../API/tmdb.js'
+import { getSearchLabel, getSearchSuggestion, searchTmdbAll } from '../API/tmdb.js'
 import './SearchResultsPage.css'
 
 function SearchResultsPage({ search, onBack }) {
-  const seeded = search.results ?? []
+  const [activeSearch, setActiveSearch] = useState(search)
+  const seeded = activeSearch.results ?? []
   const [results, setResults] = useState(seeded)
   const [status, setStatus] = useState(seeded.length ? 'success' : 'loading')
   const [error, setError] = useState('')
+  const [suggestion, setSuggestion] = useState('')
+
+  useEffect(() => {
+    setActiveSearch(search)
+  }, [search])
 
   useEffect(() => {
     let cancelled = false
-    const preseeded = search.results ?? []
+    const preseeded = activeSearch.results ?? []
 
     setResults(preseeded)
     setStatus(preseeded.length ? 'success' : 'loading')
     setError('')
+    setSuggestion('')
 
     searchTmdbAll({
-      query: search.query,
-      type: search.type,
-      year: search.year,
-      genre: search.genre,
+      query: activeSearch.query,
+      type: activeSearch.type,
+      year: activeSearch.year,
+      genre: activeSearch.genre,
     })
-      .then((items) => {
+      .then(async (items) => {
         if (cancelled) return
         setResults(items)
         setStatus(items.length === 0 ? 'empty' : 'success')
+        const nextSuggestion = await getSearchSuggestion({
+          query: activeSearch.query,
+          type: activeSearch.type,
+          year: activeSearch.year,
+          items,
+        })
+        if (!cancelled) setSuggestion(nextSuggestion ?? '')
       })
       .catch((err) => {
         if (cancelled || preseeded.length) return
@@ -36,9 +51,9 @@ function SearchResultsPage({ search, onBack }) {
       })
 
     return () => { cancelled = true }
-  }, [search])
+  }, [activeSearch])
 
-  const label = getSearchLabel(search)
+  const label = getSearchLabel(activeSearch)
   const count = results.length
   const summary =
     count > 0
@@ -65,6 +80,15 @@ function SearchResultsPage({ search, onBack }) {
 
         {status === 'empty' && (
           <p className="search-message">No results found for “{label}”.</p>
+        )}
+
+        {(status === 'empty' || status === 'success') && (
+          <DidYouMean
+            suggestion={suggestion}
+            onAccept={(nextQuery) =>
+              setActiveSearch({ ...activeSearch, query: nextQuery, results: [] })
+            }
+          />
         )}
 
         {count > 0 && (

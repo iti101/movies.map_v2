@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react'
 import Button from '../components/Button.jsx'
+import DidYouMean from '../components/DidYouMean.jsx'
 import SearchCard from '../components/SearchCard.jsx'
-import { applySearchFilters, fetchTmdbPage, getSearchLabel, isValidYear, loadGenres } from '../API/tmdb.js'
+import { applySearchFilters, fetchTmdbPage, getSearchLabel, getSearchSuggestion, isValidYear, loadGenres } from '../API/tmdb.js'
 import searchIcon from '../assets/search_opsz24.svg'
 import './SearchSection.css'
 
@@ -24,6 +25,7 @@ function SearchSection({ onSeeAll }) {
   const [status, setStatus] = useState('idle')
   const [error, setError] = useState('')
   const [searchedQuery, setSearchedQuery] = useState('')
+  const [suggestion, setSuggestion] = useState('')
 
   const filtersDisabled = type === 'person'
   const hasResults = status === 'success' && results.length > 0
@@ -43,21 +45,21 @@ function SearchSection({ onSeeAll }) {
     return () => { cancelled = true }
   }, [genreOn, filtersDisabled, type])
 
-  async function handleSubmit(event) {
-    event.preventDefault()
-
-    const trimmed = query.trim()
+  async function runSearch(nextQuery = query) {
+    const trimmed = nextQuery.trim()
     if (!trimmed && !yearFilter) {
       setStatus('idle')
       setResults([])
       setError('')
       setSearchedQuery('')
+      setSuggestion('')
       return
     }
 
     setStatus('loading')
     setError('')
     setSearchedQuery(trimmed)
+    setSuggestion('')
 
     try {
       const { items } = await fetchTmdbPage({
@@ -72,12 +74,24 @@ function SearchSection({ onSeeAll }) {
         genre: selectedGenre,
       })
       setResults(filtered)
+      setSuggestion((await getSearchSuggestion({ query: trimmed, type, year: yearFilter, items })) ?? '')
       setStatus(filtered.length === 0 ? 'empty' : 'success')
     } catch (err) {
       setResults([])
+      setSuggestion('')
       setStatus('error')
       setError(err.message || 'Something went wrong.')
     }
+  }
+
+  function handleSubmit(event) {
+    event.preventDefault()
+    runSearch(query)
+  }
+
+  function handleAcceptSuggestion(nextQuery) {
+    setQuery(nextQuery)
+    runSearch(nextQuery)
   }
 
   function selectType(nextType) {
@@ -209,6 +223,10 @@ function SearchSection({ onSeeAll }) {
 
         {status === 'empty' && (
           <p className="search-message">No results found for “{searchLabel}”.</p>
+        )}
+
+        {(status === 'empty' || status === 'success') && (
+          <DidYouMean suggestion={suggestion} onAccept={handleAcceptSuggestion} />
         )}
 
         {status === 'success' && (
