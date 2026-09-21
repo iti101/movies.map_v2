@@ -1,0 +1,131 @@
+.search-section {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1.25rem;
+  width: min(46rem, 100%);
+  margin-inline: auto;
+}
+
+.search-section--has-results {
+  height: 100%;
+  justify-content: flex-start;
+}
+
+.search-title {
+  margin: 0;
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: clamp(3.5rem, 10vw, 6.5rem);
+  letter-spacing: 0.01em;
+  line-height: 1;
+  text-align: center;
+  color: var(--color-text);
+}
+
+.search-form {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  width: 100%;
+  gap: 0.85rem;
+}
+
+.search-bar {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  height: 3.4rem;
+  padding: 0.35rem 0.35rem 0.35rem 1.35rem;
+  border: 1px solid var(--color-border);
+  border-radius: 999px;
+  background: var(--color-control);
+}
+
+.search-bar:focus-within {
+  border-color: var(--color-text-muted);
+}
+
+.search-input {
+  flex: 1;
+  min-width: 0;
+  height: 100%;
+  padding: 0;
+  border: none;
+  background: transparent;
+  color: var(--color-text);
+  font-family: var(--font-body);
+  font-size: 1.05rem;
+  outline: none;
+}
+
+.search-input::placeholder {
+  color: var(--color-placeholder);
+}
+
+.search-input::-webkit-search-cancel-button,
+.search-input::-webkit-search-decoration {
+  -webkit-appearance: none;
+}
+
+.search-submit {
+  width: 2.65rem;
+  height: 2.65rem;
+}
+
+.search-submit-icon {
+  width: 1.15rem;
+  height: 1.15rem;
+  pointer-events: none;
+  filter: invert(1);
+}
+
+.search-chips {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.5rem;
+}
+
+.search-year {
+  width: 7rem;
+  align-self: center;
+  height: 2.5rem;
+  padding: 0 0.95rem;
+  border: 1px solid var(--color-border);
+  border-radius: 999px;
+  background: var(--color-control);
+  color: var(--color-text);
+  font-family: var(--font-body);
+  font-size: 0.95rem;
+  text-align: center;
+  outline: none;
+}
+
+.search-year::placeholder {
+  color: var(--color-placeholder);
+}
+
+.search-year:focus {
+  border-color: var(--color-text-muted);
+}
+
+.search-genres {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.45rem;
+}
+
+.search-results-header {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  margin-bottom: 0.75rem;
+  background: var(--color-search);
+}
+
