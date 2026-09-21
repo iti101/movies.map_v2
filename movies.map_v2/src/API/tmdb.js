@@ -22,7 +22,9 @@ const TMDB_GENRE = {
   tv: 'https://api.themoviedb.org/3/genre/tv/list',
 }
 
+/** Poster/profile URL prefix used by SearchCard (`w185` = small TMDB size). */
 export const POSTER_BASE = 'https://image.tmdb.org/t/p/w185'
+/** Hard cap for “See all” so we do not request every TMDB page. */
 const MAX_RESULT_PAGES = 10
 
 /** Vite inlines VITE_* at startup — restart the dev server after editing .env.local. */
@@ -34,6 +36,7 @@ function getApiKey() {
   return apiKey
 }
 
+/** YYYY from TMDB’s `YYYY-MM-DD` date, or null if the field is missing. */
 function getYear(date) {
   return date?.slice(0, 4) ?? null
 }
@@ -62,6 +65,7 @@ function normalizeItem(item, fallbackType) {
   }
 }
 
+/** True only for exactly four digits (the year box after stripping non-digits). */
 export function isValidYear(value) {
   return /^\d{4}$/.test(value)
 }

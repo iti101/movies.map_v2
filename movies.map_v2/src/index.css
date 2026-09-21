@@ -1,3 +1,4 @@
+/* Full-height canvas so the snap scroller can fill the viewport. */
 *,
 *::before,
 *::after {

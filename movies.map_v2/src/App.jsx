@@ -37,6 +37,7 @@ function App() {
     applyTheme(theme)
   }, [theme])
 
+  /** Flip the localStorage login stub. No server call. */
   function handleToggleAuth() {
     setIsLoggedIn((current) => {
       const next = !current
@@ -45,6 +46,7 @@ function App() {
     })
   }
 
+  /** Switch light/dark. applyTheme runs in the layout effect when `theme` changes. */
   function handleToggleTheme() {
     setTheme((current) => (current === 'dark' ? 'light' : 'dark'))
   }

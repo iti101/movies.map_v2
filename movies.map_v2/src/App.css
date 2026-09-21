@@ -1,3 +1,4 @@
+/* Shared layout + fonts. Colors live on html[data-theme] so both themes swap together. */
 :root {
   --navbar-height: 3.5rem;
   --font-display: 'Fraunces', Georgia, serif;
@@ -55,6 +56,7 @@ html[data-theme='light'] {
   height: 100%;
 }
 
+/* Vertical full-page snap: each .snap-section is one screen. */
 .snap-container {
   height: 100%;
   overflow-y: auto;

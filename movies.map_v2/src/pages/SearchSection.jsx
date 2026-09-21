@@ -48,6 +48,7 @@ function SearchSection({ onSeeAll }) {
     return () => { cancelled = true }
   }, [genreOn, filtersDisabled, type])
 
+  /** Form submit (search button or Enter). Chips do not submit by themselves. */
   async function handleSubmit(event) {
     event.preventDefault()
     // Empty query and no YYYY: clear the grid instead of calling TMDB.

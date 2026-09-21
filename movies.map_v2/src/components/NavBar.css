@@ -1,3 +1,4 @@
+/* Highest chrome: stays above the hamburger menu (10) and See all overlay (5). */
 .navbar {
   position: fixed;
   top: 0;
@@ -77,6 +78,7 @@
   filter: var(--icon-filter);
 }
 
+/* Full-viewport overlay under the navbar so the hamburger can still close it. */
 .navbar-menu {
   position: fixed;
   inset: 0;

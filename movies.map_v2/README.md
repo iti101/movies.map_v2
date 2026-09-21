@@ -94,9 +94,38 @@ The **theme** icon always toggles light/dark. The **login** icon always flips `i
 - A `popstate` listener always sets the overlay search to `null`.
 - Navbar navigation also closes the overlay, then scrolls to the section (deferred one tick so the overlay unmounts first).
 
-### Theme
+### Theme and design tokens
 
-Default is **dark**. `index.html` reads `localStorage.theme` before React mounts to avoid a flash. `App` keeps `theme` in state, writes `data-theme` and `color-scheme` on `<html>`, and persists `'light'` or `'dark'`. Tokens live in `src/App.css` under `html[data-theme='dark']` and `html[data-theme='light']`.
+Default is **dark**. `index.html` reads `localStorage.theme` before React mounts to avoid a flash. `App` keeps `theme` in state, writes `data-theme` and `color-scheme` on `<html>`, and persists `'light'` or `'dark'`.
+
+Fonts load from Google Fonts in `index.html`: **Fraunces** (`--font-display`) and **Nunito** (`--font-body`). Offline or blocked fonts fall back to Georgia / Segoe UI.
+
+Colors live in `src/App.css` on `html[data-theme='dark']` and `html[data-theme='light']`. `Button` color props that are token names become `var(--color-<name>)`:
+
+| Token | Used for |
+| --- | --- |
+| `--color-bg`, `--color-bg-elevated`, `--color-bg-muted` | Page / card surfaces |
+| `--color-text`, `--color-text-muted`, `--color-placeholder` | Copy |
+| `--color-border`, `--color-navbar-bg`, `--color-navbar-border` | Chrome |
+| `--color-card` | Search poster cards |
+| `--color-search` | Search section + See all overlay |
+| `--color-control`, `--color-control-active` | Chips, inputs, default buttons |
+| `--color-accent-btn`, `--color-accent-btn-hover` | Round search submit |
+| `--color-button-bg`, `--color-button-text` | `variant="solid"` |
+| `--color-error` | Failed search message |
+| `--icon-filter` | Navbar SVGs (`invert(1)` in dark, `none` in light) |
+
+To add a color, define it on **both** theme blocks, then pass the token name to `Button` (`background="accent-btn"`). Do not put a hex in a component unless it is a one-off.
+
+### Stacking (what sits on top)
+
+| Layer | `z-index` | File |
+| --- | --- | --- |
+| NavBar | `20` | `NavBar.css` |
+| Hamburger menu | `10` | `NavBar.css` |
+| See all overlay | `5` | `SearchResultsPage.css` |
+
+The overlay does **not** cover the navbar. Theme and login still work on See all. Opening the menu covers the overlay; the hamburger stays clickable so you can close it. Overlay top padding is `--navbar-height` so titles are not hidden under the bar.
 
 ### Auth stub
 
@@ -113,7 +142,10 @@ Default is **dark**. `index.html` reads `localStorage.theme` before React mounts
 | `active` | `false` | Adds `is-active` and `aria-pressed` (used by search chips). |
 | `round` | `false` | Circular (search submit). |
 | `color`, `background`, `hoverBackground` | — | CSS color, or a token name that becomes `var(--color-<name>)`. |
-| `font` | `'body'` | `'body'` → `--font-body`, `'display'` → `--font-display`. |
+| `font` | `'body'` | `'body'` → `--font-body`, `'display'` → `--font-display`. Any other string is used as a raw `font-family`. |
+| `text` | — | Label used only when `children` is missing (`children ?? text`). |
+| `weight` | — | CSS `font-weight` (`--button-weight`). |
+| `fontSize` | — | Inline `fontSize`; size presets still control padding. |
 
 ```jsx
 <Button
@@ -131,9 +163,23 @@ Default is **dark**. `index.html` reads `localStorage.theme` before React mounts
 
 - **Randomizer** (`#randomizer`) is still placeholder text.
 - **Login / watchlist** are UI-only; nothing is stored except the `isLoggedIn` flag.
+- **Search cards are display-only.** There is no title detail page, trailer, or click handler on `SearchCard`.
 - Adult titles are always excluded (`include_adult=false`).
 - The intro typewriter skips animation when `prefers-reduced-motion: reduce` is set.
 - React Compiler is enabled (`babel-plugin-react-compiler` in `vite.config.js`). `App` is marked `'use no memo'` so compiler memoization does not wrap that component.
+- `main.jsx` uses `StrictMode`, so effects (including the typewriter) mount twice in `npm run dev`. The intro `AbortController` cancels the first pass.
+
+## Production build
+
+`VITE_TMDB_API_KEY` is inlined at **build** time, same as dev. Changing `.env.local` after `npm run build` does nothing until you rebuild. `npm run preview` only serves `dist/`.
+
+```bash
+cd movies.map_v2
+npm run build    # writes dist/
+npm run preview  # local production server
+```
+
+Lint: `npm run lint` runs ESLint on `**/*.{js,jsx}` and ignores `dist/` (`eslint.config.js`).
 
 ## Troubleshooting
 
@@ -142,6 +188,8 @@ Default is **dark**. `index.html` reads `localStorage.theme` before React mounts
 | `Missing TMDB API key…` | No `VITE_TMDB_API_KEY`, or the dev server was not restarted after editing `.env.local`. |
 | `Movie search failed. Check your API key…` | Wrong key type (v4 token instead of v3), revoked key, or TMDB HTTP error. |
 | Blank search after submit with only Genre on | Submit requires a non-empty query **or** a 4-digit year. Genre alone does not start a request. |
+| Chips changed but the poster grid did not | Filters do not refetch. Press search or Enter again. |
 | Year / Genre chips disabled | Type is **People**. `SearchSection` turns those filters off for `person`. |
 | Dev URL is not `:5175` | Another process already bound 5175; Vite chose the next port. |
 | Theme flash on reload | The inline script in `index.html` must stay in `<head>` so `data-theme` is set before paint. |
+| `npm run preview` search fails after editing `.env.local` | Preview serves `dist/`. Run `npm run build` again so the key is inlined. |

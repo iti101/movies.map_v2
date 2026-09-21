@@ -8,6 +8,7 @@ import './Typewriter.css'
 const FINAL = 'Find any episode'
 const ARROW_BARS = 4
 
+/** Random delay in `[min, max)` ms so typing does not look robotic. */
 function rand(min, max) {
   return min + Math.random() * (max - min)
 }
@@ -47,6 +48,7 @@ function Typewriter() {
     const { signal } = ac
     let current = ''
 
+    /** Append `chunk` one character at a time. */
     const type = async (chunk) => {
       for (let i = 0; i < chunk.length; i++) {
         const ch = chunk[i]
@@ -61,6 +63,7 @@ function Typewriter() {
       }
     }
 
+    /** Delete `count` characters from the end of the line. */
     const backspace = async (count) => {
       await wait(rand(60, 140), signal)
       for (let i = 0; i < count; i++) {

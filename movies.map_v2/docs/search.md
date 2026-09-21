@@ -4,13 +4,13 @@ How the Search section and “See all” overlay talk to TMDB. Implementation: `
 
 ## In plain English
 
-Type a title (or a 4-digit year) and press the search button. The app asks TMDB for **one page** of matches and shows posters. **See all** asks for more pages (up to 10) and covers the screen. Year and genre are sometimes sent to TMDB and sometimes applied afterward in the browser, because not every TMDB URL accepts the same options.
+Type a title (or a 4-digit year) and press the search button. The app asks TMDB for **one page** of matches and shows posters. **See all** asks for more pages (up to 10) and fills the screen under the navbar. Year and genre are sometimes sent to TMDB and sometimes applied afterward in the browser, because not every TMDB URL accepts the same options.
 
-A request runs only when the form has a trimmed query **or** a valid 4-digit year. Genre is an extra filter, not a trigger by itself.
+A request runs only when the form has a trimmed query **or** a valid 4-digit year. Genre is an extra filter, not a trigger by itself. Changing chips after a search does **not** refetch — you have to press search (or Enter) again. Posters are not clickable.
 
 ## Intent
 
-The search page shows **one TMDB page** (20 items, then local filters). **See all** re-fetches up to **10 pages**, applies the same filters, and renders them in a full-screen overlay.
+The search page shows **one TMDB page** (TMDB’s default 20 items, then local filters). **See all** re-fetches up to **10 pages** in parallel after page 1, applies the same filters, and renders them in a full-screen overlay that sits **under** the navbar.
 
 ## Data flow
 
@@ -31,7 +31,11 @@ See all → App.openResults(search)
 | Form state | Function | Endpoints |
 | --- | --- | --- |
 | Non-empty query | `searchTmdb` | `/3/search/multi`, `/movie`, `/tv`, or `/person` |
-| Empty query, valid year (and/or genre) | `discoverTmdb` | `/3/discover/movie` and/or `/tv` |
+| Empty query **and** a valid 4-digit year | `discoverTmdb` | `/3/discover/movie` and/or `/tv` (`sort_by=popularity.desc`) |
+
+`SearchSection` never calls TMDB for genre-only submit. `fetchTmdbPage` *would* discover with only a genre if something else called it that way; the form does not.
+
+Year-only submit is “popular titles from that year”, not a text search. Genre may ride along on discover as `with_genres`.
 
 Normalized item shape used by `SearchCard`:
 
@@ -67,6 +71,27 @@ TMDB does not accept the same params on every endpoint, so some filters are serv
 
 `/search/multi` has no year param, which is why **All + year** must filter locally.
 
+Chip changes are live in React state but **do not search**. The grid stays on the last submit until you press the search button or hit Enter in the query/year field. Chip `Button`s default to `type="button"`, so they never submit the form.
+
+## Examples
+
+**Title + year + genre (Movies)**
+
+1. Type `Dune`, type chip **Movies**, Release date `2021`, Genre **Science Fiction**.
+2. Submit → `GET /3/search/movie?query=Dune&year=2021&include_adult=false&page=1`.
+3. `applySearchFilters` keeps rows whose `genreIds` include that genre’s TMDB id.
+4. See all repeats that request for pages 1–10 (capped), then filters again.
+
+**Year only (All)**
+
+1. Clear the box, type **All**, Release date `1999`.
+2. Submit → discover movie (`primary_release_year=1999`) **and** TV (`first_air_date_year=1999`), both `sort_by=popularity.desc`, same page number concatenated.
+3. Client filter keeps items whose `year` is `'1999'` (needed because the two lists are merged).
+
+**Incomplete year**
+
+Typing `20` is not a valid year (`isValidYear` needs four digits). With an empty query that submit is treated as idle. With a query, search runs **without** a year param.
+
 ## See all overlay
 
 `handleSeeAll` builds the overlay payload from mixed state:
@@ -84,7 +109,9 @@ TMDB does not accept the same params on every endpoint, so some filters are serv
 3. Replaces the list with the full filtered set.
 4. If the multi-page fetch fails **and** seeded results exist, it keeps the seed and does not show an error.
 
-`App` owns overlay visibility and browser history (see the README).
+`App` owns overlay visibility and browser history (see the README). The overlay `z-index` is `5`; the navbar is `20`, so theme/login remain available.
+
+Cards (`SearchCard`) render poster, title, and year only. There is no detail route or click handler.
 
 ## Status strings (SearchSection)
 
@@ -102,7 +129,8 @@ Empty submit (no query and no valid year) resets to `idle` rather than erroring.
 
 - **v3 key only.** Requests use `?api_key=`. A TMDB v4 bearer token will fail with “Movie search failed…”.
 - **Restart after `.env.local` changes.** Vite bakes `VITE_*` at process start.
-- **Genre-only submit does nothing.** Need a query or `YYYY`.
+- **Genre-only submit does nothing.** Need a query or `YYYY`. Changing Genre after a search also does nothing until you submit again.
+- **Year-only is popularity browse.** Discover uses `sort_by=popularity.desc`, not relevance to a title.
 - **All + year on page 1 can look sparse.** Year is applied after `/search/multi`, so many of the 20 hits may drop out. See all fetches more pages, then filters.
 - **Query + genre has the same page-1 gap.** Genre is client-side on search endpoints, so See all is the path that searches deeper.
 - **All + discover concatenates movie and TV pages** for the same page number (not a single mixed TMDB list). `totalPages` is `Math.max` of the two.

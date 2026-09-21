@@ -25,6 +25,7 @@ function NavBar({ isLoggedIn, theme, onToggleAuth, onToggleTheme, onNavigate }) 
   const authIcon = isLoggedIn ? logoutIcon : loginIcon
 
   useEffect(() => {
+    // Escape closes the menu; the hamburger is the other way out.
     function onKeyDown(event) {
       if (event.key === 'Escape') setMenuOpen(false)
     }
@@ -32,10 +33,12 @@ function NavBar({ isLoggedIn, theme, onToggleAuth, onToggleTheme, onNavigate }) 
     return () => window.removeEventListener('keydown', onKeyDown)
   }, [])
 
+  /** Hide the full-screen hamburger overlay. */
   function closeMenu() {
     setMenuOpen(false)
   }
 
+  /** Close menu + overlay, then scroll to a snap section on the next tick. */
   function goTo(sectionId) {
     closeMenu()
     onNavigate?.(sectionId)

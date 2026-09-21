@@ -1,3 +1,4 @@
+/* Centered form until there are hits; --has-results stretches to fill the snap page. */
 .search-section {
   display: flex;
   flex-direction: column;

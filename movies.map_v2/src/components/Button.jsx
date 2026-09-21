@@ -7,6 +7,7 @@ function toCssColor(value) {
   return `var(--color-${value})`
 }
 
+/** `'body'` / `'display'` → theme font tokens; any other string is used as-is. */
 function resolveFont(font) {
   if (!font) return undefined
   if (font === 'body') return 'var(--font-body)'
