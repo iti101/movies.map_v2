@@ -11,5 +11,12 @@ export default defineConfig({
   server: {
     port: 5175,
     strictPort: false,
+    proxy: {
+      '/novi-api': {
+        target: 'https://novi-backend-api-wgsgz.ondigitalocean.app',
+        changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/novi-api/, ''),
+      },
+    },
   },
 })

@@ -2,6 +2,7 @@ import { useEffect, useLayoutEffect, useState } from 'react'
 import './App.css'
 import NavBar from './components/NavBar.jsx'
 import Typewriter from './components/Typewriter.jsx'
+import DetailPage from './pages/DetailPage.jsx'
 import SearchResultsPage from './pages/SearchResultsPage.jsx'
 import SearchSection from './pages/SearchSection.jsx'
 
@@ -25,6 +26,7 @@ function App() {
   const [isLoggedIn, setIsLoggedIn] = useState(getStoredAuth)
   const [theme, setTheme] = useState(getStoredTheme)
   const [resultsSearch, setResultsSearch] = useState(null)
+  const [detail, setDetail] = useState(null)
 
   useLayoutEffect(() => {
     applyTheme(theme)
@@ -55,9 +57,26 @@ function App() {
     }
   }
 
+  function openDetail(item) {
+    if (!item?.id || !item.mediaType) return
+    const next = { mediaType: item.mediaType, id: item.id }
+    setDetail(next)
+    window.history.pushState({ ...(window.history.state ?? {}), detail: next }, '')
+  }
+
+  function closeDetail() {
+    if (window.history.state?.detail) {
+      window.history.back()
+    } else {
+      setDetail(null)
+    }
+  }
+
   useEffect(() => {
     function onPopState() {
-      setResultsSearch(null)
+      const state = window.history.state
+      setDetail(state?.detail ?? null)
+      if (!state?.results) setResultsSearch(null)
     }
     window.addEventListener('popstate', onPopState)
     return () => window.removeEventListener('popstate', onPopState)
@@ -77,14 +96,27 @@ function App() {
           <Typewriter />
         </section>
         <section id="search" className="snap-section snap-section-2">
-          <SearchSection onSeeAll={openResults} />
+          <SearchSection onSeeAll={openResults} onSelect={openDetail} />
         </section>
         <section id="randomizer" className="snap-section snap-section-3">
           Random page
         </section>
       </main>
       {resultsSearch && (
-        <SearchResultsPage search={resultsSearch} onBack={closeResults} />
+        <SearchResultsPage search={resultsSearch} onBack={closeResults} onSelect={openDetail} />
+      )}
+      {detail && (
+        <DetailPage
+          key={`${detail.mediaType}-${detail.id}`}
+          mediaType={detail.mediaType}
+          id={detail.id}
+          onBack={closeDetail}
+          onOpen={openDetail}
+          isLoggedIn={isLoggedIn}
+          user={null}
+          token={null}
+          onRequestLogin={handleToggleAuth}
+        />
       )}
     </div>
   )

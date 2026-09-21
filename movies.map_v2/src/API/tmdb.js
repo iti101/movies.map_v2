@@ -16,6 +16,19 @@ const TMDB_GENRE = {
 }
 
 export const POSTER_BASE = 'https://image.tmdb.org/t/p/w185'
+const IMAGE_BASE = 'https://image.tmdb.org/t/p'
+
+export const MEDIA_LABELS = {
+  movie: 'Movie',
+  tv: 'TV',
+  person: 'Person',
+}
+
+export function getImageUrl(path, size = 'w342') {
+  if (!path) return null
+  return `${IMAGE_BASE}/${size}${path}`
+}
+
 const MAX_RESULT_PAGES = 10
 
 function getApiKey() {
@@ -241,4 +254,305 @@ export async function loadGenres(type) {
   if (!response.ok) throw new Error('Could not load genres.')
   const data = await response.json()
   return data.genres ?? []
+}
+
+const CAST_LIMIT = 12
+const DIRECTOR_LIMIT = 6
+const RELATED_LIMIT = 8
+const SIMILAR_ROW_LIMIT = 12
+const KNOWN_FOR_LIMIT = 10
+const WATCH_REGION_KEY = 'watchRegion'
+
+const OFFER_LABELS = {
+  flatrate: 'Stream',
+  free: 'Free',
+  ads: 'Free with ads',
+  rent: 'Rent',
+  buy: 'Buy',
+}
+
+const FALLBACK_REGIONS = ['US', 'GB', 'NL', 'DE', 'FR', 'CA', 'AU', 'BE', 'ES', 'IT', 'SE', 'BR', 'MX', 'JP', 'IN']
+
+const regionNames =
+  typeof Intl !== 'undefined' && Intl.DisplayNames
+    ? new Intl.DisplayNames(['en'], { type: 'region' })
+    : null
+
+async function tmdbGet(path, params = {}) {
+  const url = new URL(`https://api.themoviedb.org/3${path}`)
+  url.searchParams.set('api_key', getApiKey())
+  for (const [key, value] of Object.entries(params)) {
+    if (value != null && value !== '') url.searchParams.set(key, String(value))
+  }
+  const response = await fetch(url)
+  if (!response.ok) throw new Error('Could not load this page. Try again.')
+  return response.json()
+}
+
+function clipUrl(video) {
+  if (!video?.key) return null
+  if (video.site === 'YouTube') return `https://www.youtube.com/watch?v=${video.key}`
+  if (video.site === 'Vimeo') return `https://vimeo.com/${video.key}`
+  return null
+}
+
+function trailerUrl(videos) {
+  const clips = (videos?.results ?? []).filter((video) => clipUrl(video))
+  const trailer =
+    clips.find((video) => video.site === 'YouTube' && video.type === 'Trailer' && video.official) ||
+    clips.find((video) => video.type === 'Trailer' && video.official) ||
+    clips.find((video) => video.type === 'Trailer') ||
+    clips.find((video) => video.type === 'Teaser') ||
+    clips[0]
+  return clipUrl(trailer)
+}
+
+function mapCast(credits) {
+  return (credits?.cast ?? []).slice(0, CAST_LIMIT).map((member) => ({
+    id: member.id,
+    name: member.name,
+    character:
+      member.character ||
+      (member.roles ?? []).map((role) => role.character).filter(Boolean).join(', ') ||
+      null,
+    profilePath: member.profile_path,
+  }))
+}
+
+function mapRelated(data, mediaType, excludeId, limit = RELATED_LIMIT) {
+  const seen = new Set([Number(excludeId)])
+  const items = []
+
+  for (const source of [data.recommendations?.results, data.similar?.results]) {
+    for (const raw of source ?? []) {
+      if (!raw?.id || seen.has(raw.id)) continue
+      seen.add(raw.id)
+      items.push(normalizeItem(raw, mediaType))
+      if (items.length === limit) return items
+    }
+  }
+
+  return items
+}
+
+function mapDirectors(data) {
+  const seen = new Set()
+  const people = []
+
+  function add(person) {
+    if (!person?.id || seen.has(person.id)) return
+    seen.add(person.id)
+    people.push({
+      id: person.id,
+      name: person.name,
+      character: 'Director',
+      profilePath: person.profile_path,
+    })
+  }
+
+  for (const person of data.aggregate_credits?.crew ?? []) {
+    if ((person.jobs ?? []).some((job) => job.job === 'Director')) add(person)
+  }
+  if (!people.length) {
+    for (const person of data.credits?.crew ?? []) {
+      if (person.job === 'Director') add(person)
+    }
+  }
+
+  return people.slice(0, DIRECTOR_LIMIT)
+}
+
+export function watchRegionName(code) {
+  if (!code) return ''
+  try {
+    return regionNames?.of(code) || code
+  } catch {
+    return code
+  }
+}
+
+function toRegionOptions(codes) {
+  return [...new Set(codes.filter(Boolean))]
+    .map((code) => ({ code, name: watchRegionName(code) }))
+    .sort((a, b) => a.name.localeCompare(b.name, 'en'))
+}
+
+export function getFallbackWatchRegions() {
+  return toRegionOptions(FALLBACK_REGIONS)
+}
+
+export function getSavedWatchRegion() {
+  try {
+    const saved = localStorage.getItem(WATCH_REGION_KEY)
+    if (saved && /^[A-Z]{2}$/.test(saved)) return saved
+  } catch {
+    // Private browsing can block storage.
+  }
+  const region = navigator.language?.split('-')[1]
+  return region && /^[A-Za-z]{2}$/.test(region) ? region.toUpperCase() : 'US'
+}
+
+export function saveWatchRegion(region) {
+  try {
+    localStorage.setItem(WATCH_REGION_KEY, region)
+  } catch {
+    // Ignore storage failures.
+  }
+}
+
+function normalizeWatchProviders(watchProviders) {
+  const regions = {}
+
+  for (const [code, offers] of Object.entries(watchProviders?.results ?? {})) {
+    const providers = new Map()
+    for (const [offerType, label] of Object.entries(OFFER_LABELS)) {
+      for (const provider of offers?.[offerType] ?? []) {
+        const known = providers.get(provider.provider_id)
+        if (known) {
+          known.offers.push(label)
+          continue
+        }
+        providers.set(provider.provider_id, {
+          id: provider.provider_id,
+          name: provider.provider_name,
+          logoPath: provider.logo_path,
+          offers: [label],
+        })
+      }
+    }
+    regions[code.toUpperCase()] = {
+      link: offers?.link || null,
+      providers: [...providers.values()],
+    }
+  }
+
+  return regions
+}
+
+let watchRegionsRequest
+
+export function getWatchRegions() {
+  if (!watchRegionsRequest) {
+    watchRegionsRequest = tmdbGet('/watch/providers/regions')
+      .then((data) => {
+        const codes = (data.results ?? []).map((region) => region.iso_3166_1?.toUpperCase())
+        return toRegionOptions(codes.length ? codes : FALLBACK_REGIONS)
+      })
+      .catch(() => getFallbackWatchRegions())
+  }
+  return watchRegionsRequest
+}
+
+const PROVIDER_SITES = [
+  [/netflix/i, (query) => `https://www.netflix.com/search?q=${query}`],
+  [/disney/i, (query) => `https://www.disneyplus.com/search?q=${query}`],
+  [/prime video|amazon/i, (query) => `https://www.primevideo.com/search?phrase=${query}`],
+  [/hulu/i, (query) => `https://www.hulu.com/search?q=${query}`],
+  [/max|hbo/i, (query) => `https://play.max.com/search?q=${query}`],
+  [/apple tv/i, (query) => `https://tv.apple.com/search?term=${query}`],
+  [/paramount/i, (query) => `https://www.paramountplus.com/search/?q=${query}`],
+  [/peacock/i, (query) => `https://www.peacocktv.com/search?q=${query}`],
+  [/crunchyroll/i, (query) => `https://www.crunchyroll.com/search?q=${query}`],
+  [/youtube/i, (query) => `https://www.youtube.com/results?search_query=${query}`],
+  [/google play/i, (query) => `https://play.google.com/store/search?q=${query}&c=movies`],
+  [/mubi/i, (query) => `https://mubi.com/search/films?query=${query}`],
+]
+
+export function providerWatchUrl(name, title, fallback) {
+  const query = encodeURIComponent(title || '')
+  const match = PROVIDER_SITES.find(([pattern]) => pattern.test(name || ''))
+  return match ? match[1](query) : fallback || null
+}
+
+function score(data) {
+  return {
+    rating: data.vote_average ? Math.round(data.vote_average * 10) / 10 : null,
+    voteCount: data.vote_count || 0,
+  }
+}
+
+export async function getMovieDetails(id) {
+  const data = await tmdbGet(`/movie/${id}`, {
+    append_to_response: 'credits,videos,recommendations,similar',
+    include_video_language: 'en-US,en,null',
+  })
+
+  return {
+    id: data.id,
+    mediaType: 'movie',
+    title: data.title || 'Untitled',
+    tagline: data.tagline || null,
+    overview: data.overview || '',
+    posterPath: data.poster_path,
+    backdropPath: data.backdrop_path,
+    releaseDate: data.release_date || null,
+    runtime: data.runtime || null,
+    genres: (data.genres ?? []).map((genre) => genre.name),
+    directors: (data.credits?.crew ?? [])
+      .filter((member) => member.job === 'Director')
+      .map((member) => member.name),
+    cast: mapCast(data.credits),
+    trailerUrl: trailerUrl(data.videos),
+    similar: mapRelated(data, 'movie', data.id),
+    ...score(data),
+  }
+}
+
+export async function getTvDetails(id) {
+  const data = await tmdbGet(`/tv/${id}`, {
+    append_to_response: 'aggregate_credits,credits,videos,watch/providers,recommendations,similar',
+    include_video_language: 'en-US,en,null',
+  })
+  const credits = data.aggregate_credits?.cast?.length ? data.aggregate_credits : data.credits
+
+  return {
+    id: data.id,
+    mediaType: 'tv',
+    title: data.name || 'Untitled',
+    overview: data.overview || '',
+    posterPath: data.poster_path,
+    backdropPath: data.backdrop_path,
+    firstAirDate: data.first_air_date || null,
+    genres: (data.genres ?? []).map((genre) => genre.name),
+    createdBy: (data.created_by ?? []).map((person) => person.name),
+    directors: mapDirectors(data),
+    cast: mapCast(credits),
+    trailerUrl: trailerUrl(data.videos),
+    watch: normalizeWatchProviders(data['watch/providers']),
+    similar: mapRelated(data, 'tv', data.id, SIMILAR_ROW_LIMIT),
+    ...score(data),
+  }
+}
+
+export async function getPersonDetails(id) {
+  const data = await tmdbGet(`/person/${id}`, { append_to_response: 'combined_credits' })
+  const seen = new Set()
+  const knownFor = []
+
+  for (const credit of data.combined_credits?.cast ?? []) {
+    const mediaType = credit.media_type
+    if (mediaType !== 'movie' && mediaType !== 'tv') continue
+    if (mediaType === 'tv' && (credit.episode_count ?? 0) < 4) continue
+    const key = `${mediaType}-${credit.id}`
+    if (!credit.id || seen.has(key)) continue
+    seen.add(key)
+    knownFor.push({
+      ...normalizeItem(credit, mediaType),
+      popularity: credit.popularity ?? 0,
+    })
+  }
+
+  knownFor.sort((a, b) => b.popularity - a.popularity)
+
+  return {
+    id: data.id,
+    mediaType: 'person',
+    name: data.name || 'Unknown',
+    biography: data.biography || '',
+    profilePath: data.profile_path,
+    birthday: data.birthday || null,
+    deathday: data.deathday || null,
+    placeOfBirth: data.place_of_birth || null,
+    knownFor: knownFor.slice(0, KNOWN_FOR_LIMIT),
+  }
 }

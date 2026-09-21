@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import Button from '../components/Button.jsx'
 import DidYouMean from '../components/DidYouMean.jsx'
-import SearchCard from '../components/SearchCard.jsx'
+import MovieCard from '../components/MovieCard.jsx'
 import { applySearchFilters, fetchTmdbPage, getSearchLabel, getSearchSuggestion, isValidYear, loadGenres } from '../API/tmdb.js'
 import searchIcon from '../assets/search_opsz24.svg'
 import './SearchSection.css'
@@ -13,7 +13,7 @@ const TYPE_OPTIONS = [
   { id: 'person', label: 'People' },
 ]
 
-function SearchSection({ onSeeAll }) {
+function SearchSection({ onSeeAll, onSelect }) {
   const [query, setQuery] = useState('')
   const [type, setType] = useState('movie')
   const [releaseDateOn, setReleaseDateOn] = useState(false)
@@ -236,7 +236,7 @@ function SearchSection({ onSeeAll }) {
             </div>
             <ul className="search-grid">
               {results.map((item) => (
-                <SearchCard key={`${item.mediaType}-${item.id}`} item={item} />
+                <MovieCard key={`${item.mediaType}-${item.id}`} item={item} onSelect={onSelect} />
               ))}
             </ul>
           </>

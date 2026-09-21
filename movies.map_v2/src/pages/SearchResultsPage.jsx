@@ -1,11 +1,11 @@
 import { useEffect, useState } from 'react'
 import Button from '../components/Button.jsx'
 import DidYouMean from '../components/DidYouMean.jsx'
-import SearchCard from '../components/SearchCard.jsx'
+import MovieCard from '../components/MovieCard.jsx'
 import { getSearchLabel, getSearchSuggestion, searchTmdbAll } from '../API/tmdb.js'
 import './SearchResultsPage.css'
 
-function SearchResultsPage({ search, onBack }) {
+function SearchResultsPage({ search, onBack, onSelect }) {
   const [activeSearch, setActiveSearch] = useState(search)
   const seeded = activeSearch.results ?? []
   const [results, setResults] = useState(seeded)
@@ -63,7 +63,7 @@ function SearchResultsPage({ search, onBack }) {
   return (
     <main className="results-page">
       <div className="results-page__inner">
-        <Button variant="ghost" className="results-page__back" onClick={onBack}>
+        <Button className="results-page__back" onClick={onBack}>
           Back
         </Button>
 
@@ -94,7 +94,7 @@ function SearchResultsPage({ search, onBack }) {
         {count > 0 && (
           <ul className="search-grid results-page__grid">
             {results.map((item) => (
-              <SearchCard key={`${item.mediaType}-${item.id}`} item={item} />
+              <MovieCard key={`${item.mediaType}-${item.id}`} item={item} onSelect={onSelect} />
             ))}
           </ul>
         )}
