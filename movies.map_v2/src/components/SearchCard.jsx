@@ -1,5 +1,6 @@
 import { POSTER_BASE } from '../API/tmdb.js'
 
+/** One search result: poster (or “No poster”) plus title and year. */
 export default function SearchCard({ item }) {
   const posterSrc = item.imagePath ? `${POSTER_BASE}${item.imagePath}` : null
 
