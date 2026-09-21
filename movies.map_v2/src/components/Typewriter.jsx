@@ -2,7 +2,6 @@ import { useEffect, useState } from 'react'
 import logoIcon from '../assets/logo_ICON.png'
 import moviesLogo from '../assets/moviesLOGO.png'
 import { scrollToSection } from '../scrollToSection.js'
-import Button from './Button.jsx'
 import './Typewriter.css'
 
 const FINAL = 'Find any episode'
@@ -96,7 +95,7 @@ function Typewriter() {
   return (
     <div className="intro" aria-label="Movies.map">
       {phase === 'typing' && (
-        <h1 className="typewriter" aria-label={FINAL}>
+        <h1 className="typewriter section-title" aria-label={FINAL}>
           {text}
           <span className="typewriter__cursor" aria-hidden="true">
             |
@@ -131,14 +130,13 @@ function Typewriter() {
 
           {showCta && (
             <div className="intro__cta">
-              <Button
-                variant="ghost"
-                size="lg"
+              <button
+                type="button"
                 className="intro__start"
                 onClick={() => scrollToSection('search')}
               >
                 Get Started
-              </Button>
+              </button>
               <div className="intro__arrow" aria-hidden="true">
                 {Array.from({ length: ARROW_BARS }, (_, i) => (
                   <span key={i} className="intro__arrow-bar" />

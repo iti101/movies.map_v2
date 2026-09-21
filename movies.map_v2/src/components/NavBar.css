@@ -21,8 +21,9 @@
   gap: 0.15rem;
 }
 
-.navbar-hamburger {
-  position: relative;
+.navbar-hamburger,
+.navbar-auth,
+.navbar-theme {
   display: grid;
   place-items: center;
   width: 2.5rem;
@@ -32,6 +33,10 @@
   background: transparent;
   color: var(--color-text);
   cursor: pointer;
+}
+
+.navbar-hamburger {
+  position: relative;
 }
 
 .navbar-hamburger-bar {
@@ -93,8 +98,18 @@
   display: none;
 }
 
-.navbar-menu .ui-button:hover,
-.navbar-menu .ui-button:focus-visible {
+.navbar-menu button {
+  padding: 0.25rem;
+  border: none;
+  background: transparent;
+  color: var(--color-text);
+  font: inherit;
+  font-size: clamp(1.5rem, 4vw, 2.25rem);
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.navbar-menu button:hover,
+.navbar-menu button:focus-visible {
   color: var(--color-text-muted);
-  opacity: 1;
 }
