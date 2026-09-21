@@ -221,3 +221,31 @@ export async function createAccount({ username, email, password }) {
     },
   }
 }
+
+function asList(data) {
+  if (Array.isArray(data)) return data
+  if (Array.isArray(data?.content)) return data.content
+  if (Array.isArray(data?.reviews)) return data.reviews
+  return []
+}
+
+export async function getReviewsForMedia(mediaType, mediaId, token) {
+  const list = asList(await request('/api/reviews', { token }))
+  return list
+    .filter(
+      (review) => review.mediaType === mediaType && Number(review.mediaId) === Number(mediaId),
+    )
+    .sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0))
+}
+
+export async function createReview({ userId, mediaType, mediaId, text, rating }, token) {
+  const body = {
+    userId,
+    mediaType,
+    mediaId: Number(mediaId),
+  }
+  const trimmed = text?.trim()
+  if (trimmed) body.text = trimmed
+  if (rating > 0) body.rating = Number(rating)
+  return request('/api/reviews', { method: 'POST', body, token })
+}
