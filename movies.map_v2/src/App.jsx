@@ -1,12 +1,14 @@
 import { useEffect, useLayoutEffect, useState } from 'react'
 import './App.css'
+import { clearSession, loadSession, saveSession } from './API/novi.js'
+import AuthModal from './components/AuthModal.jsx'
 import NavBar from './components/NavBar.jsx'
 import Typewriter from './components/Typewriter.jsx'
 import SearchResultsPage from './pages/SearchResultsPage.jsx'
 import SearchSection from './pages/SearchSection.jsx'
 
 function getStoredAuth() {
-  return localStorage.getItem('isLoggedIn') === 'true'
+  return loadSession().isLoggedIn
 }
 
 function getStoredTheme() {
@@ -23,6 +25,7 @@ function applyTheme(theme) {
 function App() {
   'use no memo'
   const [isLoggedIn, setIsLoggedIn] = useState(getStoredAuth)
+  const [authOpen, setAuthOpen] = useState(false)
   const [theme, setTheme] = useState(getStoredTheme)
   const [resultsSearch, setResultsSearch] = useState(null)
 
@@ -31,11 +34,17 @@ function App() {
   }, [theme])
 
   function handleToggleAuth() {
-    setIsLoggedIn((current) => {
-      const next = !current
-      localStorage.setItem('isLoggedIn', String(next))
-      return next
-    })
+    if (isLoggedIn) {
+      clearSession()
+      setIsLoggedIn(false)
+      return
+    }
+    setAuthOpen(true)
+  }
+
+  function handleAuthenticated({ token, user }) {
+    saveSession({ token, user })
+    setIsLoggedIn(true)
   }
 
   function handleToggleTheme() {
@@ -86,6 +95,11 @@ function App() {
       {resultsSearch && (
         <SearchResultsPage search={resultsSearch} onBack={closeResults} />
       )}
+      <AuthModal
+        open={authOpen}
+        onClose={() => setAuthOpen(false)}
+        onAuthenticated={handleAuthenticated}
+      />
     </div>
   )
 }

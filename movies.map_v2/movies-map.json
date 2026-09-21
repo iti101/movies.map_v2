@@ -1,0 +1,150 @@
+{
+  "collections": [
+    {
+      "name": "profiles",
+      "fields": [
+        {
+          "name": "id",
+          "type": "number",
+          "required": true
+        },
+        {
+          "name": "userId",
+          "type": "reference:users",
+          "required": true
+        },
+        {
+          "name": "username",
+          "type": "string",
+          "required": true,
+          "min": 2,
+          "max": 40
+        }
+      ],
+      "permissions": {
+        "GET": ["user", "admin"],
+        "POST": ["anonymous", "user", "admin"],
+        "PUT": ["user", "admin"],
+        "PATCH": ["user", "admin"],
+        "DELETE": ["admin"]
+      }
+    },
+    {
+      "name": "watchlists",
+      "fields": [
+        {
+          "name": "id",
+          "type": "number",
+          "required": true
+        },
+        {
+          "name": "userId",
+          "type": "reference:users",
+          "required": true
+        },
+        {
+          "name": "name",
+          "type": "string",
+          "required": true,
+          "min": 1,
+          "max": 80
+        },
+        {
+          "name": "createdAt",
+          "type": "date",
+          "required": false,
+          "default": "CurrentDate"
+        }
+      ],
+      "permissions": {
+        "GET": ["user", "admin"],
+        "POST": ["user", "admin"],
+        "PUT": ["user", "admin"],
+        "PATCH": ["user", "admin"],
+        "DELETE": ["user", "admin"]
+      }
+    },
+    {
+      "name": "reviews",
+      "fields": [
+        {
+          "name": "id",
+          "type": "number",
+          "required": true
+        },
+        {
+          "name": "userId",
+          "type": "reference:users",
+          "required": true
+        },
+        {
+          "name": "mediaType",
+          "type": "string",
+          "required": true,
+          "min": 2,
+          "max": 10
+        },
+        {
+          "name": "mediaId",
+          "type": "number",
+          "required": true
+        },
+        {
+          "name": "text",
+          "type": "string",
+          "required": true,
+          "min": 1,
+          "max": 2000
+        },
+        {
+          "name": "rating",
+          "type": "number",
+          "required": false
+        },
+        {
+          "name": "createdAt",
+          "type": "date",
+          "required": false,
+          "default": "CurrentDate"
+        }
+      ],
+      "permissions": {
+        "GET": ["anonymous", "user", "admin"],
+        "POST": ["user", "admin"],
+        "PUT": ["user", "admin"],
+        "PATCH": ["user", "admin"],
+        "DELETE": ["user", "admin"]
+      }
+    }
+  ],
+  "users": [
+    {
+      "id": 1,
+      "email": "admin@movies.map",
+      "password": "admin123",
+      "roles": ["admin"]
+    },
+    {
+      "id": 2,
+      "email": "demo@movies.map",
+      "password": "demo1234",
+      "roles": ["user"]
+    }
+  ],
+  "data": {
+    "profiles": [
+      {
+        "id": 1,
+        "userId": 1,
+        "username": "admin"
+      },
+      {
+        "id": 2,
+        "userId": 2,
+        "username": "demo"
+      }
+    ],
+    "watchlists": [],
+    "reviews": []
+  }
+}

@@ -9,7 +9,14 @@ export default defineConfig({
     babel({ presets: [reactCompilerPreset()] })
   ],
   server: {
-    port: 5175,
+    port: 5173,
     strictPort: false,
+    proxy: {
+      '/novi-api': {
+        target: 'https://novi-backend-api-wgsgz.ondigitalocean.app',
+        changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/novi-api/, ''),
+      },
+    },
   },
 })
