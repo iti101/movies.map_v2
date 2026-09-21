@@ -1,0 +1,109 @@
+.ui-button {
+  appearance: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0;
+  padding: var(--button-padding, 0.4rem 0.95rem);
+  border: var(--button-border, 1px solid var(--color-border));
+  border-radius: var(--button-radius, 999px);
+  background: var(--button-bg, var(--color-control));
+  color: var(--button-color, var(--color-text));
+  font-family: var(--button-font, var(--font-body));
+  font-weight: var(--button-weight, 400);
+  font-size: var(--button-size, 0.9rem);
+  line-height: 1.2;
+  letter-spacing: var(--button-tracking, normal);
+  cursor: pointer;
+}
+
+.ui-button:hover:not(:disabled) {
+  background: var(--button-hover-bg, var(--color-control-active));
+}
+
+.ui-button:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.ui-button:focus-visible {
+  outline: 2px solid var(--color-focus-ring);
+  outline-offset: 2px;
+}
+
+.ui-button--chip.is-active {
+  background: var(--button-hover-bg, var(--color-control-active));
+  border-color: var(--color-text-muted);
+}
+
+.ui-button--ghost {
+  --button-bg: transparent;
+  --button-hover-bg: transparent;
+  --button-border: none;
+  --button-padding: 0.2rem 0;
+  --button-radius: 0;
+  --button-weight: 600;
+  --button-size: 0.95rem;
+}
+
+.ui-button--ghost:hover:not(:disabled),
+.ui-button--ghost:focus-visible {
+  background: transparent;
+  opacity: 0.75;
+}
+
+.ui-button--solid {
+  --button-bg: var(--color-button-bg);
+  --button-hover-bg: var(--color-button-bg);
+  --button-color: var(--color-button-text);
+  --button-border: none;
+  --button-weight: 600;
+}
+
+.ui-button--solid:hover:not(:disabled) {
+  opacity: 0.9;
+}
+
+.ui-button--icon {
+  --button-bg: transparent;
+  --button-hover-bg: var(--button-bg, transparent);
+  --button-border: none;
+  --button-padding: 0;
+  --button-radius: 0.35rem;
+  flex-shrink: 0;
+  width: 2.5rem;
+  height: 2.5rem;
+  color: var(--button-color, var(--color-text));
+}
+
+.ui-button--icon svg {
+  width: 1.15rem;
+  height: 1.15rem;
+  pointer-events: none;
+}
+
+.ui-button--round {
+  --button-radius: 50%;
+}
+
+.ui-button--sm {
+  --button-size: 0.85rem;
+  --button-padding: 0.3rem 0.75rem;
+}
+
+.ui-button--md {
+  --button-size: 0.9rem;
+}
+
+.ui-button--lg {
+  --button-size: clamp(1.15rem, 3.2vw, 1.65rem);
+  --button-weight: 600;
+  --button-tracking: 0.04em;
+  --button-padding: 0;
+}
+
+.ui-button--xl {
+  --button-size: clamp(1.5rem, 4vw, 2.25rem);
+  --button-weight: 600;
+  --button-padding: 0.25rem;
+}

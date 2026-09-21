@@ -1,20 +1,29 @@
 import { useEffect, useState } from 'react'
+import Button from './Button.jsx'
 import './NavBar.css'
 import loginIcon from '../assets/login_opsz24.svg'
 import logoutIcon from '../assets/logout_opsz24.svg'
 import lightModeIcon from '../assets/light_mode_opsz24.svg'
 import darkModeIcon from '../assets/dark_mode_opsz24.svg'
 
-function NavBar({ isLoggedIn, theme, onToggleAuth, onToggleTheme }) {
+const MENU_SECTIONS = [
+  { id: 'home', label: 'Home' },
+  { id: 'search', label: 'Search' },
+  { id: 'randomizer', label: 'Randomizer' },
+]
+
+function NavBar({ isLoggedIn, theme, onToggleAuth, onToggleTheme, onNavigate }) {
   const [menuOpen, setMenuOpen] = useState(false)
+  const isDark = theme === 'dark'
+  const themeLabel = isDark ? 'Switch to light mode' : 'Switch to dark mode'
+  const themeIcon = isDark ? lightModeIcon : darkModeIcon
+  const authLabel = isLoggedIn ? 'Log out' : 'Log in'
+  const authIcon = isLoggedIn ? logoutIcon : loginIcon
 
   useEffect(() => {
     function onKeyDown(event) {
-      if (event.key === 'Escape') {
-        setMenuOpen(false)
-      }
+      if (event.key === 'Escape') setMenuOpen(false)
     }
-
     window.addEventListener('keydown', onKeyDown)
     return () => window.removeEventListener('keydown', onKeyDown)
   }, [])
@@ -25,15 +34,15 @@ function NavBar({ isLoggedIn, theme, onToggleAuth, onToggleTheme }) {
 
   function goTo(sectionId) {
     closeMenu()
+    onNavigate?.(sectionId)
+    // Defer scroll so the overlay unmounts first
     window.setTimeout(() => {
       document.getElementById(sectionId)?.scrollIntoView({ behavior: 'smooth' })
     }, 0)
   }
 
   function handleAuthMenuClick() {
-    if (!isLoggedIn) {
-      onToggleAuth()
-    }
+    if (!isLoggedIn) onToggleAuth()
     closeMenu()
   }
 
@@ -54,33 +63,25 @@ function NavBar({ isLoggedIn, theme, onToggleAuth, onToggleTheme }) {
         </button>
 
         <div className="navbar-actions">
-          <button
+          <Button
+            variant="icon"
             className="navbar-theme"
-            type="button"
-            onClick={() => onToggleTheme()}
-            aria-pressed={theme === 'dark'}
-            aria-label={theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
-            title={theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
+            onClick={onToggleTheme}
+            aria-pressed={isDark}
+            aria-label={themeLabel}
+            title={themeLabel}
           >
-            <img
-              src={theme === 'dark' ? lightModeIcon : darkModeIcon}
-              alt=""
-              className="navbar-icon"
-            />
-          </button>
+            <img src={themeIcon} alt="" className="navbar-icon" />
+          </Button>
 
-          <button
+          <Button
+            variant="icon"
             className="navbar-auth"
-            type="button"
             onClick={onToggleAuth}
-            aria-label={isLoggedIn ? 'Log out' : 'Log in'}
+            aria-label={authLabel}
           >
-            <img
-              src={isLoggedIn ? logoutIcon : loginIcon}
-              alt=""
-              className="navbar-icon"
-            />
-          </button>
+            <img src={authIcon} alt="" className="navbar-icon" />
+          </Button>
         </div>
       </header>
 
@@ -90,18 +91,14 @@ function NavBar({ isLoggedIn, theme, onToggleAuth, onToggleTheme }) {
         aria-label="Main"
         hidden={!menuOpen}
       >
-        <button type="button" onClick={() => goTo('home')}>
-          Home
-        </button>
-        <button type="button" onClick={() => goTo('search')}>
-          Search
-        </button>
-        <button type="button" onClick={() => goTo('randomizer')}>
-          Randomizer
-        </button>
-        <button type="button" onClick={handleAuthMenuClick}>
+        {MENU_SECTIONS.map(({ id, label }) => (
+          <Button key={id} variant="ghost" size="xl" onClick={() => goTo(id)}>
+            {label}
+          </Button>
+        ))}
+        <Button variant="ghost" size="xl" onClick={handleAuthMenuClick}>
           {isLoggedIn ? 'My Watchlist' : 'Log-in / Sign-up'}
-        </button>
+        </Button>
       </nav>
     </>
   )
