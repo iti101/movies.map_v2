@@ -12,6 +12,7 @@ function rand(min, max) {
   return min + Math.random() * (max - min)
 }
 
+/** Promise delay that rejects if the component unmounts (AbortController). */
 function wait(ms, signal) {
   return new Promise((resolve, reject) => {
     const id = setTimeout(resolve, ms)
@@ -26,6 +27,10 @@ function wait(ms, signal) {
   })
 }
 
+/**
+ * Home intro: types “movie / show / episode”, then the logo, then Get Started.
+ * Skips the typing show when the OS asks for reduced motion.
+ */
 function Typewriter() {
   const [text, setText] = useState('')
   const [phase, setPhase] = useState('typing')

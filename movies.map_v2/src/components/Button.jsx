@@ -1,5 +1,6 @@
 import './Button.css'
 
+/** Token name (`accent-btn`) → `var(--color-accent-btn)`; raw CSS colors pass through. */
 function toCssColor(value) {
   if (!value) return undefined
   if (/^(var\(|#|rgb|hsl|oklch|currentColor|transparent)/i.test(value)) return value
@@ -15,6 +16,10 @@ function resolveFont(font) {
 
 const SIZE_PRESETS = new Set(['sm', 'md', 'lg', 'xl'])
 
+/**
+ * Shared chip / ghost / solid / icon button.
+ * Colors are CSS variables from App.css unless you pass a full color string.
+ */
 export default function Button({
   children,
   text,

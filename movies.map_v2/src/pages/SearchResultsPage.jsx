@@ -4,6 +4,10 @@ import SearchCard from '../components/SearchCard.jsx'
 import { getSearchLabel, searchTmdbAll } from '../API/tmdb.js'
 import './SearchResultsPage.css'
 
+/**
+ * Full-screen “See all” overlay. Shows the first page immediately, then
+ * replaces it with up to 10 TMDB pages. If that deeper fetch fails, keep the seed.
+ */
 function SearchResultsPage({ search, onBack }) {
   const seeded = search.results ?? []
   const [results, setResults] = useState(seeded)

@@ -12,6 +12,10 @@ const MENU_SECTIONS = [
   { id: 'randomizer', label: 'Randomizer' },
 ]
 
+/**
+ * Fixed top bar: hamburger overlay menu, theme toggle, and pretend login.
+ * Menu links scroll to snap sections; onNavigate also closes the results overlay.
+ */
 function NavBar({ isLoggedIn, theme, onToggleAuth, onToggleTheme, onNavigate }) {
   const [menuOpen, setMenuOpen] = useState(false)
   const isDark = theme === 'dark'
@@ -41,6 +45,7 @@ function NavBar({ isLoggedIn, theme, onToggleAuth, onToggleTheme, onNavigate }) 
     }, 0)
   }
 
+  /** Logged out: menu item logs you in. Logged in: “My Watchlist” only closes the menu. */
   function handleAuthMenuClick() {
     if (!isLoggedIn) onToggleAuth()
     closeMenu()

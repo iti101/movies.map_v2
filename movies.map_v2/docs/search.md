@@ -2,11 +2,15 @@
 
 How the Search section and “See all” overlay talk to TMDB. Implementation: `src/API/tmdb.js`, `src/pages/SearchSection.jsx`, `src/pages/SearchResultsPage.jsx`.
 
+## In plain English
+
+Type a title (or a 4-digit year) and press the search button. The app asks TMDB for **one page** of matches and shows posters. **See all** asks for more pages (up to 10) and covers the screen. Year and genre are sometimes sent to TMDB and sometimes applied afterward in the browser, because not every TMDB URL accepts the same options.
+
+A request runs only when the form has a trimmed query **or** a valid 4-digit year. Genre is an extra filter, not a trigger by itself.
+
 ## Intent
 
 The search page shows **one TMDB page** (20 items, then local filters). **See all** re-fetches up to **10 pages**, applies the same filters, and renders them in a full-screen overlay.
-
-A request runs only when the form has a trimmed query **or** a valid 4-digit year. Genre is an extra filter, not a trigger by itself.
 
 ## Data flow
 
@@ -65,7 +69,15 @@ TMDB does not accept the same params on every endpoint, so some filters are serv
 
 ## See all overlay
 
-`SearchSection` passes the current query/type/year/genre **and** the first-page `results` into the overlay. `SearchResultsPage`:
+`handleSeeAll` builds the overlay payload from mixed state:
+
+| Field | Source |
+| --- | --- |
+| `query` | Last **submitted** text (`searchedQuery`), not the live input |
+| `type`, `year`, `genre` | **Live** chips (changing them without searching again can disagree with the seeded grid) |
+| `results` | First-page list from the last successful submit |
+
+`SearchResultsPage`:
 
 1. Renders the seeded first page immediately when it is non-empty.
 2. Always calls `searchTmdbAll` (max 10 pages, parallel after page 1).
@@ -96,3 +108,4 @@ Empty submit (no query and no valid year) resets to `idle` rather than erroring.
 - **All + discover concatenates movie and TV pages** for the same page number (not a single mixed TMDB list). `totalPages` is `Math.max` of the two.
 - **Genre list fetch failures fail closed.** `loadGenres` errors set `genres` to `[]` with no error banner.
 - **Keys in the grid** are `` `${mediaType}-${id}` `` because the same TMDB id can exist as both a movie and a TV show.
+- **See all after changing chips without resubmitting** can seed movie posters then refetch as TV (or with a new year/genre). Resubmit first if you want the overlay to match the grid.
