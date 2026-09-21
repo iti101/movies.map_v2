@@ -6,7 +6,7 @@ import Button from './Button.jsx'
 import './Typewriter.css'
 
 const FINAL = 'Find any episode'
-const ARROW_BARS = 4
+const ARROW_BARS = 5
 
 function rand(min, max) {
   return min + Math.random() * (max - min)
