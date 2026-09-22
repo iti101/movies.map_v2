@@ -12,14 +12,17 @@ import SearchSection from './pages/SearchSection.jsx'
 import Watchlist from './pages/Watchlist.jsx'
 import { scrollToSection } from './scrollToSection.js'
 
+/** Pretend login flag. There is no account server — just 'true' in localStorage. */
 function getStoredAuth() {
   return loadSession()
 }
 
+/** Last chosen theme, defaulting to dark if nothing (or anything else) is stored. */
 function getStoredTheme() {
   return localStorage.getItem('theme') === 'light' ? 'light' : 'dark'
 }
 
+/** Paint CSS variables on <html> and remember the choice for the next visit. */
 function applyTheme(theme) {
   const root = document.documentElement
   root.setAttribute('data-theme', theme)
@@ -27,6 +30,10 @@ function applyTheme(theme) {
   localStorage.setItem('theme', theme)
 }
 
+/**
+ * Shell for the three snap pages plus the optional “See all” overlay.
+ * No React Router: overlay open/close is a history.pushState / popstate pair.
+ */
 function App() {
   'use no memo'
   const [session, setSession] = useState(getStoredAuth)
@@ -64,11 +71,13 @@ function App() {
     setTheme((current) => (current === 'dark' ? 'light' : 'dark'))
   }
 
+  /** Cover the snap pages with results and push a history entry so Back works. */
   function openResults(search) {
     setResultsSearch(search)
     window.history.pushState({ results: true }, '')
   }
 
+  /** Prefer history.back() so popstate clears the overlay; otherwise hide it directly. */
   function closeResults() {
     if (window.history.state?.results) {
       window.history.back()
@@ -127,6 +136,7 @@ function App() {
   }
 
   useEffect(() => {
+    // Browser Back (and closeResults → history.back) lands here and hides the overlay.
     function onPopState() {
       const state = window.history.state
       setDetail(state?.detail ?? null)

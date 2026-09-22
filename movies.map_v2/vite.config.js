@@ -10,7 +10,7 @@ export default defineConfig({
   ],
   server: {
     port: 5175,
-    strictPort: false,
+    strictPort: false, // if 5175 is taken, Vite picks the next free port
     proxy: {
       '/novi-api': {
         target: 'https://novi-backend-api-wgsgz.ondigitalocean.app',

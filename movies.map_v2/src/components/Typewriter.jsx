@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import logoIcon from '../assets/logo_ICON.png'
 import moviesLogo from '../assets/moviesLOGO.png'
 import { scrollToSection } from '../scrollToSection.js'
+import Button from './Button.jsx'
 import './Typewriter.css'
 
 const FINAL = 'Find any episode'
@@ -11,6 +12,7 @@ function rand(min, max) {
   return min + Math.random() * (max - min)
 }
 
+/** Promise delay that rejects if the component unmounts (AbortController). */
 function wait(ms, signal) {
   return new Promise((resolve, reject) => {
     const id = setTimeout(resolve, ms)
@@ -25,6 +27,10 @@ function wait(ms, signal) {
   })
 }
 
+/**
+ * Home intro: types “movie / show / episode”, then the logo, then Get Started.
+ * Skips the typing show when the OS asks for reduced motion.
+ */
 function Typewriter() {
   const [text, setText] = useState('')
   const [phase, setPhase] = useState('typing')
@@ -95,7 +101,7 @@ function Typewriter() {
   return (
     <div className="intro" aria-label="Movies.map">
       {phase === 'typing' && (
-        <h1 className="typewriter section-title" aria-label={FINAL}>
+        <h1 className="typewriter" aria-label={FINAL}>
           {text}
           <span className="typewriter__cursor" aria-hidden="true">
             |
@@ -130,13 +136,14 @@ function Typewriter() {
 
           {showCta && (
             <div className="intro__cta">
-              <button
-                type="button"
+              <Button
+                variant="ghost"
+                size="lg"
                 className="intro__start"
                 onClick={() => scrollToSection('search')}
               >
                 Get Started
-              </button>
+              </Button>
               <div className="intro__arrow" aria-hidden="true">
                 {Array.from({ length: ARROW_BARS }, (_, i) => (
                   <span key={i} className="intro__arrow-bar" />

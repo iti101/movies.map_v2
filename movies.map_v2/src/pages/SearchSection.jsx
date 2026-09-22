@@ -13,6 +13,10 @@ const TYPE_OPTIONS = [
   { id: 'person', label: 'People' },
 ]
 
+/**
+ * Search snap-page: one TMDB page of posters plus chips.
+ * Submit needs a title *or* a 4-digit year — genre alone does not search.
+ */
 function SearchSection({ onSeeAll, onSelect }) {
   const [query, setQuery] = useState('')
   const [type, setType] = useState('movie')
@@ -37,6 +41,7 @@ function SearchSection({ onSeeAll, onSelect }) {
       return
     }
 
+    // Ignore late responses if the chip/type changed before the request finished.
     let cancelled = false
     loadGenres(type)
       .then((list) => { if (!cancelled) setGenres(list) })
@@ -47,6 +52,7 @@ function SearchSection({ onSeeAll, onSelect }) {
 
   async function runSearch(nextQuery = query) {
     const trimmed = nextQuery.trim()
+    // Empty query and no YYYY: clear the grid instead of calling TMDB.
     if (!trimmed && !yearFilter) {
       setStatus('idle')
       setResults([])
@@ -94,6 +100,7 @@ function SearchSection({ onSeeAll, onSelect }) {
     runSearch(nextQuery)
   }
 
+  /** Switching type drops the genre; People also turns year/genre chips off. */
   function selectType(nextType) {
     setType(nextType)
     setSelectedGenre(null)
@@ -104,6 +111,7 @@ function SearchSection({ onSeeAll, onSelect }) {
     }
   }
 
+  /** Turning Release date off also clears the year box. */
   function toggleReleaseDate() {
     setReleaseDateOn((on) => {
       if (on) setYear('')
@@ -111,6 +119,7 @@ function SearchSection({ onSeeAll, onSelect }) {
     })
   }
 
+  /** Turning Genre off also clears the selected chip. */
   function toggleGenre() {
     setGenreOn((on) => {
       if (on) setSelectedGenre(null)
@@ -118,6 +127,10 @@ function SearchSection({ onSeeAll, onSelect }) {
     })
   }
 
+  /**
+   * Overlay payload: last *submitted* query, but live type/year/genre chips
+   * (changing chips without searching again can mismatch the seeded grid).
+   */
   function handleSeeAll() {
     onSeeAll?.({
       query: searchedQuery,

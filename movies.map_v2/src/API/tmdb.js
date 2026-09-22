@@ -1,3 +1,10 @@
+/**
+ * Talks to The Movie Database (TMDB).
+ *
+ * In plain English: if the user typed a title we *search*; if they only picked
+ * a year/genre we *browse* popular titles (discover). Some filters go in the
+ * URL; others are applied here after the JSON comes back. See docs/search.md.
+ */
 const TMDB_SEARCH = {
   all: 'https://api.themoviedb.org/3/search/multi',
   movie: 'https://api.themoviedb.org/3/search/movie',
@@ -31,6 +38,7 @@ export function getImageUrl(path, size = 'w342') {
 
 const MAX_RESULT_PAGES = 10
 
+/** Vite inlines VITE_* at startup — restart the dev server after editing .env.local. */
 function getApiKey() {
   const apiKey = import.meta.env.VITE_TMDB_API_KEY
   if (!apiKey) {
@@ -43,6 +51,7 @@ function getYear(date) {
   return date?.slice(0, 4) ?? null
 }
 
+/** Flatten TMDB’s movie/TV/person shapes into the fields SearchCard expects. */
 function normalizeItem(item, fallbackType) {
   const mediaType = item.media_type || fallbackType
   if (mediaType === 'person') {
@@ -70,6 +79,7 @@ export function isValidYear(value) {
   return /^\d{4}$/.test(value)
 }
 
+/** Heading text: the typed query, or the year if that is all they searched with. */
 export function getSearchLabel({ query, year }) {
   return query?.trim() || year || ''
 }
@@ -148,6 +158,10 @@ export async function getSearchSuggestion({ query, type, year, items }) {
   }
 }
 
+/**
+ * Extra local filters TMDB cannot always take as query params.
+ * Genre after a text search, and year when type is “all” (multi search has no year field).
+ */
 export function applySearchFilters(items, { type, year, genre }) {
   let next = items
   if (genre) {
@@ -159,6 +173,7 @@ export function applySearchFilters(items, { type, year, genre }) {
   return next
 }
 
+/** Shared fetch: non-OK HTTP becomes the user-facing “Movie search failed…” error. */
 async function fetchTmdbJson(url) {
   const response = await fetch(url)
   if (!response.ok) {
@@ -167,6 +182,7 @@ async function fetchTmdbJson(url) {
   return response.json()
 }
 
+/** Text search. Year is sent only for movie/tv — not for “all” (multi) or people. */
 export async function searchTmdb({ query, type, year, page = 1 }) {
   const url = new URL(TMDB_SEARCH[type])
   url.searchParams.set('api_key', getApiKey())
@@ -192,6 +208,7 @@ function genreIds(value) {
   return list.map((entry) => entry?.id ?? entry).filter((id) => id != null)
 }
 
+/** Browse popular titles with optional year/genre/person in the TMDB URL (no search box text). */
 async function discoverByMedia(
   mediaType,
   { year, genre, genres, excludeGenres, personId, page = 1 },
@@ -219,6 +236,7 @@ async function discoverByMedia(
   }
 }
 
+/** Discover wrapper: people are unsupported; “all” fetches movie + TV in parallel. */
 export async function discoverTmdb({
   type,
   year,
@@ -249,6 +267,7 @@ export async function discoverTmdb({
   return discoverByMedia(type, options)
 }
 
+/** One TMDB page: search if there is a query, otherwise discover. */
 export async function fetchTmdbPage({ query, type, year, genre, page = 1 }) {
   const trimmed = query?.trim() ?? ''
   if (trimmed) {
@@ -257,6 +276,7 @@ export async function fetchTmdbPage({ query, type, year, genre, page = 1 }) {
   return discoverTmdb({ type, year, genre, page })
 }
 
+/** Up to 10 pages for “See all”, then the same client-side year/genre filters. */
 export async function searchTmdbAll({ query, type, year, genre, maxPages = MAX_RESULT_PAGES }) {
   const first = await fetchTmdbPage({ query, type, year, genre, page: 1 })
   const pages = Math.min(first.totalPages, maxPages)
@@ -271,6 +291,7 @@ export async function searchTmdbAll({ query, type, year, genre, maxPages = MAX_R
   return applySearchFilters(items, { type, year, genre })
 }
 
+/** Genre chips. Type “all” uses the movie list (there is no combined TMDB genre endpoint). */
 export async function loadGenres(type) {
   if (type === 'all') {
     const [movies, shows] = await Promise.all([loadGenres('movie'), loadGenres('tv')])

@@ -5,6 +5,10 @@ import MovieCard from '../components/MovieCard.jsx'
 import { getSearchLabel, getSearchSuggestion, searchTmdbAll } from '../API/tmdb.js'
 import './SearchResultsPage.css'
 
+/**
+ * Full-screen “See all” overlay. Shows the first page immediately, then
+ * replaces it with up to 10 TMDB pages. If that deeper fetch fails, keep the seed.
+ */
 function SearchResultsPage({ search, onBack, onSelect }) {
   const [activeSearch, setActiveSearch] = useState(search)
   const seeded = activeSearch.results ?? []
