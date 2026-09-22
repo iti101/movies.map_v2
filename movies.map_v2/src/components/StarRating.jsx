@@ -1,12 +1,15 @@
 import { useId, useState } from 'react'
 import './StarRating.css'
 
+/** Snap a number onto 0.5-star steps between 0.5 and 5 (0 stays 0). */
 function clampHalfStar(value) {
   if (!Number.isFinite(value) || value <= 0) return 0
   const stepped = Math.round(value * 2) / 2
   return Math.min(5, Math.max(0.5, stepped))
 }
 
+/** Left half of a star → N-0.5; right half → N. */
+/** Left half of a star → N-0.5; right half → N. */
 function valueFromPointer(event, starIndex) {
   const { left, width } = event.currentTarget.getBoundingClientRect()
   if (width <= 0) return starIndex
@@ -14,6 +17,7 @@ function valueFromPointer(event, starIndex) {
   return ratio < 0.5 ? starIndex - 0.5 : starIndex
 }
 
+/** 0–5 stars, half-star precision. `interactive={false}` is display-only. */
 export default function StarRating({
   value = 0,
   onChange,

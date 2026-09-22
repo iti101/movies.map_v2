@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { useWatchlist } from '../context/watchlist-context.js'
 import './WatchlistModal.css'
 
+/** Name a new list (max 60 chars). Empty name stays on the dialog with an error. */
 function WatchlistModal({ isOpen, onClose }) {
   const { createList } = useWatchlist()
   const [name, setName] = useState('')

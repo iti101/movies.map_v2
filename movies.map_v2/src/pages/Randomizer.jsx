@@ -43,16 +43,19 @@ const STEPS = [
 
 const MAX_RANDOM_PAGE = 20
 
+/** Inclusive random integer — used to pick a TMDB page and a card on that page. */
 function randomInt(min, max) {
   return min + Math.floor(Math.random() * (max - min + 1))
 }
 
+/** Add or remove a genre chip. */
 function toggleGenre(list, genre) {
   return list.some((entry) => entry.id === genre.id)
     ? list.filter((entry) => entry.id !== genre.id)
     : [...list, genre]
 }
 
+/** Comma-separated genre names for the result summary strip. */
 function namesList(list, empty = 'Any') {
   if (!list.length) return empty
   return list.map((entry) => entry.name).join(', ')
@@ -62,6 +65,10 @@ function typeLabel(type) {
   return TYPE_OPTIONS.find((option) => option.id === type)?.label ?? 'Movies'
 }
 
+/**
+ * Four-step discover wizard, then a random popular title from up to 20 TMDB pages.
+ * Tapping the poster calls `onSelect` (opens DetailPage).
+ */
 function Randomizer({ onSelect }) {
   const personFieldId = useId()
   const personBoxRef = useRef(null)
@@ -165,6 +172,7 @@ function Randomizer({ onSelect }) {
     return () => window.removeEventListener('pointerdown', onPointerDown)
   }, [])
 
+  /** Fetch a random discover page (capped at 20) and pick one item from it. */
   async function roll() {
     setStatus('loading')
     setError('')
@@ -203,11 +211,13 @@ function Randomizer({ onSelect }) {
     }
   }
 
+  /** Jump to a wizard step (also used from the result summary chips). */
   function goToStep(nextIndex) {
     setStepIndex(Math.max(0, Math.min(STEPS.length - 1, nextIndex)))
     setPhase('setup')
   }
 
+  /** Continue / Skip, or roll on the last step. */
   function goNext() {
     if (isLastStep) {
       roll()
@@ -216,6 +226,7 @@ function Randomizer({ onSelect }) {
     setStepIndex((current) => current + 1)
   }
 
+  /** From a pick: return to Who. From the wizard: previous step. */
   function goBack() {
     if (phase === 'result') {
       setPhase('setup')
@@ -235,11 +246,13 @@ function Randomizer({ onSelect }) {
     setIndex((current) => (current + 1) % pool.length)
   }
 
+  /** Want chips: selecting a genre also removes it from Don't want. */
   function handleWant(genre) {
     setWantGenres((current) => toggleGenre(current, genre))
     setAvoidGenres((current) => current.filter((entry) => entry.id !== genre.id))
   }
 
+  /** Don't-want chips: selecting a genre also removes it from Want. */
   function handleAvoid(genre) {
     setAvoidGenres((current) => toggleGenre(current, genre))
     setWantGenres((current) => current.filter((entry) => entry.id !== genre.id))
