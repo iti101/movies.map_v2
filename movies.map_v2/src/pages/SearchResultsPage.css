@@ -18,7 +18,6 @@
 
 .results-page__back {
   align-self: flex-start;
-  font-size: 0.95rem;
 }
 
 .results-page__header {
@@ -42,6 +41,10 @@
   color: var(--color-text-muted);
   font-family: var(--font-body);
   font-size: 1rem;
+}
+
+.results-page .did-you-mean {
+  text-align: left;
 }
 
 .results-page__grid {

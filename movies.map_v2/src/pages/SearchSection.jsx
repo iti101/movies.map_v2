@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react'
 import Button from '../components/Button.jsx'
-import SearchCard from '../components/SearchCard.jsx'
-import { applySearchFilters, fetchTmdbPage, getSearchLabel, isValidYear, loadGenres } from '../API/tmdb.js'
+import DidYouMean from '../components/DidYouMean.jsx'
+import MovieCard from '../components/MovieCard.jsx'
+import { applySearchFilters, fetchTmdbPage, getSearchLabel, getSearchSuggestion, isValidYear, loadGenres } from '../API/tmdb.js'
 import searchIcon from '../assets/search_opsz24.svg'
 import './SearchSection.css'
 
@@ -16,7 +17,7 @@ const TYPE_OPTIONS = [
  * Search snap-page: one TMDB page of posters plus chips.
  * Submit needs a title *or* a 4-digit year — genre alone does not search.
  */
-function SearchSection({ onSeeAll }) {
+function SearchSection({ onSeeAll, onSelect }) {
   const [query, setQuery] = useState('')
   const [type, setType] = useState('movie')
   const [releaseDateOn, setReleaseDateOn] = useState(false)
@@ -28,6 +29,7 @@ function SearchSection({ onSeeAll }) {
   const [status, setStatus] = useState('idle')
   const [error, setError] = useState('')
   const [searchedQuery, setSearchedQuery] = useState('')
+  const [suggestion, setSuggestion] = useState('')
 
   const filtersDisabled = type === 'person'
   const hasResults = status === 'success' && results.length > 0
@@ -48,22 +50,22 @@ function SearchSection({ onSeeAll }) {
     return () => { cancelled = true }
   }, [genreOn, filtersDisabled, type])
 
-  async function handleSubmit(event) {
-    event.preventDefault()
+  async function runSearch(nextQuery = query) {
+    const trimmed = nextQuery.trim()
     // Empty query and no YYYY: clear the grid instead of calling TMDB.
-
-    const trimmed = query.trim()
     if (!trimmed && !yearFilter) {
       setStatus('idle')
       setResults([])
       setError('')
       setSearchedQuery('')
+      setSuggestion('')
       return
     }
 
     setStatus('loading')
     setError('')
     setSearchedQuery(trimmed)
+    setSuggestion('')
 
     try {
       const { items } = await fetchTmdbPage({
@@ -78,12 +80,24 @@ function SearchSection({ onSeeAll }) {
         genre: selectedGenre,
       })
       setResults(filtered)
+      setSuggestion((await getSearchSuggestion({ query: trimmed, type, year: yearFilter, items })) ?? '')
       setStatus(filtered.length === 0 ? 'empty' : 'success')
     } catch (err) {
       setResults([])
+      setSuggestion('')
       setStatus('error')
       setError(err.message || 'Something went wrong.')
     }
+  }
+
+  function handleSubmit(event) {
+    event.preventDefault()
+    runSearch(query)
+  }
+
+  function handleAcceptSuggestion(nextQuery) {
+    setQuery(nextQuery)
+    runSearch(nextQuery)
   }
 
   /** Switching type drops the genre; People also turns year/genre chips off. */
@@ -224,6 +238,10 @@ function SearchSection({ onSeeAll }) {
           <p className="search-message">No results found for “{searchLabel}”.</p>
         )}
 
+        {(status === 'empty' || status === 'success') && (
+          <DidYouMean suggestion={suggestion} onAccept={handleAcceptSuggestion} />
+        )}
+
         {status === 'success' && (
           <>
             <div className="search-results-header">
@@ -231,7 +249,7 @@ function SearchSection({ onSeeAll }) {
             </div>
             <ul className="search-grid">
               {results.map((item) => (
-                <SearchCard key={`${item.mediaType}-${item.id}`} item={item} />
+                <MovieCard key={`${item.mediaType}-${item.id}`} item={item} onSelect={onSelect} />
               ))}
             </ul>
           </>

@@ -13,10 +13,10 @@ const MENU_SECTIONS = [
 ]
 
 /**
- * Fixed top bar: hamburger overlay menu, theme toggle, and pretend login.
- * Menu links scroll to snap sections; onNavigate also closes the results overlay.
+ * Fixed top bar: hamburger overlay menu, theme toggle, and auth/watchlist.
+ * Menu links scroll to snap sections; onNavigate also closes overlays.
  */
-function NavBar({ isLoggedIn, theme, onToggleAuth, onToggleTheme, onNavigate }) {
+function NavBar({ isLoggedIn, theme, onToggleAuth, onToggleTheme, onNavigate, onOpenWatchlist }) {
   const [menuOpen, setMenuOpen] = useState(false)
   const isDark = theme === 'dark'
   const themeLabel = isDark ? 'Switch to light mode' : 'Switch to dark mode'
@@ -45,9 +45,13 @@ function NavBar({ isLoggedIn, theme, onToggleAuth, onToggleTheme, onNavigate }) 
     }, 0)
   }
 
-  /** Logged out: menu item logs you in. Logged in: “My Watchlist” only closes the menu. */
+  /** Logged out: menu item logs you in. Logged in: opens the watchlist. */
   function handleAuthMenuClick() {
-    if (!isLoggedIn) onToggleAuth()
+    if (isLoggedIn) {
+      onOpenWatchlist?.()
+    } else {
+      onToggleAuth()
+    }
     closeMenu()
   }
 
