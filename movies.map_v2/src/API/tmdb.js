@@ -31,6 +31,7 @@ export const MEDIA_LABELS = {
   person: 'Person',
 }
 
+/** TMDB image path → full URL. Missing path → null (callers show a placeholder). */
 export function getImageUrl(path, size = 'w342') {
   if (!path) return null
   return `${IMAGE_BASE}/${size}${path}`
@@ -47,11 +48,12 @@ function getApiKey() {
   return apiKey
 }
 
+/** First four characters of a TMDB date (`2010-07-16` → `2010`). */
 function getYear(date) {
   return date?.slice(0, 4) ?? null
 }
 
-/** Flatten TMDB’s movie/TV/person shapes into the fields SearchCard expects. */
+/** Flatten TMDB’s movie/TV/person shapes into the fields MovieCard expects. */
 function normalizeItem(item, fallbackType) {
   const mediaType = item.media_type || fallbackType
   if (mediaType === 'person') {
@@ -75,6 +77,7 @@ function normalizeItem(item, fallbackType) {
   }
 }
 
+/** Four-digit year only (`1999` yes, `99` / `19990` no). */
 export function isValidYear(value) {
   return /^\d{4}$/.test(value)
 }
@@ -84,6 +87,7 @@ export function getSearchLabel({ query, year }) {
   return query?.trim() || year || ''
 }
 
+/** Compare titles: ignore case, accents, “the ”, and punctuation. */
 function normalizeTitle(value) {
   return String(value ?? '')
     .toLowerCase()
@@ -95,6 +99,7 @@ function normalizeTitle(value) {
     .trim()
 }
 
+/** Edit distance between two strings (insert / delete / replace). */
 function levenshtein(a, b) {
   if (a === b) return 0
   if (!a) return b.length
@@ -115,6 +120,7 @@ function levenshtein(a, b) {
   return prev[b.length]
 }
 
+/** Closest result title for a likely typo, or null if the query already matches. */
 export function getDidYouMeanSuggestion(query, items) {
   const q = normalizeTitle(query)
   if (q.length < 3 || !items?.length) return null
@@ -140,6 +146,7 @@ export function getDidYouMeanSuggestion(query, items) {
   return bestTitle
 }
 
+/** Did-you-mean from current hits, or a shortened-query retry when the list is empty. */
 export async function getSearchSuggestion({ query, type, year, items }) {
   const fromItems = getDidYouMeanSuggestion(query, items)
   if (fromItems || items?.length) return fromItems ?? null
@@ -202,6 +209,7 @@ export async function searchTmdb({ query, type, year, page = 1 }) {
   }
 }
 
+/** Genre objects or raw ids → numeric ids for TMDB discover params. */
 function genreIds(value) {
   if (!value) return []
   const list = Array.isArray(value) ? value : [value]
@@ -291,7 +299,7 @@ export async function searchTmdbAll({ query, type, year, genre, maxPages = MAX_R
   return applySearchFilters(items, { type, year, genre })
 }
 
-/** Genre chips. Type “all” uses the movie list (there is no combined TMDB genre endpoint). */
+/** Genre chips. Type “all” merges movie + TV lists by id (no combined TMDB endpoint). */
 export async function loadGenres(type) {
   if (type === 'all') {
     const [movies, shows] = await Promise.all([loadGenres('movie'), loadGenres('tv')])
@@ -311,6 +319,7 @@ export async function loadGenres(type) {
   return data.genres ?? []
 }
 
+/** First page of people search, capped at 6 — used by the Randomizer “Who” step. */
 export async function searchPeople(query) {
   const trimmed = String(query ?? '').trim()
   if (!trimmed) return []
@@ -351,6 +360,7 @@ const regionNames =
     ? new Intl.DisplayNames(['en'], { type: 'region' })
     : null
 
+/** TMDB GET `/3{path}` with the v3 key. Non-OK → “Could not load this page…”. */
 async function tmdbGet(path, params = {}) {
   const url = new URL(`https://api.themoviedb.org/3${path}`)
   url.searchParams.set('api_key', getApiKey())
@@ -362,6 +372,7 @@ async function tmdbGet(path, params = {}) {
   return response.json()
 }
 
+/** YouTube/Vimeo watch URL, or null for other TMDB video sites. */
 function clipUrl(video) {
   if (!video?.key) return null
   if (video.site === 'YouTube') return `https://www.youtube.com/watch?v=${video.key}`
@@ -369,6 +380,7 @@ function clipUrl(video) {
   return null
 }
 
+/** Prefer an official YouTube trailer; otherwise teaser or first playable clip. */
 function trailerUrl(videos) {
   const clips = (videos?.results ?? []).filter((video) => clipUrl(video))
   const trailer =
@@ -380,6 +392,7 @@ function trailerUrl(videos) {
   return clipUrl(trailer)
 }
 
+/** First CAST_LIMIT names, with character (or TV role list) when TMDB has it. */
 function mapCast(credits) {
   return (credits?.cast ?? []).slice(0, CAST_LIMIT).map((member) => ({
     id: member.id,
@@ -392,6 +405,7 @@ function mapCast(credits) {
   }))
 }
 
+/** Recommendations first, then similar, skipping the current title. */
 function mapRelated(data, mediaType, excludeId, limit = RELATED_LIMIT) {
   const seen = new Set([Number(excludeId)])
   const items = []
@@ -408,6 +422,7 @@ function mapRelated(data, mediaType, excludeId, limit = RELATED_LIMIT) {
   return items
 }
 
+/** TV directors from aggregate_credits, falling back to credits.crew. */
 function mapDirectors(data) {
   const seen = new Set()
   const people = []
@@ -435,6 +450,7 @@ function mapDirectors(data) {
   return people.slice(0, DIRECTOR_LIMIT)
 }
 
+/** English country name for an ISO region code (`US` → `United States`). */
 export function watchRegionName(code) {
   if (!code) return ''
   try {
@@ -444,16 +460,19 @@ export function watchRegionName(code) {
   }
 }
 
+/** `{ code, name }` options, unique and sorted for the region <select>. */
 function toRegionOptions(codes) {
   return [...new Set(codes.filter(Boolean))]
     .map((code) => ({ code, name: watchRegionName(code) }))
     .sort((a, b) => a.name.localeCompare(b.name, 'en'))
 }
 
+/** Offline region list when TMDB’s watch-provider regions call fails. */
 export function getFallbackWatchRegions() {
   return toRegionOptions(FALLBACK_REGIONS)
 }
 
+/** Last “Where to watch” country, else the browser language region, else US. */
 export function getSavedWatchRegion() {
   try {
     const saved = localStorage.getItem(WATCH_REGION_KEY)
@@ -465,6 +484,7 @@ export function getSavedWatchRegion() {
   return region && /^[A-Za-z]{2}$/.test(region) ? region.toUpperCase() : 'US'
 }
 
+/** Remember the watch-provider country (`localStorage.watchRegion`). */
 export function saveWatchRegion(region) {
   try {
     localStorage.setItem(WATCH_REGION_KEY, region)
@@ -473,6 +493,7 @@ export function saveWatchRegion(region) {
   }
 }
 
+/** Group a country’s providers and stack Stream/Free/Rent/Buy labels. */
 function normalizeWatchProviders(watchProviders) {
   const regions = {}
 
@@ -504,6 +525,7 @@ function normalizeWatchProviders(watchProviders) {
 
 let watchRegionsRequest
 
+/** Cached TMDB watch-provider countries; falls back to `FALLBACK_REGIONS`. */
 export function getWatchRegions() {
   if (!watchRegionsRequest) {
     watchRegionsRequest = tmdbGet('/watch/providers/regions')
@@ -531,12 +553,14 @@ const PROVIDER_SITES = [
   [/mubi/i, (query) => `https://mubi.com/search/films?query=${query}`],
 ]
 
+/** Search URL on a known streamer, or TMDB’s country `link` if the name is unknown. */
 export function providerWatchUrl(name, title, fallback) {
   const query = encodeURIComponent(title || '')
   const match = PROVIDER_SITES.find(([pattern]) => pattern.test(name || ''))
   return match ? match[1](query) : fallback || null
 }
 
+/** TMDB vote_average rounded to one decimal, plus vote count. */
 function score(data) {
   return {
     rating: data.vote_average ? Math.round(data.vote_average * 10) / 10 : null,
@@ -544,6 +568,7 @@ function score(data) {
   }
 }
 
+/** One-shot movie page: credits, trailer, watch providers, similar. */
 export async function getMovieDetails(id) {
   const data = await tmdbGet(`/movie/${id}`, {
     append_to_response: 'credits,videos,watch/providers,recommendations,similar',
@@ -572,6 +597,7 @@ export async function getMovieDetails(id) {
   }
 }
 
+/** One-shot TV page: aggregate cast, directors, seasons, watch providers, similar. */
 export async function getTvDetails(id) {
   const data = await tmdbGet(`/tv/${id}`, {
     append_to_response: 'aggregate_credits,credits,videos,watch/providers,recommendations,similar',
@@ -605,6 +631,7 @@ export async function getTvDetails(id) {
   }
 }
 
+/** Episode list for one season (name, air date, runtime, overview). */
 export async function getTvSeason(showId, seasonNumber) {
   const data = await tmdbGet(`/tv/${showId}/season/${seasonNumber}`)
 
@@ -618,6 +645,7 @@ export async function getTvSeason(showId, seasonNumber) {
   }))
 }
 
+/** Person page plus popular movie/TV cast credits (`knownFor`). */
 export async function getPersonDetails(id) {
   const data = await tmdbGet(`/person/${id}`, { append_to_response: 'combined_credits' })
   const seen = new Set()

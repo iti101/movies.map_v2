@@ -1,10 +1,10 @@
 # TMDB search
 
-How the Search section and “See all” overlay talk to TMDB. Implementation: `src/API/tmdb.js`, `src/pages/SearchSection.jsx`, `src/pages/SearchResultsPage.jsx`.
+How the Search section and “See all” overlay talk to TMDB. Implementation: `src/API/tmdb.js`, `src/pages/SearchSection.jsx`, `src/pages/SearchResultsPage.jsx`, `src/components/DidYouMean.jsx`. Posters open the detail overlay (`MovieCard` → `App.openDetail`).
 
 ## In plain English
 
-Type a title (or a 4-digit year) and press the search button. The app asks TMDB for **one page** of matches and shows posters. **See all** asks for more pages (up to 10) and covers the screen. Year and genre are sometimes sent to TMDB and sometimes applied afterward in the browser, because not every TMDB URL accepts the same options.
+Type a title (or a 4-digit year) and press the search button. The app asks TMDB for **one page** of matches and shows posters you can tap. **See all** asks for more pages (up to 10) and covers the screen. If the titles look like a typo, a **Did you mean** link can search a closer title. Year and genre are sometimes sent to TMDB and sometimes applied afterward in the browser, because not every TMDB URL accepts the same options.
 
 A request runs only when the form has a trimmed query **or** a valid 4-digit year. Genre is an extra filter, not a trigger by itself.
 
@@ -33,7 +33,7 @@ See all → App.openResults(search)
 | Non-empty query | `searchTmdb` | `/3/search/multi`, `/movie`, `/tv`, or `/person` |
 | Empty query, valid year (and/or genre) | `discoverTmdb` | `/3/discover/movie` and/or `/tv` |
 
-Normalized item shape used by `SearchCard`:
+Normalized item shape used by `MovieCard`:
 
 ```js
 { id, mediaType, title, year, imagePath, genreIds }
@@ -49,7 +49,7 @@ Default type in the UI is **Movies** (`type: 'movie'`), not All.
 | --- | --- | --- |
 | All / Movies / TV / People | `all`, `movie`, `tv`, `person` | Changing type clears the selected genre. |
 | Release date | 4-digit `YYYY` only (`isValidYear`) | Digits are stripped and capped at 4 characters. Turning the chip off clears the year. |
-| Genre | TMDB `{ id, name }` | Loaded from `/3/genre/movie/list` or `/tv/list`. `all` uses the **movie** genre list. Turning the chip off clears the selection. |
+| Genre | TMDB `{ id, name }` | Loaded from `/3/genre/movie/list` and/or `/tv/list`. Type **all** merges both lists by id and sorts by English name. Turning the chip off clears the selection. |
 
 **People** (`type === 'person'`) disables year and genre. `discoverTmdb` for `person` returns `{ items: [], totalPages: 0 }` — people only appear when there is a search query.
 
@@ -84,7 +84,7 @@ TMDB does not accept the same params on every endpoint, so some filters are serv
 3. Replaces the list with the full filtered set.
 4. If the multi-page fetch fails **and** seeded results exist, it keeps the seed and does not show an error.
 
-`App` owns overlay visibility and browser history (see the README).
+`App` owns overlay visibility and browser history (see the README). Each `MovieCard` calls `onSelect(item)`, which opens `DetailPage` and pushes `{ detail: { mediaType, id } }` (keeping `results: true` so Back returns here).
 
 ## Status strings (SearchSection)
 
@@ -98,6 +98,24 @@ TMDB does not accept the same params on every endpoint, so some filters are serv
 
 Empty submit (no query and no valid year) resets to `idle` rather than erroring.
 
+## Did you mean
+
+Shown on `empty` and `success` when `getSearchSuggestion` returns a title.
+
+1. Normalize the query and the first **10** result titles (lowercase, strip accents, `&` → `and`, drop a leading “the/a/an”, keep letters/digits).
+2. If any title matches exactly, there is no suggestion.
+3. Otherwise pick the closest title whose Levenshtein distance is > 0 and ≤ `max(1, round(length * 0.34))`. Skip pairs where one string is the other plus a space prefix (`dune` vs `dune part two`).
+4. If the result list is **empty** and the typed query is at least **5** characters, retry TMDB with a stub (`query.slice(0, max(4, length - 2))`) and run the same comparison.
+
+Accepting the link:
+
+- Search page: puts the suggestion in the box and submits (`runSearch`).
+- See all: sets `activeSearch.query` and clears the seeded `results` so the overlay refetches.
+
+Queries shorter than 3 characters (after normalize) never suggest.
+
+**Example:** query `dunne`, type Movies → titles include “Dune” → distance 1, allowed for a 5-letter query → **Did you mean Dune?**
+
 ## Pitfalls
 
 - **v3 key only.** Requests use `?api_key=`. A TMDB v4 bearer token will fail with “Movie search failed…”.
@@ -109,3 +127,5 @@ Empty submit (no query and no valid year) resets to `idle` rather than erroring.
 - **Genre list fetch failures fail closed.** `loadGenres` errors set `genres` to `[]` with no error banner.
 - **Keys in the grid** are `` `${mediaType}-${id}` `` because the same TMDB id can exist as both a movie and a TV show.
 - **See all after changing chips without resubmitting** can seed movie posters then refetch as TV (or with a new year/genre). Resubmit first if you want the overlay to match the grid.
+- **Did you mean on the Search page uses the unfiltered TMDB page** (`items` before `applySearchFilters`). A genre/year chip can hide the title that was suggested. See all passes the already-filtered list.
+- **Genre lists for All** include TV-only names (for example Talk) that will not match movie `genreIds`.

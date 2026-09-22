@@ -1,3 +1,4 @@
+/** Native <select> wrapper used to switch watchlists. */
 function Select({ className = '', ariaLabel, value, onChange, options }) {
   return (
     <select
