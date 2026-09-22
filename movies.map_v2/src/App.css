@@ -103,6 +103,12 @@ html[data-theme='light'] {
 
 .snap-section-3 {
   background: var(--color-bg-muted);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: calc(var(--navbar-height) + 1.5rem) 1.5rem 1.5rem;
+  font-size: 1rem;
+  font-weight: 400;
 }
 
 .search-results {

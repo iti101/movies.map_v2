@@ -5,7 +5,7 @@ import logoutIcon from '../assets/logout_opsz24.svg'
 import lightModeIcon from '../assets/light_mode_opsz24.svg'
 import darkModeIcon from '../assets/dark_mode_opsz24.svg'
 
-function NavBar({ isLoggedIn, theme, onToggleAuth, onToggleTheme }) {
+function NavBar({ isLoggedIn, theme, onToggleAuth, onToggleTheme, onNavigate, onOpenWatchlist }) {
   const [menuOpen, setMenuOpen] = useState(false)
 
   useEffect(() => {
@@ -25,13 +25,16 @@ function NavBar({ isLoggedIn, theme, onToggleAuth, onToggleTheme }) {
 
   function goTo(sectionId) {
     closeMenu()
+    onNavigate?.()
     window.setTimeout(() => {
       document.getElementById(sectionId)?.scrollIntoView({ behavior: 'smooth' })
     }, 0)
   }
 
   function handleAuthMenuClick() {
-    if (!isLoggedIn) {
+    if (isLoggedIn) {
+      onOpenWatchlist?.()
+    } else {
       onToggleAuth()
     }
     closeMenu()

@@ -1,13 +1,13 @@
 import { getImageUrl, MEDIA_LABELS } from '../API/tmdb.js'
 import './MovieCard.css'
 
-function MovieCard({ item, onSelect }) {
+function MovieCard({ item, onSelect, className = '', children }) {
   const posterUrl = getImageUrl(item.imagePath, 'w342')
   const year = item.year || (item.date ? item.date.slice(0, 4) : null)
   const subtitle = year || MEDIA_LABELS[item.mediaType] || item.mediaType
 
   return (
-    <li className="movie-card">
+    <li className={['movie-card', className].filter(Boolean).join(' ')}>
       <button type="button" className="movie-card__open" onClick={() => onSelect?.(item)}>
         {posterUrl ? (
           <img
@@ -30,6 +30,7 @@ function MovieCard({ item, onSelect }) {
           <span className="movie-card__year">{subtitle}</span>
         </span>
       </button>
+      {children}
     </li>
   )
 }

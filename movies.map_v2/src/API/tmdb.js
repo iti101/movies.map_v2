@@ -186,7 +186,16 @@ export async function searchTmdb({ query, type, year, page = 1 }) {
   }
 }
 
-async function discoverByMedia(mediaType, { year, genre, page = 1 }) {
+function genreIds(value) {
+  if (!value) return []
+  const list = Array.isArray(value) ? value : [value]
+  return list.map((entry) => entry?.id ?? entry).filter((id) => id != null)
+}
+
+async function discoverByMedia(
+  mediaType,
+  { year, genre, genres, excludeGenres, personId, page = 1 },
+) {
   const url = new URL(TMDB_DISCOVER[mediaType])
   url.searchParams.set('api_key', getApiKey())
   url.searchParams.set('include_adult', 'false')
@@ -194,7 +203,13 @@ async function discoverByMedia(mediaType, { year, genre, page = 1 }) {
   url.searchParams.set('sort_by', 'popularity.desc')
   if (year && mediaType === 'movie') url.searchParams.set('primary_release_year', year)
   if (year && mediaType === 'tv') url.searchParams.set('first_air_date_year', year)
-  if (genre?.id) url.searchParams.set('with_genres', String(genre.id))
+
+  const include = genreIds(genres?.length ? genres : genre)
+  const exclude = genreIds(excludeGenres)
+  // Pipe = OR for wants; comma = exclude any of these genres
+  if (include.length) url.searchParams.set('with_genres', include.join('|'))
+  if (exclude.length) url.searchParams.set('without_genres', exclude.join(','))
+  if (personId) url.searchParams.set('with_people', String(personId))
 
   const data = await fetchTmdbJson(url)
   return {
@@ -204,15 +219,25 @@ async function discoverByMedia(mediaType, { year, genre, page = 1 }) {
   }
 }
 
-export async function discoverTmdb({ type, year, genre, page = 1 }) {
+export async function discoverTmdb({
+  type,
+  year,
+  genre,
+  genres,
+  excludeGenres,
+  personId,
+  page = 1,
+}) {
   if (type === 'person') {
     return { items: [], page: 1, totalPages: 0 }
   }
 
+  const options = { year, genre, genres, excludeGenres, personId, page }
+
   if (type === 'all') {
     const [movies, shows] = await Promise.all([
-      discoverByMedia('movie', { year, genre, page }),
-      discoverByMedia('tv', { year, genre, page }),
+      discoverByMedia('movie', options),
+      discoverByMedia('tv', options),
     ])
     return {
       items: [...movies.items, ...shows.items],
@@ -221,7 +246,7 @@ export async function discoverTmdb({ type, year, genre, page = 1 }) {
     }
   }
 
-  return discoverByMedia(type, { year, genre, page })
+  return discoverByMedia(type, options)
 }
 
 export async function fetchTmdbPage({ query, type, year, genre, page = 1 }) {
@@ -247,6 +272,15 @@ export async function searchTmdbAll({ query, type, year, genre, maxPages = MAX_R
 }
 
 export async function loadGenres(type) {
+  if (type === 'all') {
+    const [movies, shows] = await Promise.all([loadGenres('movie'), loadGenres('tv')])
+    const byId = new Map()
+    for (const genre of [...movies, ...shows]) {
+      if (genre?.id != null) byId.set(genre.id, genre)
+    }
+    return [...byId.values()].sort((a, b) => a.name.localeCompare(b.name, 'en'))
+  }
+
   const endpoint = type === 'tv' ? TMDB_GENRE.tv : TMDB_GENRE.movie
   const url = new URL(endpoint)
   url.searchParams.set('api_key', getApiKey())
@@ -254,6 +288,24 @@ export async function loadGenres(type) {
   if (!response.ok) throw new Error('Could not load genres.')
   const data = await response.json()
   return data.genres ?? []
+}
+
+export async function searchPeople(query) {
+  const trimmed = String(query ?? '').trim()
+  if (!trimmed) return []
+
+  const url = new URL(TMDB_SEARCH.person)
+  url.searchParams.set('api_key', getApiKey())
+  url.searchParams.set('query', trimmed)
+  url.searchParams.set('include_adult', 'false')
+  url.searchParams.set('page', '1')
+
+  const data = await fetchTmdbJson(url)
+  return (data.results ?? []).slice(0, 6).map((person) => ({
+    id: person.id,
+    name: person.name,
+    profilePath: person.profile_path ?? null,
+  }))
 }
 
 const CAST_LIMIT = 12
@@ -473,7 +525,7 @@ function score(data) {
 
 export async function getMovieDetails(id) {
   const data = await tmdbGet(`/movie/${id}`, {
-    append_to_response: 'credits,videos,recommendations,similar',
+    append_to_response: 'credits,videos,watch/providers,recommendations,similar',
     include_video_language: 'en-US,en,null',
   })
 
@@ -493,6 +545,7 @@ export async function getMovieDetails(id) {
       .map((member) => member.name),
     cast: mapCast(data.credits),
     trailerUrl: trailerUrl(data.videos),
+    watch: normalizeWatchProviders(data['watch/providers']),
     similar: mapRelated(data, 'movie', data.id),
     ...score(data),
   }
@@ -515,6 +568,13 @@ export async function getTvDetails(id) {
     firstAirDate: data.first_air_date || null,
     genres: (data.genres ?? []).map((genre) => genre.name),
     createdBy: (data.created_by ?? []).map((person) => person.name),
+    seasons: (data.seasons ?? [])
+      .filter((season) => season.episode_count > 0)
+      .map((season) => ({
+        number: season.season_number,
+        name: season.name,
+        episodeCount: season.episode_count,
+      })),
     directors: mapDirectors(data),
     cast: mapCast(credits),
     trailerUrl: trailerUrl(data.videos),
@@ -522,6 +582,19 @@ export async function getTvDetails(id) {
     similar: mapRelated(data, 'tv', data.id, SIMILAR_ROW_LIMIT),
     ...score(data),
   }
+}
+
+export async function getTvSeason(showId, seasonNumber) {
+  const data = await tmdbGet(`/tv/${showId}/season/${seasonNumber}`)
+
+  return (data.episodes ?? []).map((episode) => ({
+    id: episode.id,
+    number: episode.episode_number,
+    name: episode.name || `Episode ${episode.episode_number}`,
+    airDate: episode.air_date || null,
+    runtime: episode.runtime || null,
+    overview: episode.overview || null,
+  }))
 }
 
 export async function getPersonDetails(id) {

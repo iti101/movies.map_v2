@@ -7,6 +7,7 @@ import {
   getPersonDetails,
   getSavedWatchRegion,
   getTvDetails,
+  getTvSeason,
   getWatchRegions,
   providerWatchUrl,
   saveWatchRegion,
@@ -15,6 +16,7 @@ import {
 import { addToWatchlist, isInWatchlist } from '../API/watchlist.js'
 import Button from '../components/Button.jsx'
 import MovieCard from '../components/MovieCard.jsx'
+import StarRating from '../components/StarRating.jsx'
 import './DetailPage.css'
 
 const LOADERS = {
@@ -156,7 +158,7 @@ function WatchlistButton({ item, user, isLoggedIn, onRequestLogin }) {
       mediaType: item.mediaType,
       title: item.title,
       imagePath: item.posterPath,
-      year: item.firstAirDate?.slice(0, 4) ?? null,
+      year: (item.releaseDate || item.firstAirDate)?.slice(0, 4) ?? null,
     })
     setNote(result === 'already' ? 'Already in your watchlist' : 'Added to your watchlist')
   }
@@ -258,40 +260,6 @@ function WhereToWatch({ title, watchByRegion }) {
   )
 }
 
-function Stars({ value = 0, onChange, label }) {
-  const interactive = Boolean(onChange)
-  return (
-    <div
-      className={`detail__stars${interactive ? ' detail__stars--interactive' : ''}`}
-      role={interactive ? 'radiogroup' : 'img'}
-      aria-label={label}
-    >
-      {[1, 2, 3, 4, 5].map((star) => {
-        const on = star <= value
-        if (!interactive) {
-          return (
-            <span key={star} className={on ? 'is-on' : undefined} aria-hidden="true">
-              ★
-            </span>
-          )
-        }
-        return (
-          <button
-            key={star}
-            type="button"
-            role="radio"
-            aria-checked={value === star}
-            className={on ? 'is-on' : undefined}
-            onClick={() => onChange(value === star ? 0 : star)}
-          >
-            ★
-          </button>
-        )
-      })}
-    </div>
-  )
-}
-
 function Reviews({ item, isLoggedIn, user, token, onRequestLogin }) {
   const fieldId = useId()
   const [open, setOpen] = useState(false)
@@ -305,7 +273,7 @@ function Reviews({ item, isLoggedIn, user, token, onRequestLogin }) {
   useEffect(() => {
     let cancelled = false
     setLoading(true)
-    getReviewsForMedia('tv', item.id, token)
+    getReviewsForMedia(item.mediaType, item.id, token)
       .then((list) => {
         if (!cancelled) setReviews(list)
       })
@@ -318,7 +286,7 @@ function Reviews({ item, isLoggedIn, user, token, onRequestLogin }) {
     return () => {
       cancelled = true
     }
-  }, [item.id, token])
+  }, [item.id, item.mediaType, token])
 
   function handleWrite() {
     if (!isLoggedIn || user?.id == null) {
@@ -346,14 +314,14 @@ function Reviews({ item, isLoggedIn, user, token, onRequestLogin }) {
       await createReview(
         {
           userId: user.id,
-          mediaType: 'tv',
+          mediaType: item.mediaType,
           mediaId: item.id,
           text: trimmed,
           rating,
         },
         token,
       )
-      setReviews(await getReviewsForMedia('tv', item.id, token))
+      setReviews(await getReviewsForMedia(item.mediaType, item.id, token))
       setText('')
       setRating(0)
       setOpen(false)
@@ -372,7 +340,7 @@ function Reviews({ item, isLoggedIn, user, token, onRequestLogin }) {
         </Button>
         {open && (
           <div className="detail__review-form">
-            <Stars value={rating} onChange={setRating} label="Your rating" />
+            <StarRating value={rating} onChange={setRating} label="Your rating" />
             <label className="detail__kicker" htmlFor={fieldId}>
               Your review
             </label>
@@ -410,13 +378,135 @@ function Reviews({ item, isLoggedIn, user, token, onRequestLogin }) {
                   {when && <span className="detail__muted">{when}</span>}
                 </div>
                 {Number(review.rating) > 0 && (
-                  <Stars value={Number(review.rating)} label={`${review.rating} out of 5 stars`} />
+                  <StarRating
+                    value={Number(review.rating)}
+                    interactive={false}
+                    label={`${review.rating} out of 5 stars`}
+                  />
                 )}
                 {review.text && <p className="detail__text">{review.text}</p>}
               </li>
             )
           })}
         </ul>
+      )}
+    </Section>
+  )
+}
+
+function defaultSeasonNumber(seasons) {
+  if (!seasons.length) return null
+  return seasons.find((season) => season.number >= 1)?.number ?? seasons[0].number
+}
+
+function SeasonEpisodes({ showId, seasons }) {
+  const selectId = useId()
+  const [seasonNumber, setSeasonNumber] = useState(() => defaultSeasonNumber(seasons))
+  const [episodes, setEpisodes] = useState([])
+  const [openEpisodeId, setOpenEpisodeId] = useState(null)
+  const [status, setStatus] = useState('loading')
+  const [error, setError] = useState('')
+
+  useEffect(() => {
+    if (seasonNumber == null) {
+      setEpisodes([])
+      setStatus('idle')
+      return undefined
+    }
+
+    let cancelled = false
+    setStatus('loading')
+    setError('')
+    setOpenEpisodeId(null)
+
+    getTvSeason(showId, seasonNumber)
+      .then((list) => {
+        if (cancelled) return
+        setEpisodes(list)
+        setStatus('success')
+      })
+      .catch((err) => {
+        if (cancelled) return
+        setEpisodes([])
+        setStatus('error')
+        setError(err.message || 'Could not load episodes.')
+      })
+
+    return () => {
+      cancelled = true
+    }
+  }, [showId, seasonNumber])
+
+  useEffect(() => {
+    if (openEpisodeId == null) return undefined
+    function onKeyDown(event) {
+      if (event.key === 'Escape') setOpenEpisodeId(null)
+    }
+    document.addEventListener('keydown', onKeyDown)
+    return () => document.removeEventListener('keydown', onKeyDown)
+  }, [openEpisodeId])
+
+  if (!seasons.length) return null
+
+  return (
+    <Section
+      title="Episodes"
+      extra={
+        <label className="detail__region" htmlFor={selectId}>
+          <span className="detail__kicker">Season</span>
+          <select
+            id={selectId}
+            className="detail__select"
+            value={seasonNumber ?? ''}
+            onChange={(event) => setSeasonNumber(Number(event.target.value))}
+          >
+            {seasons.map((season) => (
+              <option key={season.number} value={season.number}>
+                {season.name} · {season.episodeCount}{' '}
+                {season.episodeCount === 1 ? 'episode' : 'episodes'}
+              </option>
+            ))}
+          </select>
+        </label>
+      }
+    >
+      {status === 'loading' && <p className="detail__text">Loading episodes…</p>}
+      {status === 'error' && <p className="detail__status detail__status--error">{error}</p>}
+      {status === 'success' && episodes.length === 0 && (
+        <p className="detail__text">No episodes listed for this season.</p>
+      )}
+      {status === 'success' && episodes.length > 0 && (
+        <ol className="detail__episodes">
+          {episodes.map((episode) => {
+            const aired = formatDate(episode.airDate)
+            const runtime = formatRuntime(episode.runtime)
+            const meta = [aired, runtime].filter(Boolean).join(' · ')
+            const isOpen = openEpisodeId === episode.id
+
+            return (
+              <li
+                key={episode.id}
+                className={`detail__episode${isOpen ? ' detail__episode--open' : ''}`}
+              >
+                <button
+                  type="button"
+                  className="detail__episode-toggle"
+                  aria-expanded={isOpen}
+                  onClick={() => setOpenEpisodeId(isOpen ? null : episode.id)}
+                >
+                  <span className="detail__episode-number">E{episode.number}</span>
+                  <span className="detail__episode-name">{episode.name}</span>
+                  {meta && <span className="detail__episode-meta">{meta}</span>}
+                </button>
+                {isOpen && (
+                  <p className="detail__episode-overview">
+                    {episode.overview || 'No synopsis available yet.'}
+                  </p>
+                )}
+              </li>
+            )
+          })}
+        </ol>
       )}
     </Section>
   )
@@ -481,6 +571,7 @@ function TvView({ item, onOpen, isLoggedIn, user, token, onRequestLogin }) {
         <p className="detail__text">{item.overview || 'No synopsis available yet.'}</p>
       </Section>
       <Cast people={people} onOpen={onOpen} />
+      <SeasonEpisodes showId={item.id} seasons={item.seasons ?? []} />
       <WhereToWatch title={item.title} watchByRegion={item.watch} />
       <Reviews
         item={item}
@@ -494,7 +585,7 @@ function TvView({ item, onOpen, isLoggedIn, user, token, onRequestLogin }) {
   )
 }
 
-function TitleView({ item, onOpen }) {
+function TitleView({ item, onOpen, isLoggedIn, user, token, onRequestLogin }) {
   const date = formatDate(item.releaseDate)
   const directors = item.directors ?? []
   const runtime = formatRuntime(item.runtime)
@@ -527,11 +618,21 @@ function TitleView({ item, onOpen }) {
           <Facts facts={facts} />
           <div className="detail__actions">
             <Rating rating={item.rating} voteCount={item.voteCount} />
-            {item.trailerUrl && (
-              <a className="detail__trailer" href={item.trailerUrl} target="_blank" rel="noreferrer">
-                Watch trailer
-              </a>
-            )}
+            <div className="detail__cta">
+              <WatchlistButton
+                item={item}
+                user={user}
+                isLoggedIn={isLoggedIn}
+                onRequestLogin={onRequestLogin}
+              />
+              {item.trailerUrl ? (
+                <a className="detail__trailer" href={item.trailerUrl} target="_blank" rel="noreferrer">
+                  Watch Trailer
+                </a>
+              ) : (
+                <span className="detail__trailer detail__trailer--disabled">No trailer yet</span>
+              )}
+            </div>
           </div>
         </div>
       </header>
@@ -540,6 +641,14 @@ function TitleView({ item, onOpen }) {
         <p className="detail__text">{item.overview || 'No synopsis available yet.'}</p>
       </Section>
       <Cast people={item.cast} onOpen={onOpen} />
+      <WhereToWatch title={item.title} watchByRegion={item.watch} />
+      <Reviews
+        item={item}
+        isLoggedIn={isLoggedIn}
+        user={user}
+        token={token}
+        onRequestLogin={onRequestLogin}
+      />
       <Related title="Similar movies" items={item.similar} onOpen={onOpen} />
     </>
   )
@@ -646,7 +755,16 @@ function DetailPage({ mediaType, id, onBack, onOpen, isLoggedIn, user, token, on
             onRequestLogin={onRequestLogin}
           />
         )}
-        {item && mediaType === 'movie' && <TitleView item={item} onOpen={onOpen} />}
+        {item && mediaType === 'movie' && (
+          <TitleView
+            item={item}
+            onOpen={onOpen}
+            isLoggedIn={isLoggedIn}
+            user={user}
+            token={token}
+            onRequestLogin={onRequestLogin}
+          />
+        )}
       </div>
     </article>
   )
