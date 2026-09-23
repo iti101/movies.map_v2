@@ -1,8 +1,14 @@
+/**
+ * Novi student backend: login, signup, and reviews.
+ * In plain English: this is the school account server. Watchlists are *not* here
+ * (see watchlist.js). Dev traffic goes through Vite’s `/novi-api` proxy.
+ */
 const PROJECT_HEADER = 'novi-education-project-id'
 const TOKEN_KEY = 'noviToken'
 const USER_KEY = 'noviUser'
 const LOGGED_IN_KEY = 'isLoggedIn'
 
+/** Vite inlines VITE_* at startup — restart after editing `.env.local`. */
 function getProjectId() {
   const projectId = import.meta.env.VITE_NOVI_PROJECT_ID
   if (!projectId) {
@@ -13,6 +19,7 @@ function getProjectId() {
   return projectId
 }
 
+/** Dev: same-origin proxy. Production: `VITE_NOVI_API_URL` or the hosted default. */
 function getBaseUrl() {
   if (import.meta.env.DEV) return '/novi-api'
   return (
@@ -21,6 +28,7 @@ function getBaseUrl() {
   ).replace(/\/$/, '')
 }
 
+/** JSON + project header; Bearer token only when we have a session. */
 function authHeaders(token) {
   const headers = {
     'Content-Type': 'application/json',
@@ -30,6 +38,7 @@ function authHeaders(token) {
   return headers
 }
 
+/** Prefer Novi’s `detail`/`message`; otherwise a status-based fallback sentence. */
 async function readErrorMessage(response) {
   const fallback =
     response.status === 401
@@ -48,6 +57,7 @@ async function readErrorMessage(response) {
   }
 }
 
+/** Fetch helper: throw on non-OK, parse JSON, treat empty/204 as null. */
 async function request(path, { method = 'GET', body, token } = {}) {
   const response = await fetch(`${getBaseUrl()}${path}`, {
     method,
@@ -70,6 +80,7 @@ async function request(path, { method = 'GET', body, token } = {}) {
   }
 }
 
+/** Decode the middle part of a JWT. Garbage tokens return null. */
 export function decodeTokenPayload(token) {
   if (!token) return null
   try {
@@ -81,6 +92,7 @@ export function decodeTokenPayload(token) {
   }
 }
 
+/** True when the JWT exists and `exp` is still more than 5s away (missing `exp` counts as valid). */
 export function isTokenValid(token) {
   const payload = decodeTokenPayload(token)
   if (!payload) return false
@@ -88,17 +100,20 @@ export function isTokenValid(token) {
   return payload.exp * 1000 > Date.now() + 5000
 }
 
+/** User id from a Novi user object or JWT (`id` / `userId` / `sub`). */
 function readUserId(source) {
   const value = source?.id ?? source?.userId ?? source?.sub
   const numeric = Number(value)
   return Number.isFinite(numeric) ? numeric : value ?? null
 }
 
+/** Novi sometimes returns one object, sometimes `[profile]`. */
 function firstItem(data) {
   if (!data) return null
   return Array.isArray(data) ? (data[0] ?? null) : data
 }
 
+/** Trimmed `username` or null — used for “your review” labels. */
 function readUsername(source) {
   if (!source) return null
   if (typeof source.username === 'string' && source.username.trim()) {
@@ -107,6 +122,7 @@ function readUsername(source) {
   return null
 }
 
+/** Restore token + user from localStorage, or log out if the JWT is missing/expired. */
 export function loadSession() {
   const token = localStorage.getItem(TOKEN_KEY)
   if (!token || !isTokenValid(token)) {
@@ -124,18 +140,21 @@ export function loadSession() {
   return { isLoggedIn: true, token, user }
 }
 
+/** Persist a successful login so a refresh stays signed in. */
 export function saveSession({ token, user }) {
   localStorage.setItem(TOKEN_KEY, token)
   localStorage.setItem(USER_KEY, JSON.stringify(user ?? null))
   localStorage.setItem(LOGGED_IN_KEY, 'true')
 }
 
+/** Drop the token; keep `isLoggedIn='false'` so older UI flags stay consistent. */
 export function clearSession() {
   localStorage.removeItem(TOKEN_KEY)
   localStorage.removeItem(USER_KEY)
   localStorage.setItem(LOGGED_IN_KEY, 'false')
 }
 
+/** `POST /api/login`, then optionally attach a profile username. */
 export async function login({ email, password }) {
   const data = await request('/api/login', {
     method: 'POST',
@@ -170,6 +189,7 @@ export async function login({ email, password }) {
   return { token, user }
 }
 
+/** `POST /api/users` — used by signup, not the sign-in form. */
 export async function createUser({ email, password, roles = ['user'] }) {
   return request('/api/users', {
     method: 'POST',
@@ -177,6 +197,7 @@ export async function createUser({ email, password, roles = ['user'] }) {
   })
 }
 
+/** Extra username row. Signup still works if this call fails. */
 export async function createProfile({ userId, username, token }) {
   return request('/api/profiles', {
     method: 'POST',
@@ -185,12 +206,14 @@ export async function createProfile({ userId, username, token }) {
   })
 }
 
+/** First profile for this user, or null. */
 export async function getMyProfile(token, userId) {
   if (userId == null) return null
   const data = await request(`/api/users/${userId}/profiles`, { token })
   return firstItem(data)
 }
 
+/** Create user → log in → try to store the username profile. */
 export async function createAccount({ username, email, password }) {
   const created = await createUser({ email, password, roles: ['user'] })
   const session = await login({ email, password })
@@ -222,6 +245,7 @@ export async function createAccount({ username, email, password }) {
   }
 }
 
+/** Unwrap `{ content }` / `{ reviews }` / a bare array from Novi list endpoints. */
 function asList(data) {
   if (Array.isArray(data)) return data
   if (Array.isArray(data?.content)) return data.content
@@ -229,6 +253,7 @@ function asList(data) {
   return []
 }
 
+/** Fetch every review, then keep this title’s rows, newest first. */
 export async function getReviewsForMedia(mediaType, mediaId, token) {
   const list = asList(await request('/api/reviews', { token }))
   return list
@@ -238,6 +263,7 @@ export async function getReviewsForMedia(mediaType, mediaId, token) {
     .sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0))
 }
 
+/** `POST /api/reviews`. Omits empty text and a 0 rating so the body stays sparse. */
 export async function createReview({ userId, mediaType, mediaId, text, rating }, token) {
   const body = {
     userId,

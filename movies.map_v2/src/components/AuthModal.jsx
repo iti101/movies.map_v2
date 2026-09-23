@@ -5,6 +5,7 @@ import visibilityIcon from '../assets/visibility_opsz24.svg'
 import visibilityOffIcon from '../assets/visibility_off_opsz24.svg'
 import './AuthModal.css'
 
+/** Show/hide icon for the password field. */
 function EyeIcon({ slashed }) {
   return (
     <img
@@ -15,6 +16,7 @@ function EyeIcon({ slashed }) {
   )
 }
 
+/** Password input plus a visibility toggle (tabIndex -1 so tab skips the eye). */
 function PasswordField({
   id,
   label,
@@ -61,10 +63,12 @@ const INITIAL_FORM = {
   confirmPassword: '',
 }
 
+/** Signup rule: 8+ chars, a digit, and a non-alphanumeric character. */
 function isStrongPassword(password) {
   return password.length >= 8 && /\d/.test(password) && /[^A-Za-z0-9]/.test(password)
 }
 
+/** Sign-in / create-account dialog. Escape or backdrop click closes it. */
 function AuthModal({ open, onClose, onAuthenticated }) {
   const titleId = useId()
   const emailId = useId()
@@ -108,6 +112,7 @@ function AuthModal({ open, onClose, onAuthenticated }) {
     }
   }, [open])
 
+  /** Bind one input; typing also clears a leftover error. */
   function updateField(field) {
     return (event) => {
       setForm((current) => ({ ...current, [field]: event.target.value }))
@@ -115,6 +120,7 @@ function AuthModal({ open, onClose, onAuthenticated }) {
     }
   }
 
+  /** Flip Sign in ↔ Create account, keep email, clear the other fields. */
   function switchMode(nextMode) {
     setMode(nextMode)
     setError('')

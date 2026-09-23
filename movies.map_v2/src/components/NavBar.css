@@ -1,3 +1,4 @@
+/* Stays above page overlays (5–6) so theme/login remain tappable. */
 .navbar {
   position: fixed;
   top: 0;
