@@ -50,6 +50,7 @@ function SearchSection({ onSeeAll, onSelect }) {
     return () => { cancelled = true }
   }, [genreOn, filtersDisabled, type])
 
+  /** One TMDB page + local filters. No query and no YYYY → idle (genre-only does nothing). */
   async function runSearch(nextQuery = query) {
     const trimmed = nextQuery.trim()
     // Empty query and no YYYY: clear the grid instead of calling TMDB.
@@ -95,6 +96,7 @@ function SearchSection({ onSeeAll, onSelect }) {
     runSearch(query)
   }
 
+  /** Put the Did-you-mean title in the box and search it. */
   function handleAcceptSuggestion(nextQuery) {
     setQuery(nextQuery)
     runSearch(nextQuery)
