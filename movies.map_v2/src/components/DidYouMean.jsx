@@ -1,5 +1,6 @@
 import './DidYouMean.css'
 
+/** “Did you mean {title}?” — hidden when `suggestion` is empty. */
 function DidYouMean({ suggestion, onAccept }) {
   if (!suggestion) return null
 
