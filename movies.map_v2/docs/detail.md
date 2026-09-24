@@ -29,8 +29,8 @@ Normalized extras:
 | Field | Rule |
 | --- | --- |
 | Trailer | First official YouTube Trailer, else any official Trailer, else Trailer, else Teaser, else first clip. YouTube / Vimeo only. |
-| Cast | First **12**. TV prefers `aggregate_credits`. |
-| Directors (TV) | Jobs named Director, max **6**. |
+| Cast | First **12**. TV prefers `aggregate_credits`. On TV pages, directors (max **6**) are **prepended** onto this same row — there is no separate Directors block. |
+| Directors (movie) | Names only, in the header facts (`Director` / `Directors`). |
 | Similar | Recommendations first, then similar; skip the current id. |
 | Score | `vote_average` rounded to 1 decimal; hidden as “Not rated yet” when 0. |
 | Person known-for | Cast credits only; skip TV with fewer than **4** episodes; sort by TMDB popularity. |
@@ -55,7 +55,9 @@ Provider taps go to a **search URL** on that service (`providerWatchUrl`), not a
 
 `Reviews` loads `GET /api/reviews` (Novi) and **filters in the browser** to this `mediaType` + `mediaId`. A failed fetch shows “No reviews yet.”
 
-**Write a review** opens login if you have no session. Publish requires a star rating **or** non-empty text (max **2000** characters). Stars are 0.5–5 (`StarRating`). Authors: your review can show `user.username`; everyone else is **Member**.
+**Write a review** opens login if you have no session. Publish requires a star rating **or** non-empty text (max **2000** characters).
+
+`StarRating` is 0.5–5. Hover/click the **left** half of a star for `N − 0.5`, the **right** half for `N`. Published reviews pass `interactive={false}` so they are display-only. Authors: your review can show `user.username`; everyone else is **Member**.
 
 ## Watchlist button
 

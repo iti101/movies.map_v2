@@ -130,6 +130,7 @@ function AuthModal({ open, onClose, onAuthenticated }) {
     }))
   }
 
+  /** Client checks first, then Novi login or createAccount. Success closes the dialog. */
   async function handleSubmit(event) {
     event.preventDefault()
     const email = form.email.trim()

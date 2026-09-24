@@ -170,6 +170,23 @@ The navbar stays above the page overlays (you can still toggle theme or log out 
 
 `MovieCard` is the clickable poster used by search, See all, Randomizer, watchlist, and “similar / known for” rows. It calls `onSelect(item)` with `{ id, mediaType, title, … }`. Optional `children` overlay the tile (watchlist remove button).
 
+## Workflows (runbook)
+
+These are the student-facing paths. None of them are React routes — they are snap sections or `history.pushState` overlays.
+
+| Goal | What to do | Where it lives |
+| --- | --- | --- |
+| Search a title | Type a query **or** a 4-digit year, press search. Genre alone does nothing. | `#search` → `SearchSection` |
+| Open a title | Tap any `MovieCard`. | `App.openDetail` → `DetailPage` |
+| See more matches | **See all** after a successful search. Back returns to the snap page. | `SearchResultsPage` |
+| Random pick | Scroll to Randomizer, answer (or skip) 4 steps, **Surprise me**. | `#randomizer` → `Randomizer` |
+| Sign in / create account | Navbar login icon, or any action that needs a session (watchlist, review). | `AuthModal` → Novi |
+| Save a title | On a movie/TV detail page, **Add to Watchlist** (writes `lists[0]`). | `watchlist.js` localStorage |
+| Open saved lists | Menu **My Watchlist** (logged in). | `Watchlist` overlay |
+| Write a review | Detail page → **Write a review** (needs Novi token). | `POST /api/reviews` |
+
+Local loop: `cd movies.map_v2 && npm run dev`. Restart after any `.env.local` change. Production / `preview` does **not** use the `/novi-api` proxy — set `VITE_NOVI_API_URL` if the default host is wrong.
+
 ## Constraints and known gaps
 
 - Adult titles are always excluded (`include_adult=false`).
