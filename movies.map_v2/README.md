@@ -1,18 +1,25 @@
 # movies.map
 
-React + Vite client for browsing movies, TV shows, and people through [TMDB](https://www.themoviedb.org/). The home screen is a full-viewport snap scroller: a typewriter intro, a live search section, and a Randomizer placeholder.
+React + Vite client for browsing movies, TV shows, and people through [TMDB](https://www.themoviedb.org/). The home screen is a full-viewport snap scroller: a typewriter intro, live search, and a guided Randomizer. Login uses the Novi student backend; watchlists stay in the browser.
 
-This README covers setup, architecture, and the pitfalls that are easy to hit locally. Search request behavior is documented in [docs/search.md](docs/search.md).
+This README covers setup, architecture, and the pitfalls that are easy to hit locally.
+
+| Topic | Doc |
+| --- | --- |
+| Search, filters, See all, Did you mean | [docs/search.md](docs/search.md) |
+| Guided Randomizer | [docs/randomizer.md](docs/randomizer.md) |
+| Title / person detail, trailers, watch providers, reviews | [docs/detail.md](docs/detail.md) |
+| Novi login, reviews API, local watchlists | [docs/auth-and-watchlists.md](docs/auth-and-watchlists.md) |
 
 ## In plain English
 
-The app is three full-screen pages you scroll between, plus a search overlay:
+The app is three full-screen pages you scroll between, plus overlay screens:
 
 1. **Home** types a short sentence, then shows the logo and **Get Started**.
-2. **Search** asks [TMDB](https://www.themoviedb.org/) (a public movie catalog) for posters that match a title or year.
-3. **Randomizer** is an empty page for a later feature.
+2. **Search** asks TMDB (a public movie catalog) for posters. Tapping a poster opens a detail page.
+3. **Randomizer** asks a few optional filters, then picks a random popular title.
 
-There is no login server. The person icon is a browser on/off switch. Search needs a free TMDB **v3** API key in `.env.local`.
+**Log in** creates a real Novi account (reviews live on that server). **Watchlists** are saved only in this browser, keyed by your Novi user id. Search and the Randomizer need a free TMDB **v3** API key in `.env.local`. Login also needs a Novi project id.
 
 ## Quick start
 
@@ -20,7 +27,7 @@ There is no login server. The person icon is a browser on/off switch. Search nee
 cd movies.map_v2
 npm install
 cp .env.example .env.local
-# add your TMDB v3 API key to .env.local
+# add VITE_TMDB_API_KEY and VITE_NOVI_PROJECT_ID
 npm run dev
 ```
 
@@ -28,7 +35,7 @@ Vite listens on **port 5175** and will pick the next free port if 5175 is busy (
 
 | Script | What it does |
 | --- | --- |
-| `npm run dev` | Dev server with HMR |
+| `npm run dev` | Dev server with HMR. `/novi-api` is proxied to Novi. |
 | `npm run build` | Production build to `dist/` |
 | `npm run preview` | Serve the production build |
 | `npm run lint` | ESLint (`**/*.{js,jsx}`) |
@@ -37,34 +44,49 @@ Vite listens on **port 5175** and will pick the next free port if 5175 is busy (
 
 | Variable | Required | Notes |
 | --- | --- | --- |
-| `VITE_TMDB_API_KEY` | Yes, for search | TMDB **v3** key. Vite inlines `import.meta.env` at startup, so changing `.env.local` requires a restart. |
+| `VITE_TMDB_API_KEY` | Yes, for search / randomizer / details | TMDB **v3** key (`api_key` query param). |
+| `VITE_NOVI_PROJECT_ID` | Yes, for login / reviews | Sent as header `novi-education-project-id`. |
+| `VITE_NOVI_API_URL` | Production only | Defaults to the hosted Novi API. Dev ignores this and uses the Vite proxy. |
 
-`.env.local` is gitignored via `*.local`. Do not commit a real key.
+Vite inlines `import.meta.env` at startup, so changing `.env.local` requires a restart. `.env.local` is gitignored via `*.local`. Do not commit real keys.
 
-Without the key, `src/API/tmdb.js` throws:
+Without the TMDB key, `src/API/tmdb.js` throws:
 
 > Missing TMDB API key. Add `VITE_TMDB_API_KEY` to `.env.local` and restart the dev server.
 
+Without the Novi project id, submitting the login form throws:
+
+> Missing NOVI project ID. Add `VITE_NOVI_PROJECT_ID` to `.env.local` and restart the dev server.
+
 ## Architecture
 
-There is no router. `src/App.jsx` owns session-ish state and the three snap sections; the “See all” results view is an overlay, not a route.
+There is no React Router. `src/App.jsx` owns session, theme, and overlay flags. Search results, a title/person page, and the watchlist are full-screen overlays on top of the snap scroller.
 
 ```
 App
-├── NavBar              theme + localStorage auth stub + section menu
+├── WatchlistProvider     localStorage lists for the logged-in user id
+├── NavBar                theme, login/logout, section menu, My Watchlist
 ├── main.snap-container
-│   ├── #home           Typewriter intro
-│   ├── #search         SearchSection (first TMDB page)
-│   └── #randomizer     placeholder copy only
-└── SearchResultsPage   overlay when “See all” is open
+│   ├── #home             Typewriter intro
+│   ├── #search           SearchSection (first TMDB page)
+│   └── #randomizer       guided discover + random pick
+├── SearchResultsPage     overlay when “See all” is open
+├── Watchlist             overlay when logged in and “My Watchlist” is open
+├── DetailPage            overlay for a movie, TV show, or person
+└── AuthModal             sign-in / create-account dialog
 ```
 
 | Concern | Where it lives |
 | --- | --- |
-| Theme + auth stub | `src/App.jsx`, applied to `<html data-theme>` |
+| Theme | `src/App.jsx`, applied to `<html data-theme>` |
+| Novi session + reviews HTTP | `src/API/novi.js` |
 | TMDB HTTP + filters | `src/API/tmdb.js` |
+| Local watchlists | `src/API/watchlist.js`, `src/context/WatchlistContext.jsx` |
 | First-page search UI | `src/pages/SearchSection.jsx` |
 | Multi-page results overlay | `src/pages/SearchResultsPage.jsx` |
+| Title / person page | `src/pages/DetailPage.jsx` |
+| Guided random pick | `src/pages/Randomizer.jsx` |
+| Poster tile | `src/components/MovieCard.jsx` |
 | Shared buttons | `src/components/Button.jsx` |
 | Smooth scroll helper | `src/scrollToSection.js` |
 
@@ -82,25 +104,42 @@ App
 
 ### NavBar
 
-Hamburger opens a full-viewport menu (`#main-menu`). **Escape** closes it. Section buttons call `onNavigate` (which closes the results overlay) then `scrollIntoView` on the next tick.
+Hamburger opens a full-viewport menu (`#main-menu`). **Escape** closes it. Section buttons call `onNavigate` (which dismisses overlays) then `scrollIntoView` on the next tick.
 
-The **theme** icon always toggles light/dark. The **login** icon always flips `isLoggedIn`. The menu’s **Log-in / Sign-up** item logs you in if you are logged out; **My Watchlist** (logged-in label) only closes the menu — there is no watchlist view.
+The **theme** icon always toggles light/dark. The **login** icon opens `AuthModal` when logged out, or logs out (clears the Novi session and closes the watchlist) when logged in. The menu’s **Log-in / Sign-up** item does the same as the icon when logged out; **My Watchlist** opens the watchlist overlay (or the auth modal if you are logged out).
 
-### Results overlay and history
+### Overlays and history
 
-`openResults` stores the current search and `history.pushState({ results: true })`. Back / **Back** clears the overlay:
+Still no router. Overlays are `history.pushState` flags so **Back** works:
 
-- If `history.state.results` is set, `closeResults` calls `history.back()`.
-- A `popstate` listener always sets the overlay search to `null`.
-- Navbar navigation also closes the overlay, then scrolls to the section (deferred one tick so the overlay unmounts first).
+| Overlay | History flag | z-index | Closed by |
+| --- | --- | --- | --- |
+| See all results | `{ results: true }` | 5 | Back, navbar navigation |
+| Watchlist | `{ …state, watchlist: true }` | 5 | Back, logout, navbar navigation |
+| Detail | `{ …state, detail: { mediaType, id } }` | 6 | Back, navbar navigation |
+| Auth modal | none (React state only) | 40 | Escape, overlay click, success |
+
+`openResults` replaces history state with `{ results: true }` (it does not copy earlier flags). `openDetail` and `openWatchlist` spread the current state, so you can open a title from See all or from the watchlist and go **Back** to that overlay.
+
+`popstate` restores `detail` and `watchlist` from `history.state`. The results overlay is only cleared when `state.results` is missing — it is not rebuilt from history, so a full reload drops an open See all view.
+
+Navbar section links call `dismissOverlays`, which hides every overlay and `replaceState({}, '')`.
 
 ### Theme
 
 Default is **dark**. `index.html` reads `localStorage.theme` before React mounts to avoid a flash. `App` keeps `theme` in state, writes `data-theme` and `color-scheme` on `<html>`, and persists `'light'` or `'dark'`. Tokens live in `src/App.css` under `html[data-theme='dark']` and `html[data-theme='light']`.
 
-### Auth stub
+### Stacking
 
-`localStorage.isLoggedIn` is a boolean string (`'true'` / anything else). The navbar login icon toggles it. There is no backend, session cookie, or watchlist page — the menu label **My Watchlist** only appears when the stub is logged in.
+The navbar stays above the page overlays (you can still toggle theme or log out on a detail page). Auth sits on top of everything.
+
+| Layer | z-index |
+| --- | --- |
+| Navbar | 20 |
+| Hamburger menu | 10 |
+| Detail | 6 |
+| See all / Watchlist | 5 |
+| Auth modal | 40 |
 
 ## UI primitives
 
@@ -114,6 +153,8 @@ Default is **dark**. `index.html` reads `localStorage.theme` before React mounts
 | `round` | `false` | Circular (search submit). |
 | `color`, `background`, `hoverBackground` | — | CSS color, or a token name that becomes `var(--color-<name>)`. |
 | `font` | `'body'` | `'body'` → `--font-body`, `'display'` → `--font-display`. |
+| `text` | — | Fallback label if there are no `children`. |
+| `weight`, `fontSize` | — | Inline `font-weight` / `font-size`. |
 
 ```jsx
 <Button
@@ -127,13 +168,34 @@ Default is **dark**. `index.html` reads `localStorage.theme` before React mounts
 </Button>
 ```
 
+`MovieCard` is the clickable poster used by search, See all, Randomizer, watchlist, and “similar / known for” rows. It calls `onSelect(item)` with `{ id, mediaType, title, … }`. Optional `children` overlay the tile (watchlist remove button).
+
+## Workflows (runbook)
+
+These are the student-facing paths. None of them are React routes — they are snap sections or `history.pushState` overlays.
+
+| Goal | What to do | Where it lives |
+| --- | --- | --- |
+| Search a title | Type a query **or** a 4-digit year, press search. Genre alone does nothing. | `#search` → `SearchSection` |
+| Open a title | Tap any `MovieCard`. | `App.openDetail` → `DetailPage` |
+| See more matches | **See all** after a successful search. Back returns to the snap page. | `SearchResultsPage` |
+| Random pick | Scroll to Randomizer, answer (or skip) 4 steps, **Surprise me**. | `#randomizer` → `Randomizer` |
+| Sign in / create account | Navbar login icon, or any action that needs a session (watchlist, review). | `AuthModal` → Novi |
+| Save a title | On a movie/TV detail page, **Add to Watchlist** (writes `lists[0]`). | `watchlist.js` localStorage |
+| Open saved lists | Menu **My Watchlist** (logged in). | `Watchlist` overlay |
+| Write a review | Detail page → **Write a review** (needs Novi token). | `POST /api/reviews` |
+
+Local loop: `cd movies.map_v2 && npm run dev`. Restart after any `.env.local` change. Production / `preview` does **not** use the `/novi-api` proxy — set `VITE_NOVI_API_URL` if the default host is wrong.
+
 ## Constraints and known gaps
 
-- **Randomizer** (`#randomizer`) is still placeholder text.
-- **Login / watchlist** are UI-only; nothing is stored except the `isLoggedIn` flag.
 - Adult titles are always excluded (`include_adult=false`).
+- Watchlists are **localStorage only** (`watchlists`). They are not synced to Novi. Clearing site data wipes lists.
+- **Add to Watchlist** on a detail page always writes to the **first** stored list, even if another list is selected in the Watchlist overlay.
+- Reviews require a logged-in Novi session. Other users’ names render as **Member**; your own review can show your username.
 - The intro typewriter skips animation when `prefers-reduced-motion: reduce` is set.
 - React Compiler is enabled (`babel-plugin-react-compiler` in `vite.config.js`). `App` is marked `'use no memo'` so compiler memoization does not wrap that component.
+- Production builds inline `VITE_*`. A wrong key in the built `dist/` means rebuild, not just restart.
 
 ## Troubleshooting
 
@@ -141,7 +203,11 @@ Default is **dark**. `index.html` reads `localStorage.theme` before React mounts
 | --- | --- |
 | `Missing TMDB API key…` | No `VITE_TMDB_API_KEY`, or the dev server was not restarted after editing `.env.local`. |
 | `Movie search failed. Check your API key…` | Wrong key type (v4 token instead of v3), revoked key, or TMDB HTTP error. |
+| `Missing NOVI project ID…` | No `VITE_NOVI_PROJECT_ID`, or no restart after adding it. |
+| `Invalid email or password.` | Novi 401. Check the account, or create one from the modal. |
+| Login works in `npm run dev` but fails in `preview` | Production calls `VITE_NOVI_API_URL` (or the default host) directly — CORS / URL must be reachable without the Vite proxy. |
 | Blank search after submit with only Genre on | Submit requires a non-empty query **or** a 4-digit year. Genre alone does not start a request. |
 | Year / Genre chips disabled | Type is **People**. `SearchSection` turns those filters off for `person`. |
 | Dev URL is not `:5175` | Another process already bound 5175; Vite chose the next port. |
 | Theme flash on reload | The inline script in `index.html` must stay in `<head>` so `data-theme` is set before paint. |
+| Watchlist empty after login | Lists are keyed by Novi `user.id`. A different account (or missing id) is a different bucket. |
