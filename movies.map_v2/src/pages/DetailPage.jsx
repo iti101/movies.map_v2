@@ -25,6 +25,7 @@ const LOADERS = {
   person: getPersonDetails,
 }
 
+/** `2024-03-01` → `March 1, 2024` in en-US. Invalid values pass through. */
 function formatDate(value) {
   if (!value) return null
   const match = /^(\d{4})-(\d{2})-(\d{2})/.exec(value)
@@ -35,6 +36,7 @@ function formatDate(value) {
   return date.toLocaleDateString('en-US', { day: 'numeric', month: 'long', year: 'numeric' })
 }
 
+/** `125` → `2h 5m`. Falsy minutes → null. */
 function formatRuntime(minutes) {
   if (!minutes) return null
   const hours = Math.floor(minutes / 60)
@@ -43,6 +45,7 @@ function formatRuntime(minutes) {
   return rest ? `${hours}h ${rest}m` : `${hours}h`
 }
 
+/** Poster/profile image, or a placeholder span when TMDB has no path. */
 function MediaImage({ path, size, alt, className, empty, lazy = false }) {
   const src = getImageUrl(path, size)
   if (!src) {
@@ -55,6 +58,7 @@ function MediaImage({ path, size, alt, className, empty, lazy = false }) {
   return <img className={className} src={src} alt={alt} loading={lazy ? 'lazy' : undefined} />
 }
 
+/** Label/value rows under the title (release date, runtime, genres…). */
 function Facts({ facts }) {
   if (!facts.length) return null
   return (
@@ -69,6 +73,7 @@ function Facts({ facts }) {
   )
 }
 
+/** TMDB audience score out of 10, or “Not rated yet”. */
 function Rating({ rating, voteCount }) {
   return (
     <div className="detail__rating-block">
@@ -85,6 +90,7 @@ function Rating({ rating, voteCount }) {
   )
 }
 
+/** Titled block; `extra` is the right-side control (region/season select). */
 function Section({ title, children, extra }) {
   return (
     <section className="detail__section">
@@ -97,6 +103,7 @@ function Section({ title, children, extra }) {
   )
 }
 
+/** Cast row. A tap opens that person’s detail page. */
 function Cast({ people, onOpen }) {
   if (!people?.length) return null
   return (
@@ -127,6 +134,7 @@ function Cast({ people, onOpen }) {
   )
 }
 
+/** Similar / known-for posters. `rows` uses the denser TV grid. */
 function Related({ title, items, onOpen, rows = false }) {
   if (!items?.length) return null
   return (
@@ -140,6 +148,7 @@ function Related({ title, items, onOpen, rows = false }) {
   )
 }
 
+/** Adds the title to lists[0]. Logged out → login modal. */
 function WatchlistButton({ item, user, isLoggedIn, onRequestLogin }) {
   const [note, setNote] = useState('')
   const saved = isLoggedIn && isInWatchlist(user?.id, item)
@@ -177,6 +186,7 @@ function WatchlistButton({ item, user, isLoggedIn, onRequestLogin }) {
   )
 }
 
+/** Streaming/rent/buy logos for one saved country (`localStorage.watchRegion`). */
 function WhereToWatch({ title, watchByRegion }) {
   const labelId = useId()
   const [region, setRegion] = useState(getSavedWatchRegion)
@@ -260,6 +270,7 @@ function WhereToWatch({ title, watchByRegion }) {
   )
 }
 
+/** Novi reviews for this title. Write requires login; list fetch fails closed. */
 function Reviews({ item, isLoggedIn, user, token, onRequestLogin }) {
   const fieldId = useId()
   const [open, setOpen] = useState(false)
@@ -394,11 +405,13 @@ function Reviews({ item, isLoggedIn, user, token, onRequestLogin }) {
   )
 }
 
+/** Prefer season 1+ so “Specials” (0) is not the default. */
 function defaultSeasonNumber(seasons) {
   if (!seasons.length) return null
   return seasons.find((season) => season.number >= 1)?.number ?? seasons[0].number
 }
 
+/** Episode accordion for one season. Escape closes a synopsis, not the overlay. */
 function SeasonEpisodes({ showId, seasons }) {
   const selectId = useId()
   const [seasonNumber, setSeasonNumber] = useState(() => defaultSeasonNumber(seasons))
@@ -512,6 +525,7 @@ function SeasonEpisodes({ showId, seasons }) {
   )
 }
 
+/** Drop duplicate people (TV directors are prepended onto the cast list). */
 function credits(people) {
   const seen = new Set()
   return people.filter((person) => {
@@ -521,6 +535,7 @@ function credits(people) {
   })
 }
 
+/** TV layout: episodes + a longer similar row. Directors are mixed into Cast. */
 function TvView({ item, onOpen, isLoggedIn, user, token, onRequestLogin }) {
   const date = formatDate(item.firstAirDate)
   const facts = [
@@ -585,6 +600,7 @@ function TvView({ item, onOpen, isLoggedIn, user, token, onRequestLogin }) {
   )
 }
 
+/** Movie layout: tagline, runtime, similar movies (not the TV episode list). */
 function TitleView({ item, onOpen, isLoggedIn, user, token, onRequestLogin }) {
   const date = formatDate(item.releaseDate)
   const directors = item.directors ?? []
@@ -654,6 +670,7 @@ function TitleView({ item, onOpen, isLoggedIn, user, token, onRequestLogin }) {
   )
 }
 
+/** Person layout: bio + known-for. No watchlist, trailer, or reviews. */
 function PersonView({ person, onOpen }) {
   const facts = [
     person.birthday && { label: 'Born', value: formatDate(person.birthday) },
@@ -687,6 +704,10 @@ function PersonView({ person, onOpen }) {
   )
 }
 
+/**
+ * Overlay for one TMDB id. `mediaType` picks movie / TV / person loaders.
+ * Nested opens (cast, similar) remount via App’s `key`.
+ */
 function DetailPage({ mediaType, id, onBack, onOpen, isLoggedIn, user, token, onRequestLogin }) {
   const [item, setItem] = useState(null)
   const [status, setStatus] = useState('loading')
