@@ -50,6 +50,7 @@ function SearchSection({ onSeeAll, onSelect }) {
     return () => { cancelled = true }
   }, [genreOn, filtersDisabled, type])
 
+  /** One TMDB page + local filters. No query and no YYYY → idle (genre-only does nothing). */
   async function runSearch(nextQuery = query) {
     const trimmed = nextQuery.trim()
     // Empty query and no YYYY: clear the grid instead of calling TMDB.
@@ -80,6 +81,7 @@ function SearchSection({ onSeeAll, onSelect }) {
         genre: selectedGenre,
       })
       setResults(filtered)
+      // Suggestion uses the unfiltered TMDB page so a hidden title can still be offered.
       setSuggestion((await getSearchSuggestion({ query: trimmed, type, year: yearFilter, items })) ?? '')
       setStatus(filtered.length === 0 ? 'empty' : 'success')
     } catch (err) {
@@ -95,6 +97,8 @@ function SearchSection({ onSeeAll, onSelect }) {
     runSearch(query)
   }
 
+  /** Put the Did-you-mean title in the box and search it. */
+  /** Put the suggested title in the box and search again. */
   function handleAcceptSuggestion(nextQuery) {
     setQuery(nextQuery)
     runSearch(nextQuery)
