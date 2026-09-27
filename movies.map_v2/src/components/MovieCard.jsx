@@ -1,6 +1,7 @@
 import { getImageUrl, MEDIA_LABELS } from '../API/tmdb.js'
 import './MovieCard.css'
 
+/** Clickable poster tile. Optional `children` sit on top (watchlist × button). */
 function MovieCard({ item, onSelect, className = '', children }) {
   const posterUrl = getImageUrl(item.imagePath, 'w342')
   const year = item.year || (item.date ? item.date.slice(0, 4) : null)

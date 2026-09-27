@@ -12,6 +12,7 @@ export default defineConfig({
     port: 5175,
     strictPort: false, // if 5175 is taken, Vite picks the next free port
     proxy: {
+      // Dev-only: AuthModal talks to `/novi-api` so the browser stays same-origin.
       '/novi-api': {
         target: 'https://novi-backend-api-wgsgz.ondigitalocean.app',
         changeOrigin: true,

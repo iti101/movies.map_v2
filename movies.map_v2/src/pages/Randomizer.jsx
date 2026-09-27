@@ -43,25 +43,33 @@ const STEPS = [
 
 const MAX_RANDOM_PAGE = 20
 
+/** Inclusive random integer — used to pick a TMDB page and a card on that page. */
 function randomInt(min, max) {
   return min + Math.floor(Math.random() * (max - min + 1))
 }
 
+/** Add or remove a genre chip. */
 function toggleGenre(list, genre) {
   return list.some((entry) => entry.id === genre.id)
     ? list.filter((entry) => entry.id !== genre.id)
     : [...list, genre]
 }
 
+/** Comma-separated genre names for the result summary strip. */
 function namesList(list, empty = 'Any') {
   if (!list.length) return empty
   return list.map((entry) => entry.name).join(', ')
 }
 
+/** Chip label for the current format (`movie` → “Movies”). */
 function typeLabel(type) {
   return TYPE_OPTIONS.find((option) => option.id === type)?.label ?? 'Movies'
 }
 
+/**
+ * Four-step discover wizard, then a random popular title from up to 20 TMDB pages.
+ * Tapping the poster calls `onSelect` (opens DetailPage).
+ */
 function Randomizer({ onSelect }) {
   const personFieldId = useId()
   const personBoxRef = useRef(null)
@@ -165,6 +173,7 @@ function Randomizer({ onSelect }) {
     return () => window.removeEventListener('pointerdown', onPointerDown)
   }, [])
 
+  /** Fetch a random discover page (capped at 20) and pick one item from it. */
   async function roll() {
     setStatus('loading')
     setError('')
@@ -203,11 +212,13 @@ function Randomizer({ onSelect }) {
     }
   }
 
+  /** Jump to a wizard step (also used from the result summary chips). */
   function goToStep(nextIndex) {
     setStepIndex(Math.max(0, Math.min(STEPS.length - 1, nextIndex)))
     setPhase('setup')
   }
 
+  /** Continue / Skip, or roll on the last step. */
   function goNext() {
     if (isLastStep) {
       roll()
@@ -216,6 +227,7 @@ function Randomizer({ onSelect }) {
     setStepIndex((current) => current + 1)
   }
 
+  /** From a pick: return to Who. From the wizard: previous step. */
   function goBack() {
     if (phase === 'result') {
       setPhase('setup')
@@ -225,26 +237,31 @@ function Randomizer({ onSelect }) {
     setStepIndex((current) => Math.max(0, current - 1))
   }
 
+  /** Walk the current page pool backward (wraps). Does not fetch another page. */
   function showPrevious() {
     if (!canBrowse) return
     setIndex((current) => (current - 1 + pool.length) % pool.length)
   }
 
+  /** Walk the current page pool forward (wraps). Does not fetch another page. */
   function showNext() {
     if (!canBrowse) return
     setIndex((current) => (current + 1) % pool.length)
   }
 
+  /** Want chips: selecting a genre also removes it from Don't want. */
   function handleWant(genre) {
     setWantGenres((current) => toggleGenre(current, genre))
     setAvoidGenres((current) => current.filter((entry) => entry.id !== genre.id))
   }
 
+  /** Don't-want chips: selecting a genre also removes it from Want. */
   function handleAvoid(genre) {
     setAvoidGenres((current) => toggleGenre(current, genre))
     setWantGenres((current) => current.filter((entry) => entry.id !== genre.id))
   }
 
+  /** Clear the Who step so the next roll omits `with_people`. */
   function clearPerson() {
     setPerson(null)
     setPersonQuery('')
@@ -252,6 +269,7 @@ function Randomizer({ onSelect }) {
     setPersonStatus('idle')
   }
 
+  /** One-line recap used on the result summary strip. */
   function stepSummary(stepId) {
     if (stepId === 'type') return typeLabel(type)
     if (stepId === 'want') return namesList(wantGenres, 'Open to anything')

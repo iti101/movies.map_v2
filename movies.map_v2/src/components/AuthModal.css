@@ -1,3 +1,4 @@
+/* Highest overlay — login must sit above navbar, menu, and page overlays. */
 .auth-overlay {
   position: fixed;
   inset: 0;

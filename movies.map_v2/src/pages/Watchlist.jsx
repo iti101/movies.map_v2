@@ -6,6 +6,7 @@ import WatchlistModal from '../components/WatchlistModal.jsx'
 import { useWatchlist } from '../context/watchlist-context.js'
 import './Watchlist.css'
 
+/** Logged-in overlay: switch lists, remove titles, or create/delete a list. */
 function Watchlist({ onBack, onSelect, onFindTitle }) {
   const {
     lists,
@@ -20,6 +21,7 @@ function Watchlist({ onBack, onSelect, onFindTitle }) {
 
   const count = activeList?.items.length ?? 0
 
+  /** Empty lists delete immediately; lists with titles ask for a second click. */
   function handleDeleteList() {
     if (!activeList) return
     if (!confirmDelete && count > 0) {
