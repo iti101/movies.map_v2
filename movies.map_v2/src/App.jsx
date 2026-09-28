@@ -12,7 +12,7 @@ import SearchSection from './pages/SearchSection.jsx'
 import Watchlist from './pages/Watchlist.jsx'
 import { scrollToSection } from './scrollToSection.js'
 
-/** Pretend login flag. There is no account server — just 'true' in localStorage. */
+/** Restore a Novi session from localStorage if the JWT is still valid. */
 function getStoredAuth() {
   return loadSession()
 }
@@ -31,8 +31,8 @@ function applyTheme(theme) {
 }
 
 /**
- * Shell for the three snap pages plus the optional “See all” overlay.
- * No React Router: overlay open/close is a history.pushState / popstate pair.
+ * Shell for the three snap pages plus overlay screens (results, detail, watchlist).
+ * No React Router: overlays are history.pushState / popstate flags.
  */
 function App() {
   'use no memo'
@@ -47,6 +47,7 @@ function App() {
     applyTheme(theme)
   }, [theme])
 
+  /** Logged in → sign out and close watchlist. Logged out → open the auth modal. */
   function handleToggleAuth() {
     if (session.isLoggedIn) {
       clearSession()
@@ -62,11 +63,13 @@ function App() {
     setAuthOpen(true)
   }
 
+  /** Store the Novi token/user after a successful sign-in or signup. */
   function handleAuthenticated(next) {
     saveSession(next)
     setSession({ isLoggedIn: true, token: next.token, user: next.user })
   }
 
+  /** Flip dark ↔ light; `applyTheme` persists it on `<html>`. */
   function handleToggleTheme() {
     setTheme((current) => (current === 'dark' ? 'light' : 'dark'))
   }
@@ -86,6 +89,7 @@ function App() {
     }
   }
 
+  /** Open a movie/TV/person page; keep any results/watchlist flags so Back returns there. */
   function openDetail(item) {
     if (!item?.id || !item.mediaType) return
     const next = { mediaType: item.mediaType, id: item.id }
@@ -93,6 +97,7 @@ function App() {
     window.history.pushState({ ...(window.history.state ?? {}), detail: next }, '')
   }
 
+  /** Prefer history.back() so popstate hides the overlay; otherwise hide it directly. */
   function closeDetail() {
     if (window.history.state?.detail) {
       window.history.back()
@@ -101,6 +106,7 @@ function App() {
     }
   }
 
+  /** Watchlist overlay, or the login modal if there is no session. */
   function openWatchlist() {
     if (!session.isLoggedIn) {
       setAuthOpen(true)
@@ -112,6 +118,7 @@ function App() {
     }
   }
 
+  /** Prefer history.back() so popstate hides watchlist; otherwise hide it directly. */
   function closeWatchlist() {
     if (window.history.state?.watchlist) {
       window.history.back()
@@ -120,6 +127,7 @@ function App() {
     }
   }
 
+  /** Navbar section click: hide every overlay without adding another history entry. */
   function dismissOverlays() {
     setResultsSearch(null)
     setDetail(null)
@@ -130,13 +138,14 @@ function App() {
     }
   }
 
+  /** Empty-list CTA: close watchlist, then snap-scroll to Search. */
   function handleFindTitle() {
     closeWatchlist()
     window.setTimeout(() => scrollToSection('search'), 0)
   }
 
   useEffect(() => {
-    // Browser Back (and closeResults → history.back) lands here and hides the overlay.
+    // Browser Back restores detail/watchlist flags; results only clear (they are not stored).
     function onPopState() {
       const state = window.history.state
       setDetail(state?.detail ?? null)

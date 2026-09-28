@@ -8,6 +8,10 @@ import {
 } from '../API/watchlist.js'
 import { WatchlistContext } from './watchlist-context.js'
 
+/**
+ * Holds the current user's lists and which one is selected.
+ * Listens for `watchlists-changed` so Add on a detail page updates this overlay.
+ */
 export function WatchlistProvider({ userId, children }) {
   const [lists, setLists] = useState(() => getLists(userId))
   const [activeListId, setActiveListId] = useState(

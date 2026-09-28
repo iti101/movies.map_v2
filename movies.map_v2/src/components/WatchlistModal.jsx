@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { useWatchlist } from '../context/watchlist-context.js'
 import './WatchlistModal.css'
 
+/** Name a new list (max 60 chars). Empty name stays on the dialog with an error. */
 function WatchlistModal({ isOpen, onClose }) {
   const { createList } = useWatchlist()
   const [name, setName] = useState('')
@@ -23,12 +24,14 @@ function WatchlistModal({ isOpen, onClose }) {
 
   if (!isOpen) return null
 
+  /** Close and wipe the draft name so the next open starts empty. */
   function close() {
     setName('')
     setError('')
     onClose()
   }
 
+  /** Create the list; blank names stay on the dialog with an error. */
   function handleSubmit(event) {
     event.preventDefault()
     const list = createList(name)

@@ -57,6 +57,11 @@ function SearchResultsPage({ search, onBack, onSelect }) {
     return () => { cancelled = true }
   }, [activeSearch])
 
+  /** Accept a suggestion: drop the seeded first page so the overlay refetches. */
+  function handleAcceptSuggestion(nextQuery) {
+    setActiveSearch({ ...activeSearch, query: nextQuery, results: [] })
+  }
+
   const label = getSearchLabel(activeSearch)
   const count = results.length
   const summary =
@@ -87,12 +92,7 @@ function SearchResultsPage({ search, onBack, onSelect }) {
         )}
 
         {(status === 'empty' || status === 'success') && (
-          <DidYouMean
-            suggestion={suggestion}
-            onAccept={(nextQuery) =>
-              setActiveSearch({ ...activeSearch, query: nextQuery, results: [] })
-            }
-          />
+          <DidYouMean suggestion={suggestion} onAccept={handleAcceptSuggestion} />
         )}
 
         {count > 0 && (

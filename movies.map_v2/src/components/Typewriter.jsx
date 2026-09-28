@@ -8,6 +8,7 @@ import './Typewriter.css'
 const FINAL = 'Find any episode'
 const ARROW_BARS = 4
 
+/** Random delay between min and max (typewriter cadence). */
 function rand(min, max) {
   return min + Math.random() * (max - min)
 }
