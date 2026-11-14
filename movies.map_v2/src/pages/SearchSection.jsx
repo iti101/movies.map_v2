@@ -1,21 +1,24 @@
 import { useEffect, useState } from 'react'
+import {
+  applySearchFilters,
+  fetchTmdbPage,
+  getSearchLabel,
+  getSearchSuggestion,
+  isValidYear,
+  loadGenres,
+} from '../API/tmdb.js'
+import { isAbortError } from '../API/tmdb/client.js'
 import Button from '../components/Button.jsx'
+import ChipRow from '../components/ChipRow.jsx'
 import DidYouMean from '../components/DidYouMean.jsx'
-import MovieCard from '../components/MovieCard.jsx'
-import { applySearchFilters, fetchTmdbPage, getSearchLabel, getSearchSuggestion, isValidYear, loadGenres } from '../API/tmdb.js'
+import ResultGrid from '../components/ResultGrid.jsx'
+import { SEARCH_TYPES } from '../lib/media.js'
 import searchIcon from '../assets/search_opsz24.svg'
 import './SearchSection.css'
 
-const TYPE_OPTIONS = [
-  { id: 'all', label: 'All' },
-  { id: 'movie', label: 'Movies' },
-  { id: 'tv', label: 'TV' },
-  { id: 'person', label: 'People' },
-]
-
 /**
  * Search snap-page: one TMDB page of posters plus chips.
- * Submit needs a title *or* a 4-digit year — genre alone does not search.
+ * Submit needs a title, a 4-digit year, or a selected genre.
  */
 function SearchSection({ onSeeAll, onSelect }) {
   const [query, setQuery] = useState('')
@@ -34,26 +37,24 @@ function SearchSection({ onSeeAll, onSelect }) {
   const filtersDisabled = type === 'person'
   const hasResults = status === 'success' && results.length > 0
   const yearFilter = releaseDateOn && isValidYear(year) ? year : ''
+  const genreFilter = genreOn && !filtersDisabled ? selectedGenre : null
 
   useEffect(() => {
-    if (!genreOn || filtersDisabled) {
-      setGenres([])
-      return
-    }
+    if (!genreOn || filtersDisabled) return undefined
 
-    // Ignore late responses if the chip/type changed before the request finished.
-    let cancelled = false
-    loadGenres(type)
-      .then((list) => { if (!cancelled) setGenres(list) })
-      .catch(() => { if (!cancelled) setGenres([]) })
+    const controller = new AbortController()
+    loadGenres(type, { signal: controller.signal })
+      .then((list) => setGenres(list))
+      .catch((err) => {
+        if (!isAbortError(err)) setGenres([])
+      })
 
-    return () => { cancelled = true }
+    return () => controller.abort()
   }, [genreOn, filtersDisabled, type])
 
   async function runSearch(nextQuery = query) {
     const trimmed = nextQuery.trim()
-    // Empty query and no YYYY: clear the grid instead of calling TMDB.
-    if (!trimmed && !yearFilter) {
+    if (!trimmed && !yearFilter && !genreFilter) {
       setStatus('idle')
       setResults([])
       setError('')
@@ -72,15 +73,22 @@ function SearchSection({ onSeeAll, onSelect }) {
         query: trimmed,
         type,
         year: yearFilter,
-        genre: selectedGenre,
+        genre: genreFilter,
       })
       const filtered = applySearchFilters(items, {
         type,
         year: yearFilter,
-        genre: selectedGenre,
+        genre: genreFilter,
       })
       setResults(filtered)
-      setSuggestion((await getSearchSuggestion({ query: trimmed, type, year: yearFilter, items })) ?? '')
+      setSuggestion(
+        (await getSearchSuggestion({
+          query: trimmed,
+          type,
+          year: yearFilter,
+          items,
+        })) ?? '',
+      )
       setStatus(filtered.length === 0 ? 'empty' : 'success')
     } catch (err) {
       setResults([])
@@ -100,7 +108,6 @@ function SearchSection({ onSeeAll, onSelect }) {
     runSearch(nextQuery)
   }
 
-  /** Switching type drops the genre; People also turns year/genre chips off. */
   function selectType(nextType) {
     setType(nextType)
     setSelectedGenre(null)
@@ -111,7 +118,6 @@ function SearchSection({ onSeeAll, onSelect }) {
     }
   }
 
-  /** Turning Release date off also clears the year box. */
   function toggleReleaseDate() {
     setReleaseDateOn((on) => {
       if (on) setYear('')
@@ -119,7 +125,6 @@ function SearchSection({ onSeeAll, onSelect }) {
     })
   }
 
-  /** Turning Genre off also clears the selected chip. */
   function toggleGenre() {
     setGenreOn((on) => {
       if (on) setSelectedGenre(null)
@@ -127,21 +132,21 @@ function SearchSection({ onSeeAll, onSelect }) {
     })
   }
 
-  /**
-   * Overlay payload: last *submitted* query, but live type/year/genre chips
-   * (changing chips without searching again can mismatch the seeded grid).
-   */
   function handleSeeAll() {
     onSeeAll?.({
       query: searchedQuery,
       type,
       year: yearFilter,
-      genre: selectedGenre,
+      genre: genreFilter,
       results,
     })
   }
 
-  const searchLabel = getSearchLabel({ query: searchedQuery, year: yearFilter })
+  const searchLabel = getSearchLabel({
+    query: searchedQuery,
+    year: yearFilter,
+    genre: genreFilter,
+  })
 
   return (
     <div className={`search-section${hasResults || status === 'empty' ? ' search-section--has-results' : ''}`}>
@@ -173,7 +178,7 @@ function SearchSection({ onSeeAll, onSelect }) {
         </div>
 
         <div className="search-chips">
-          {TYPE_OPTIONS.map((option) => (
+          {SEARCH_TYPES.map((option) => (
             <Button
               key={option.id}
               active={type === option.id}
@@ -182,18 +187,10 @@ function SearchSection({ onSeeAll, onSelect }) {
               {option.label}
             </Button>
           ))}
-          <Button
-            active={releaseDateOn}
-            onClick={toggleReleaseDate}
-            disabled={filtersDisabled}
-          >
+          <Button active={releaseDateOn} onClick={toggleReleaseDate} disabled={filtersDisabled}>
             Release date
           </Button>
-          <Button
-            active={genreOn}
-            onClick={toggleGenre}
-            disabled={filtersDisabled}
-          >
+          <Button active={genreOn} onClick={toggleGenre} disabled={filtersDisabled}>
             Genre
           </Button>
         </div>
@@ -211,19 +208,14 @@ function SearchSection({ onSeeAll, onSelect }) {
         )}
 
         {genreOn && (
-          <div className="search-genres">
-            {genres.map((genre) => (
-              <Button
-                key={genre.id}
-                active={selectedGenre?.id === genre.id}
-                onClick={() =>
-                  setSelectedGenre((current) => (current?.id === genre.id ? null : genre))
-                }
-              >
-                {genre.name}
-              </Button>
-            ))}
-          </div>
+          <ChipRow
+            className="search-genres"
+            items={genres}
+            isActive={(genre) => selectedGenre?.id === genre.id}
+            onSelect={(genre) =>
+              setSelectedGenre((current) => (current?.id === genre.id ? null : genre))
+            }
+          />
         )}
       </form>
 
@@ -247,11 +239,7 @@ function SearchSection({ onSeeAll, onSelect }) {
             <div className="search-results-header">
               <Button onClick={handleSeeAll}>See all</Button>
             </div>
-            <ul className="search-grid">
-              {results.map((item) => (
-                <MovieCard key={`${item.mediaType}-${item.id}`} item={item} onSelect={onSelect} />
-              ))}
-            </ul>
+            <ResultGrid items={results} onSelect={onSelect} />
           </>
         )}
       </div>

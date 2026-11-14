@@ -1,61 +1,76 @@
 import { useEffect, useState } from 'react'
-import Button from '../components/Button.jsx'
-import DidYouMean from '../components/DidYouMean.jsx'
-import MovieCard from '../components/MovieCard.jsx'
 import { getSearchLabel, getSearchSuggestion, searchTmdbAll } from '../API/tmdb.js'
+import { isAbortError } from '../API/tmdb/client.js'
+import DidYouMean from '../components/DidYouMean.jsx'
+import OverlayPage from '../components/OverlayPage.jsx'
+import ResultGrid from '../components/ResultGrid.jsx'
 import './SearchResultsPage.css'
+
+function searchKeyOf(search) {
+  return `${search.query ?? ''}|${search.type}|${search.year ?? ''}|${search.genre?.id ?? ''}`
+}
 
 /**
  * Full-screen “See all” overlay. Shows the first page immediately, then
  * replaces it with up to 10 TMDB pages. If that deeper fetch fails, keep the seed.
  */
 function SearchResultsPage({ search, onBack, onSelect }) {
-  const [activeSearch, setActiveSearch] = useState(search)
+  const [queryOverride, setQueryOverride] = useState(null)
+  const searchKey = searchKeyOf(search)
+  const activeSearch =
+    queryOverride?.key === searchKey
+      ? { ...search, query: queryOverride.query, results: [] }
+      : search
+  const activeKey = searchKeyOf(activeSearch)
   const seeded = activeSearch.results ?? []
-  const [results, setResults] = useState(seeded)
-  const [status, setStatus] = useState(seeded.length ? 'success' : 'loading')
+
+  const [fetched, setFetched] = useState(null)
+  const [suggestion, setSuggestion] = useState({ key: '', value: '' })
   const [error, setError] = useState('')
-  const [suggestion, setSuggestion] = useState('')
+
+  const results = fetched?.key === activeKey ? fetched.items : seeded
+  const status =
+    fetched?.key === activeKey
+      ? fetched.items.length
+        ? 'success'
+        : 'empty'
+      : seeded.length
+        ? 'success'
+        : error
+          ? 'error'
+          : 'loading'
 
   useEffect(() => {
-    setActiveSearch(search)
-  }, [search])
-
-  useEffect(() => {
-    let cancelled = false
-    const preseeded = activeSearch.results ?? []
-
-    setResults(preseeded)
-    setStatus(preseeded.length ? 'success' : 'loading')
-    setError('')
-    setSuggestion('')
+    const controller = new AbortController()
+    const key = activeKey
 
     searchTmdbAll({
       query: activeSearch.query,
       type: activeSearch.type,
       year: activeSearch.year,
       genre: activeSearch.genre,
+      signal: controller.signal,
     })
       .then(async (items) => {
-        if (cancelled) return
-        setResults(items)
-        setStatus(items.length === 0 ? 'empty' : 'success')
+        setFetched({ key, items })
         const nextSuggestion = await getSearchSuggestion({
           query: activeSearch.query,
           type: activeSearch.type,
           year: activeSearch.year,
           items,
+          signal: controller.signal,
         })
-        if (!cancelled) setSuggestion(nextSuggestion ?? '')
+        if (!controller.signal.aborted) {
+          setSuggestion({ key, value: nextSuggestion ?? '' })
+        }
       })
       .catch((err) => {
-        if (cancelled || preseeded.length) return
-        setStatus('error')
+        if (isAbortError(err) || seeded.length) return
         setError(err.message || 'Something went wrong.')
       })
 
-    return () => { cancelled = true }
-  }, [activeSearch])
+    return () => controller.abort()
+  }, [activeKey, activeSearch.query, activeSearch.type, activeSearch.year, activeSearch.genre, seeded.length])
 
   const label = getSearchLabel(activeSearch)
   const count = results.length
@@ -65,45 +80,41 @@ function SearchResultsPage({ search, onBack, onSelect }) {
       : `Results for “${label}”`
 
   return (
-    <main className="results-page">
-      <div className="results-page__inner">
-        <Button className="results-page__back" onClick={onBack}>
-          Back
-        </Button>
+    <OverlayPage
+      className="results-page"
+      contentClass="results-page__inner"
+      backClass="results-page__back"
+      onBack={onBack}
+      labelledBy="results-title"
+    >
+      <header className="results-page__header">
+        <h1 id="results-title" className="results-page__title">
+          Results
+        </h1>
+        <p className="results-page__query">{summary}</p>
+      </header>
 
-        <header className="results-page__header">
-          <h1 className="results-page__title">Results</h1>
-          <p className="results-page__query">{summary}</p>
-        </header>
+      {status === 'loading' && <p className="search-message">Searching…</p>}
 
-        {status === 'loading' && <p className="search-message">Searching…</p>}
+      {status === 'error' && (
+        <p className="search-message search-message-error">{error}</p>
+      )}
 
-        {status === 'error' && (
-          <p className="search-message search-message-error">{error}</p>
-        )}
+      {status === 'empty' && (
+        <p className="search-message">No results found for “{label}”.</p>
+      )}
 
-        {status === 'empty' && (
-          <p className="search-message">No results found for “{label}”.</p>
-        )}
+      {(status === 'empty' || status === 'success') && (
+        <DidYouMean
+          suggestion={suggestion.key === activeKey ? suggestion.value : ''}
+          onAccept={(nextQuery) => setQueryOverride({ key: searchKey, query: nextQuery })}
+        />
+      )}
 
-        {(status === 'empty' || status === 'success') && (
-          <DidYouMean
-            suggestion={suggestion}
-            onAccept={(nextQuery) =>
-              setActiveSearch({ ...activeSearch, query: nextQuery, results: [] })
-            }
-          />
-        )}
-
-        {count > 0 && (
-          <ul className="search-grid results-page__grid">
-            {results.map((item) => (
-              <MovieCard key={`${item.mediaType}-${item.id}`} item={item} onSelect={onSelect} />
-            ))}
-          </ul>
-        )}
-      </div>
-    </main>
+      {count > 0 && (
+        <ResultGrid items={results} onSelect={onSelect} className="search-grid results-page__grid" />
+      )}
+    </OverlayPage>
   )
 }
 

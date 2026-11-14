@@ -1,12 +1,12 @@
 # TMDB search
 
-How the Search section and “See all” overlay talk to TMDB. Implementation: `src/API/tmdb.js`, `src/pages/SearchSection.jsx`, `src/pages/SearchResultsPage.jsx`.
+How the Search section and “See all” overlay talk to TMDB. Implementation: `src/API/tmdb/search.js`, `src/pages/SearchSection.jsx`, `src/pages/SearchResultsPage.jsx`.
 
 ## In plain English
 
-Type a title (or a 4-digit year) and press the search button. The app asks TMDB for **one page** of matches and shows posters. **See all** asks for more pages (up to 10) and covers the screen. Year and genre are sometimes sent to TMDB and sometimes applied afterward in the browser, because not every TMDB URL accepts the same options.
+Type a title, a 4-digit year, or pick a genre, then press the search button. The app asks TMDB for **one page** of matches and shows posters. **See all** asks for more pages (up to 10) and covers the screen. Year and genre are sometimes sent to TMDB and sometimes applied afterward in the browser, because not every TMDB URL accepts the same options.
 
-A request runs only when the form has a trimmed query **or** a valid 4-digit year. Genre is an extra filter, not a trigger by itself.
+A request runs when the form has a trimmed query, a valid 4-digit year, **or** a selected genre.
 
 ## Intent
 
@@ -18,7 +18,7 @@ The search page shows **one TMDB page** (20 items, then local filters). **See al
 SearchSection.handleSubmit
   → fetchTmdbPage({ query, type, year, genre })   // page 1
   → applySearchFilters(...)                       // client-side year/genre when needed
-  → SearchCard grid + “See all”
+  → MovieCard grid + “See all”
 
 See all → App.openResults(search)
   → SearchResultsPage
@@ -31,15 +31,15 @@ See all → App.openResults(search)
 | Form state | Function | Endpoints |
 | --- | --- | --- |
 | Non-empty query | `searchTmdb` | `/3/search/multi`, `/movie`, `/tv`, or `/person` |
-| Empty query, valid year (and/or genre) | `discoverTmdb` | `/3/discover/movie` and/or `/tv` |
+| Empty query, valid year and/or genre | `discoverTmdb` | `/3/discover/movie` and/or `/tv` |
 
-Normalized item shape used by `SearchCard`:
+Normalized item shape used by `MovieCard`:
 
 ```js
 { id, mediaType, title, year, imagePath, genreIds }
 ```
 
-Posters use `https://image.tmdb.org/t/p/w185` plus `imagePath`. Missing images render a “No poster” placeholder. People use `profile_path` and have `year: null` and empty `genreIds`.
+Posters use `https://image.tmdb.org/t/p/w342` plus `imagePath`. Missing images render a “No poster” placeholder. People use `profile_path` and have `year: null` and empty `genreIds`.
 
 ## Filters
 
@@ -49,7 +49,7 @@ Default type in the UI is **Movies** (`type: 'movie'`), not All.
 | --- | --- | --- |
 | All / Movies / TV / People | `all`, `movie`, `tv`, `person` | Changing type clears the selected genre. |
 | Release date | 4-digit `YYYY` only (`isValidYear`) | Digits are stripped and capped at 4 characters. Turning the chip off clears the year. |
-| Genre | TMDB `{ id, name }` | Loaded from `/3/genre/movie/list` or `/tv/list`. `all` uses the **movie** genre list. Turning the chip off clears the selection. |
+| Genre | TMDB `{ id, name }` | Loaded from `/3/genre/movie/list` and/or `/tv/list`. `all` **merges** both lists. Turning the chip off clears the selection. |
 
 **People** (`type === 'person'`) disables year and genre. `discoverTmdb` for `person` returns `{ items: [], totalPages: 0 }` — people only appear when there is a search query.
 
@@ -94,15 +94,14 @@ TMDB does not accept the same params on every endpoint, so some filters are serv
 | `loading` | “Searching…”; submit button disabled |
 | `success` | Grid + See all |
 | `empty` | “No results found for …” |
-| `error` | `err.message` from `tmdb.js` |
+| `error` | `err.message` from the TMDB client |
 
-Empty submit (no query and no valid year) resets to `idle` rather than erroring.
+Empty submit (no query, year, or genre) resets to `idle` rather than erroring.
 
 ## Pitfalls
 
 - **v3 key only.** Requests use `?api_key=`. A TMDB v4 bearer token will fail with “Movie search failed…”.
 - **Restart after `.env.local` changes.** Vite bakes `VITE_*` at process start.
-- **Genre-only submit does nothing.** Need a query or `YYYY`.
 - **All + year on page 1 can look sparse.** Year is applied after `/search/multi`, so many of the 20 hits may drop out. See all fetches more pages, then filters.
 - **Query + genre has the same page-1 gap.** Genre is client-side on search endpoints, so See all is the path that searches deeper.
 - **All + discover concatenates movie and TV pages** for the same page number (not a single mixed TMDB list). `totalPages` is `Math.max` of the two.

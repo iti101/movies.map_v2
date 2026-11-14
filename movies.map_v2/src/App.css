@@ -61,6 +61,29 @@ html[data-theme='light'] {
   color-scheme: light;
 }
 
+.skip-link {
+  position: absolute;
+  left: 0.75rem;
+  top: 0.75rem;
+  z-index: 50;
+  transform: translateY(-200%);
+  padding: 0.55rem 0.9rem;
+  border-radius: 999px;
+  background: var(--color-button-bg);
+  color: var(--color-button-text);
+  font: 600 0.9rem var(--font-body);
+  text-decoration: none;
+}
+
+.skip-link:focus {
+  transform: none;
+}
+
+.app-error {
+  margin: 1.5rem;
+  color: var(--color-error);
+}
+
 .app {
   height: 100%;
 }

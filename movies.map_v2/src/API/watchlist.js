@@ -51,25 +51,50 @@ export function isInWatchlist(userId, item) {
   return getLists(userId).some((list) => list.items.some((entry) => sameTitle(entry, item)))
 }
 
-export function addToWatchlist(userId, item) {
+function asWatchlistEntry(item) {
+  return {
+    id: item.id,
+    mediaType: item.mediaType,
+    title: item.title,
+    imagePath: item.imagePath ?? item.posterPath ?? null,
+    year:
+      item.year ??
+      (item.releaseDate || item.firstAirDate)?.slice(0, 4) ??
+      null,
+  }
+}
+
+export function addToList(userId, listId, item) {
+  if (userId == null || !item || !listId) return null
+
   const all = readAll()
   const lists = listsFor(userId)
-  const list = { ...lists[0], items: [...lists[0].items] }
-  const exists = list.items.some((entry) => sameTitle(entry, item))
+  const target = lists.find((list) => list.id === listId)
+  if (!target) return null
 
-  if (!exists) {
-    list.items.push({
-      id: item.id,
-      mediaType: item.mediaType,
-      title: item.title,
-      imagePath: item.imagePath ?? null,
-      year: item.year ?? null,
-    })
-  }
+  const exists = target.items.some((entry) => sameTitle(entry, item))
+  const nextLists = lists.map((list) => {
+    if (list.id !== listId) return list
+    return {
+      ...list,
+      items: exists ? list.items : [...list.items, asWatchlistEntry(item)],
+    }
+  })
 
-  all[String(userId)] = [list, ...lists.slice(1)]
+  all[String(userId)] = nextLists
   writeAll(all)
   return exists ? 'already' : 'added'
+}
+
+export function addToWatchlist(userId, item) {
+  const lists = listsFor(userId)
+  return addToList(userId, lists[0].id, item)
+}
+
+export function isInList(userId, listId, item) {
+  if (userId == null || !item || !listId) return false
+  const list = getLists(userId).find((entry) => entry.id === listId)
+  return Boolean(list?.items.some((entry) => sameTitle(entry, item)))
 }
 
 export function createList(userId, name) {

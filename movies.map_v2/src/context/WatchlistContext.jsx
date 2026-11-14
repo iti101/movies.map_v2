@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import {
   WATCHLISTS_CHANGED,
+  addToList,
   createList as storeCreateList,
   deleteList as storeDeleteList,
   getLists,
@@ -46,6 +47,9 @@ export function WatchlistProvider({ userId, children }) {
         const list = storeCreateList(userId, name)
         if (list) setActiveListId(list.id)
         return list
+      },
+      addItem(listId, item) {
+        return addToList(userId, listId, item)
       },
     }),
     [lists, activeList, activeListId, userId],

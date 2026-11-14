@@ -1,18 +1,18 @@
 # movies.map
 
-React + Vite client for browsing movies, TV shows, and people through [TMDB](https://www.themoviedb.org/). The home screen is a full-viewport snap scroller: a typewriter intro, a live search section, and a Randomizer placeholder.
+React + Vite client for browsing movies, TV shows, and people through [TMDB](https://www.themoviedb.org/). The home screen is a full-viewport snap scroller: a typewriter intro, live search, and a guided Randomizer. Signed-in users can keep watchlists and write reviews through the Novi education API.
 
 This README covers setup, architecture, and the pitfalls that are easy to hit locally. Search request behavior is documented in [docs/search.md](docs/search.md).
 
 ## In plain English
 
-The app is three full-screen pages you scroll between, plus a search overlay:
+The app is three full-screen pages you scroll between, plus overlays:
 
 1. **Home** types a short sentence, then shows the logo and **Get Started**.
-2. **Search** asks [TMDB](https://www.themoviedb.org/) (a public movie catalog) for posters that match a title or year.
-3. **Randomizer** is an empty page for a later feature.
+2. **Search** asks TMDB for posters that match a title, year, or genre.
+3. **Randomizer** walks through format, genre, and optional person filters, then suggests a title.
 
-There is no login server. The person icon is a browser on/off switch. Search needs a free TMDB **v3** API key in `.env.local`.
+Sign in with a Novi account to save watchlists and publish reviews. Search needs a free TMDB **v3** API key in `.env.local`.
 
 ## Quick start
 
@@ -20,7 +20,7 @@ There is no login server. The person icon is a browser on/off switch. Search nee
 cd movies.map_v2
 npm install
 cp .env.example .env.local
-# add your TMDB v3 API key to .env.local
+# add your TMDB v3 API key and Novi project ID to .env.local
 npm run dev
 ```
 
@@ -37,40 +37,49 @@ Vite listens on **port 5175** and will pick the next free port if 5175 is busy (
 
 | Variable | Required | Notes |
 | --- | --- | --- |
-| `VITE_TMDB_API_KEY` | Yes, for search | TMDB **v3** key. Vite inlines `import.meta.env` at startup, so changing `.env.local` requires a restart. |
+| `VITE_TMDB_API_KEY` | Yes, for catalog data | TMDB **v3** key. Vite inlines `import.meta.env` at startup, so changing `.env.local` requires a restart. |
+| `VITE_NOVI_PROJECT_ID` | Yes, for login/reviews | Sent as the `novi-education-project-id` header. |
+| `VITE_NOVI_API_URL` | No | Hosted Novi API. Dev traffic is proxied through `/novi-api`. |
 
 `.env.local` is gitignored via `*.local`. Do not commit a real key.
 
-Without the key, `src/API/tmdb.js` throws:
+Without the TMDB key, `src/API/tmdb/client.js` throws:
 
 > Missing TMDB API key. Add `VITE_TMDB_API_KEY` to `.env.local` and restart the dev server.
 
 ## Architecture
 
-There is no router. `src/App.jsx` owns session-ish state and the three snap sections; the “See all” results view is an overlay, not a route.
+There is no router. `src/App.jsx` owns session and overlay history. Search, detail, and watchlist views are overlays, not routes. Overlay pages load with `React.lazy`.
 
 ```
 App
-├── NavBar              theme + localStorage auth stub + section menu
-├── main.snap-container
-│   ├── #home           Typewriter intro
-│   ├── #search         SearchSection (first TMDB page)
-│   └── #randomizer     placeholder copy only
-└── SearchResultsPage   overlay when “See all” is open
+├── NavBar                 theme, Novi auth, section menu, watchlist
+├── main.snap-container    inert while an overlay is open
+│   ├── #home              Typewriter intro
+│   ├── #search            SearchSection (first TMDB page)
+│   └── #randomizer        guided Randomizer
+├── SearchResultsPage      overlay when “See all” is open
+├── Watchlist              overlay when signed in
+├── DetailPage             movie / TV / person
+└── AuthModal              sign in / create account
 ```
 
 | Concern | Where it lives |
 | --- | --- |
-| Theme + auth stub | `src/App.jsx`, applied to `<html data-theme>` |
-| TMDB HTTP + filters | `src/API/tmdb.js` |
+| Theme + session | `src/App.jsx`, `src/API/novi.js` |
+| Overlay history | `src/hooks/useOverlayHistory.js` |
+| TMDB HTTP | `src/API/tmdb/` (`client`, `search`, `details`, `watch`) |
 | First-page search UI | `src/pages/SearchSection.jsx` |
 | Multi-page results overlay | `src/pages/SearchResultsPage.jsx` |
-| Shared buttons | `src/components/Button.jsx` |
+| Title / person detail | `src/pages/detail/` |
+| Shared overlay / modal / chips | `src/components/` |
 | Smooth scroll helper | `src/scrollToSection.js` |
+
+TMDB GETs share an LRU cache and coalesce in-flight requests in `src/API/tmdb/client.js`. Overlay unmounts abort waiting on the result; the network response can still fill the cache.
 
 ### Snap layout
 
-`.snap-container` uses `scroll-snap-type: y mandatory`. Each `.snap-section` is one viewport tall, with top padding for the fixed navbar (`--navbar-height: 3.5rem`). Menu items and the intro **Get Started** button scroll to `#home`, `#search`, or `#randomizer`.
+`.snap-container` uses `scroll-snap-type: y mandatory`. Each `.snap-section` is one viewport tall, with top padding for the fixed navbar (`--navbar-height: 3.5rem`). Menu items and the intro **Get Started** button scroll to `#home`, `#search`, or `#randomizer`. Press **/** from outside a field to jump to Search.
 
 ### Home intro (`Typewriter`)
 
@@ -82,25 +91,26 @@ App
 
 ### NavBar
 
-Hamburger opens a full-viewport menu (`#main-menu`). **Escape** closes it. Section buttons call `onNavigate` (which closes the results overlay) then `scrollIntoView` on the next tick.
+Hamburger opens a full-viewport menu (`#main-menu`). **Escape** closes it. Section buttons call `onNavigate` (which closes overlays) then `scrollIntoView` on the next tick.
 
-The **theme** icon always toggles light/dark. The **login** icon always flips `isLoggedIn`. The menu’s **Log-in / Sign-up** item logs you in if you are logged out; **My Watchlist** (logged-in label) only closes the menu — there is no watchlist view.
+The **theme** icon always toggles light/dark. The **login** icon opens the Novi auth modal, or logs out. The menu’s **Log-in / Sign-up** item does the same when logged out; **My Watchlist** opens the watchlist overlay.
 
-### Results overlay and history
+### Overlays and history
 
-`openResults` stores the current search and `history.pushState({ results: true })`. Back / **Back** clears the overlay:
+`useOverlayHistory` stores search / detail / watchlist in `history.state` so Back works:
 
-- If `history.state.results` is set, `closeResults` calls `history.back()`.
-- A `popstate` listener always sets the overlay search to `null`.
-- Navbar navigation also closes the overlay, then scrolls to the section (deferred one tick so the overlay unmounts first).
+- **See all** pushes `{ results: true }`.
+- Opening a title stacks `{ detail }` on the current state.
+- Watchlist stacks `{ watchlist: true }`.
+- Navbar navigation dismisses overlays with `replaceState`.
 
 ### Theme
 
 Default is **dark**. `index.html` reads `localStorage.theme` before React mounts to avoid a flash. `App` keeps `theme` in state, writes `data-theme` and `color-scheme` on `<html>`, and persists `'light'` or `'dark'`. Tokens live in `src/App.css` under `html[data-theme='dark']` and `html[data-theme='light']`.
 
-### Auth stub
+### Auth and watchlists
 
-`localStorage.isLoggedIn` is a boolean string (`'true'` / anything else). The navbar login icon toggles it. There is no backend, session cookie, or watchlist page — the menu label **My Watchlist** only appears when the stub is logged in.
+Novi JWT + profile are stored in `localStorage` (`noviToken`, `noviUser`). Watchlists are per user id in `localStorage.watchlists`. From a title page, **Add to Watchlist** saves to the default list, or asks which list when more than one exists.
 
 ## UI primitives
 
@@ -115,25 +125,14 @@ Default is **dark**. `index.html` reads `localStorage.theme` before React mounts
 | `color`, `background`, `hoverBackground` | — | CSS color, or a token name that becomes `var(--color-<name>)`. |
 | `font` | `'body'` | `'body'` → `--font-body`, `'display'` → `--font-display`. |
 
-```jsx
-<Button
-  variant="icon"
-  round
-  background="accent-btn"
-  hoverBackground="accent-btn-hover"
-  aria-label="Search"
->
-  <img src={searchIcon} alt="" />
-</Button>
-```
+`OverlayPage`, `Modal`, `ChipRow`, `ResultGrid`, `MediaImage`, and `PersonTypeahead` wrap the repeated overlay, dialog, chip, poster-grid, and actor-search patterns.
 
 ## Constraints and known gaps
 
-- **Randomizer** (`#randomizer`) is still placeholder text.
-- **Login / watchlist** are UI-only; nothing is stored except the `isLoggedIn` flag.
 - Adult titles are always excluded (`include_adult=false`).
 - The intro typewriter skips animation when `prefers-reduced-motion: reduce` is set.
 - React Compiler is enabled (`babel-plugin-react-compiler` in `vite.config.js`). `App` is marked `'use no memo'` so compiler memoization does not wrap that component.
+- Novi reviews are fetched as a list, then filtered to the current title in the client.
 
 ## Troubleshooting
 
@@ -141,7 +140,8 @@ Default is **dark**. `index.html` reads `localStorage.theme` before React mounts
 | --- | --- |
 | `Missing TMDB API key…` | No `VITE_TMDB_API_KEY`, or the dev server was not restarted after editing `.env.local`. |
 | `Movie search failed. Check your API key…` | Wrong key type (v4 token instead of v3), revoked key, or TMDB HTTP error. |
-| Blank search after submit with only Genre on | Submit requires a non-empty query **or** a 4-digit year. Genre alone does not start a request. |
+| `Missing NOVI project ID…` | No `VITE_NOVI_PROJECT_ID` in `.env.local`. |
+| Blank search after submit | Need a query, a 4-digit year, or a selected genre. |
 | Year / Genre chips disabled | Type is **People**. `SearchSection` turns those filters off for `person`. |
 | Dev URL is not `:5175` | Another process already bound 5175; Vite chose the next port. |
 | Theme flash on reload | The inline script in `index.html` must stay in `<head>` so `data-theme` is set before paint. |

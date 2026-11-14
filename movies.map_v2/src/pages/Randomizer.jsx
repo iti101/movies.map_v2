@@ -1,14 +1,14 @@
-import { useEffect, useId, useRef, useState } from 'react'
-import { discoverTmdb, loadGenres, searchPeople } from '../API/tmdb.js'
+import { useEffect, useState } from 'react'
+import { discoverTmdb, loadGenres } from '../API/tmdb.js'
+import { isAbortError } from '../API/tmdb/client.js'
 import Button from '../components/Button.jsx'
+import ChipRow from '../components/ChipRow.jsx'
 import MovieCard from '../components/MovieCard.jsx'
+import PersonTypeahead from '../components/PersonTypeahead.jsx'
+import { cn } from '../lib/format.js'
+import { RANDOMIZER_TYPES } from '../lib/media.js'
+import { randomInt, shuffle, uniqueBy } from '../lib/shuffle.js'
 import './Randomizer.css'
-
-const TYPE_OPTIONS = [
-  { id: 'movie', label: 'Movies' },
-  { id: 'tv', label: 'TV' },
-  { id: 'all', label: 'All' },
-]
 
 const STEPS = [
   {
@@ -43,10 +43,6 @@ const STEPS = [
 
 const MAX_RANDOM_PAGE = 20
 
-function randomInt(min, max) {
-  return min + Math.floor(Math.random() * (max - min + 1))
-}
-
 function toggleGenre(list, genre) {
   return list.some((entry) => entry.id === genre.id)
     ? list.filter((entry) => entry.id !== genre.id)
@@ -59,13 +55,10 @@ function namesList(list, empty = 'Any') {
 }
 
 function typeLabel(type) {
-  return TYPE_OPTIONS.find((option) => option.id === type)?.label ?? 'Movies'
+  return RANDOMIZER_TYPES.find((option) => option.id === type)?.label ?? 'Movies'
 }
 
 function Randomizer({ onSelect }) {
-  const personFieldId = useId()
-  const personBoxRef = useRef(null)
-
   const [stepIndex, setStepIndex] = useState(0)
   const [phase, setPhase] = useState('setup')
   const [type, setType] = useState('movie')
@@ -74,8 +67,6 @@ function Randomizer({ onSelect }) {
   const [avoidGenres, setAvoidGenres] = useState([])
   const [personQuery, setPersonQuery] = useState('')
   const [person, setPerson] = useState(null)
-  const [personMatches, setPersonMatches] = useState([])
-  const [personStatus, setPersonStatus] = useState('idle')
   const [pool, setPool] = useState([])
   const [index, setIndex] = useState(0)
   const [status, setStatus] = useState('idle')
@@ -88,10 +79,9 @@ function Randomizer({ onSelect }) {
   const hasResult = phase === 'result' && Boolean(pick)
 
   useEffect(() => {
-    let cancelled = false
-    loadGenres(type)
+    const controller = new AbortController()
+    loadGenres(type, { signal: controller.signal })
       .then((list) => {
-        if (cancelled) return
         setGenres(list)
         const ids = new Set(list.map((genre) => genre.id))
         setWantGenres((current) => {
@@ -103,67 +93,19 @@ function Randomizer({ onSelect }) {
           return next.length === current.length ? current : next
         })
       })
-      .catch(() => {
-        if (!cancelled) setGenres([])
+      .catch((err) => {
+        if (!isAbortError(err)) setGenres([])
       })
-    return () => {
-      cancelled = true
-    }
+    return () => controller.abort()
   }, [type])
 
-  useEffect(() => {
+  function resetRoll() {
     setPool([])
     setIndex(0)
     setStatus('idle')
     setError('')
     setPhase('setup')
-  }, [type, wantGenres, avoidGenres, person])
-
-  useEffect(() => {
-    if (person) {
-      setPersonMatches([])
-      setPersonStatus('idle')
-      return undefined
-    }
-
-    const trimmed = personQuery.trim()
-    if (trimmed.length < 2) {
-      setPersonMatches([])
-      setPersonStatus('idle')
-      return undefined
-    }
-
-    let cancelled = false
-    setPersonStatus('loading')
-    const timer = window.setTimeout(() => {
-      searchPeople(trimmed)
-        .then((matches) => {
-          if (cancelled) return
-          setPersonMatches(matches)
-          setPersonStatus(matches.length ? 'ready' : 'empty')
-        })
-        .catch(() => {
-          if (cancelled) return
-          setPersonMatches([])
-          setPersonStatus('empty')
-        })
-    }, 280)
-
-    return () => {
-      cancelled = true
-      window.clearTimeout(timer)
-    }
-  }, [personQuery, person])
-
-  useEffect(() => {
-    function onPointerDown(event) {
-      if (!personBoxRef.current?.contains(event.target)) {
-        setPersonMatches([])
-      }
-    }
-    window.addEventListener('pointerdown', onPointerDown)
-    return () => window.removeEventListener('pointerdown', onPointerDown)
-  }, [])
+  }
 
   async function roll() {
     setStatus('loading')
@@ -181,8 +123,9 @@ function Randomizer({ onSelect }) {
       const lastPage = Math.min(Math.max(first.totalPages || 1, 1), MAX_RANDOM_PAGE)
       const page = randomInt(1, lastPage)
       const { items } = page === 1 ? first : await discoverTmdb({ ...filters, page })
+      const mixed = shuffle(uniqueBy(items, (item) => `${item.mediaType}-${item.id}`))
 
-      if (!items.length) {
+      if (!mixed.length) {
         setPool([])
         setIndex(0)
         setStatus('empty')
@@ -190,8 +133,8 @@ function Randomizer({ onSelect }) {
         return
       }
 
-      setPool(items)
-      setIndex(randomInt(0, items.length - 1))
+      setPool(mixed)
+      setIndex(0)
       setStatus('success')
       setPhase('result')
     } catch (err) {
@@ -238,18 +181,13 @@ function Randomizer({ onSelect }) {
   function handleWant(genre) {
     setWantGenres((current) => toggleGenre(current, genre))
     setAvoidGenres((current) => current.filter((entry) => entry.id !== genre.id))
+    resetRoll()
   }
 
   function handleAvoid(genre) {
     setAvoidGenres((current) => toggleGenre(current, genre))
     setWantGenres((current) => current.filter((entry) => entry.id !== genre.id))
-  }
-
-  function clearPerson() {
-    setPerson(null)
-    setPersonQuery('')
-    setPersonMatches([])
-    setPersonStatus('idle')
+    resetRoll()
   }
 
   function stepSummary(stepId) {
@@ -261,7 +199,7 @@ function Randomizer({ onSelect }) {
   }
 
   return (
-    <div className={`randomizer${hasResult ? ' randomizer--has-pick' : ''}`}>
+    <div className={cn('randomizer', hasResult && 'randomizer--has-pick')}>
       <header className="randomizer__intro">
         <h2 className="randomizer__title">Randomizer</h2>
         <p className="randomizer__lead">
@@ -272,21 +210,19 @@ function Randomizer({ onSelect }) {
       </header>
 
       <nav className="randomizer__steps" aria-label="Filter steps">
-        {STEPS.map((entry, index) => {
-          const done = index < stepIndex || phase === 'result'
-          const current = phase === 'setup' && index === stepIndex
+        {STEPS.map((entry, stepPosition) => {
+          const done = stepPosition < stepIndex || phase === 'result'
+          const current = phase === 'setup' && stepPosition === stepIndex
           return (
             <button
               key={entry.id}
               type="button"
-              className={[
+              className={cn(
                 'randomizer__step',
                 current && 'randomizer__step--current',
                 done && 'randomizer__step--done',
-              ]
-                .filter(Boolean)
-                .join(' ')}
-              onClick={() => goToStep(index)}
+              )}
+              onClick={() => goToStep(stepPosition)}
               aria-current={current ? 'step' : undefined}
             >
               <span className="randomizer__step-number" aria-hidden="true">
@@ -314,101 +250,51 @@ function Randomizer({ onSelect }) {
 
           <div className="randomizer__choices">
             {step.id === 'type' && (
-              <div className="randomizer__chips">
-                {TYPE_OPTIONS.map((option) => (
-                  <Button
-                    key={option.id}
-                    active={type === option.id}
-                    onClick={() => setType(option.id)}
-                  >
-                    {option.label}
-                  </Button>
-                ))}
-              </div>
+              <ChipRow
+                className="randomizer__chips"
+                items={RANDOMIZER_TYPES}
+                isActive={(option) => type === option.id}
+                onSelect={(option) => {
+                  setType(option.id)
+                  resetRoll()
+                }}
+              />
             )}
 
             {step.id === 'want' && (
-              <div className="randomizer__genre-row">
-                {genres.map((genre) => (
-                  <Button
-                    key={`want-${genre.id}`}
-                    active={wantGenres.some((entry) => entry.id === genre.id)}
-                    onClick={() => handleWant(genre)}
-                  >
-                    {genre.name}
-                  </Button>
-                ))}
-              </div>
+              <ChipRow
+                className="randomizer__genre-row"
+                items={genres}
+                isActive={(genre) => wantGenres.some((entry) => entry.id === genre.id)}
+                onSelect={handleWant}
+              />
             )}
 
             {step.id === 'avoid' && (
-              <div className="randomizer__genre-row">
-                {genres.map((genre) => (
-                  <Button
-                    key={`avoid-${genre.id}`}
-                    active={avoidGenres.some((entry) => entry.id === genre.id)}
-                    onClick={() => handleAvoid(genre)}
-                  >
-                    {genre.name}
-                  </Button>
-                ))}
-              </div>
+              <ChipRow
+                className="randomizer__genre-row"
+                items={genres}
+                isActive={(genre) => avoidGenres.some((entry) => entry.id === genre.id)}
+                onSelect={handleAvoid}
+              />
             )}
 
             {step.id === 'person' && (
-              <div className="randomizer__person" ref={personBoxRef}>
-                {person ? (
-                  <div className="randomizer__person-picked">
-                    <span>{person.name}</span>
-                    <button
-                      type="button"
-                      className="randomizer__person-clear"
-                      onClick={clearPerson}
-                      aria-label={`Clear ${person.name}`}
-                    >
-                      ×
-                    </button>
-                  </div>
-                ) : (
-                  <>
-                    <input
-                      id={personFieldId}
-                      className="randomizer__person-input"
-                      type="search"
-                      value={personQuery}
-                      onChange={(event) => setPersonQuery(event.target.value)}
-                      placeholder="Actor or director name"
-                      aria-label="Filter by actor or director"
-                      autoComplete="off"
-                    />
-                    {personStatus === 'loading' && (
-                      <p className="randomizer__person-hint">Searching…</p>
-                    )}
-                    {personStatus === 'empty' && personQuery.trim().length >= 2 && (
-                      <p className="randomizer__person-hint">No people found.</p>
-                    )}
-                    {personMatches.length > 0 && (
-                      <ul className="randomizer__person-matches" role="listbox">
-                        {personMatches.map((match) => (
-                          <li key={match.id}>
-                            <button
-                              type="button"
-                              role="option"
-                              onClick={() => {
-                                setPerson(match)
-                                setPersonQuery(match.name)
-                                setPersonMatches([])
-                              }}
-                            >
-                              {match.name}
-                            </button>
-                          </li>
-                        ))}
-                      </ul>
-                    )}
-                  </>
-                )}
-              </div>
+              <PersonTypeahead
+                value={person}
+                query={personQuery}
+                onQueryChange={setPersonQuery}
+                onSelect={(match) => {
+                  setPerson(match)
+                  setPersonQuery(match.name)
+                  resetRoll()
+                }}
+                onClear={() => {
+                  setPerson(null)
+                  setPersonQuery('')
+                  resetRoll()
+                }}
+              />
             )}
           </div>
 

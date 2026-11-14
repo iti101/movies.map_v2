@@ -48,11 +48,12 @@ async function readErrorMessage(response) {
   }
 }
 
-async function request(path, { method = 'GET', body, token } = {}) {
+async function request(path, { method = 'GET', body, token, signal } = {}) {
   const response = await fetch(`${getBaseUrl()}${path}`, {
     method,
     headers: authHeaders(token),
     body: body ? JSON.stringify(body) : undefined,
+    signal,
   })
 
   if (!response.ok) {
@@ -114,7 +115,7 @@ export function loadSession() {
     return { isLoggedIn: false, token: null, user: null }
   }
 
-  let user = null
+  let user
   try {
     user = JSON.parse(localStorage.getItem(USER_KEY) || 'null')
   } catch {
@@ -229,8 +230,8 @@ function asList(data) {
   return []
 }
 
-export async function getReviewsForMedia(mediaType, mediaId, token) {
-  const list = asList(await request('/api/reviews', { token }))
+export async function getReviewsForMedia(mediaType, mediaId, token, { signal } = {}) {
+  const list = asList(await request('/api/reviews', { token, signal }))
   return list
     .filter(
       (review) => review.mediaType === mediaType && Number(review.mediaId) === Number(mediaId),

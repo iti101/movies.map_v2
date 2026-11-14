@@ -1,5 +1,6 @@
-import { useEffect, useId, useRef, useState } from 'react'
+import { useId, useState } from 'react'
 import Button from './Button.jsx'
+import Modal from './Modal.jsx'
 import { createAccount, login } from '../API/novi.js'
 import visibilityIcon from '../assets/visibility_opsz24.svg'
 import visibilityOffIcon from '../assets/visibility_off_opsz24.svg'
@@ -71,7 +72,6 @@ function AuthModal({ open, onClose, onAuthenticated }) {
   const passwordId = useId()
   const usernameId = useId()
   const confirmId = useId()
-  const firstFieldRef = useRef(null)
 
   const [mode, setMode] = useState('signin')
   const [form, setForm] = useState(INITIAL_FORM)
@@ -80,33 +80,13 @@ function AuthModal({ open, onClose, onAuthenticated }) {
 
   const isSignIn = mode === 'signin'
 
-  useEffect(() => {
-    if (!open) return undefined
-
-    const previousOverflow = document.body.style.overflow
-    document.body.style.overflow = 'hidden'
-
-    function onKeyDown(event) {
-      if (event.key === 'Escape') onClose()
-    }
-
-    window.addEventListener('keydown', onKeyDown)
-    window.setTimeout(() => firstFieldRef.current?.focus(), 0)
-
-    return () => {
-      document.body.style.overflow = previousOverflow
-      window.removeEventListener('keydown', onKeyDown)
-    }
-  }, [open, mode, onClose])
-
-  useEffect(() => {
-    if (!open) {
-      setMode('signin')
-      setForm(INITIAL_FORM)
-      setError('')
-      setSubmitting(false)
-    }
-  }, [open])
+  function handleClose() {
+    setMode('signin')
+    setForm(INITIAL_FORM)
+    setError('')
+    setSubmitting(false)
+    onClose()
+  }
 
   function updateField(field) {
     return (event) => {
@@ -158,7 +138,7 @@ function AuthModal({ open, onClose, onAuthenticated }) {
         ? await login({ email, password })
         : await createAccount({ username, email, password })
       onAuthenticated(session)
-      onClose()
+      handleClose()
     } catch (err) {
       setError(err.message || 'Something went wrong. Please try again.')
     } finally {
@@ -166,147 +146,141 @@ function AuthModal({ open, onClose, onAuthenticated }) {
     }
   }
 
-  if (!open) return null
-
   return (
-    <div className="auth-overlay" onClick={onClose}>
-      <div
-        className="auth-dialog"
-        role="dialog"
-        aria-modal="true"
-        aria-labelledby={titleId}
-        onClick={(event) => event.stopPropagation()}
+    <Modal
+      open={open}
+      onClose={handleClose}
+      labelledBy={titleId}
+      overlayClass="auth-overlay"
+      dialogClass="auth-dialog"
+    >
+      <button
+        className="auth-close"
+        type="button"
+        aria-label="Close"
+        onClick={handleClose}
       >
-        <button
-          className="auth-close"
-          type="button"
-          aria-label="Close"
-          onClick={onClose}
-        >
-          ×
-        </button>
+        ×
+      </button>
 
-        <h2 id={titleId} className="auth-title">
-          {isSignIn ? 'Sign in' : 'Create account'}
-        </h2>
+      <h2 id={titleId} className="auth-title">
+        {isSignIn ? 'Sign in' : 'Create account'}
+      </h2>
 
+      {!isSignIn && (
+        <p className="auth-subtitle">
+          Register with your email to save watchlists and write reviews.
+        </p>
+      )}
+
+      <form className="auth-form" onSubmit={handleSubmit}>
         {!isSignIn && (
-          <p className="auth-subtitle">
-            Register with your email to save watchlists and write reviews.
-          </p>
-        )}
-
-        <form className="auth-form" onSubmit={handleSubmit}>
-          {!isSignIn && (
-            <div className="auth-field">
-              <label htmlFor={usernameId}>Username</label>
-              <input
-                ref={firstFieldRef}
-                id={usernameId}
-                className="auth-input"
-                type="text"
-                value={form.username}
-                onChange={updateField('username')}
-                placeholder="Choose a username"
-                autoComplete="username"
-                minLength={2}
-                maxLength={40}
-                disabled={submitting}
-              />
-            </div>
-          )}
-
           <div className="auth-field">
-            <label htmlFor={emailId}>Email</label>
+            <label htmlFor={usernameId}>Username</label>
             <input
-              ref={isSignIn ? firstFieldRef : undefined}
-              id={emailId}
+              id={usernameId}
               className="auth-input"
-              type="email"
-              value={form.email}
-              onChange={updateField('email')}
-              placeholder={isSignIn ? undefined : 'you@example.com'}
-              autoComplete="email"
+              type="text"
+              value={form.username}
+              onChange={updateField('username')}
+              placeholder="Choose a username"
+              autoComplete="username"
+              minLength={2}
+              maxLength={40}
               disabled={submitting}
             />
           </div>
+        )}
 
-          <PasswordField
-            id={passwordId}
-            label="Password"
-            value={form.password}
-            onChange={updateField('password')}
-            placeholder={isSignIn ? undefined : 'Create a strong password'}
-            autoComplete={isSignIn ? 'current-password' : 'new-password'}
+        <div className="auth-field">
+          <label htmlFor={emailId}>Email</label>
+          <input
+            id={emailId}
+            className="auth-input"
+            type="email"
+            value={form.email}
+            onChange={updateField('email')}
+            placeholder={isSignIn ? undefined : 'you@example.com'}
+            autoComplete="email"
             disabled={submitting}
           />
-
-          {!isSignIn && (
-            <>
-              <ul className="auth-requirements">
-                <li>At least 8 characters</li>
-                <li>At least 1 number</li>
-                <li>At least 1 special character</li>
-              </ul>
-
-              <PasswordField
-                id={confirmId}
-                label="Confirm password"
-                value={form.confirmPassword}
-                onChange={updateField('confirmPassword')}
-                placeholder="Repeat your password"
-                autoComplete="new-password"
-                disabled={submitting}
-              />
-            </>
-          )}
-
-          {error && (
-            <p className="auth-error" role="alert">
-              {error}
-            </p>
-          )}
-
-          <Button
-            className="auth-submit"
-            type="submit"
-            variant="solid"
-            disabled={submitting}
-          >
-            {submitting
-              ? isSignIn
-                ? 'Signing in…'
-                : 'Creating account…'
-              : isSignIn
-                ? 'Sign in'
-                : 'Create account'}
-          </Button>
-        </form>
-
-        <div className="auth-footer">
-          {isSignIn ? (
-            <p>
-              Don&apos;t have an account?{' '}
-              <button type="button" className="auth-link" onClick={() => switchMode('signup')}>
-                Create an account
-              </button>
-            </p>
-          ) : (
-            <>
-              <p>
-                Already have an account?{' '}
-                <button type="button" className="auth-link" onClick={() => switchMode('signin')}>
-                  Sign in
-                </button>
-              </p>
-              <button type="button" className="auth-link" onClick={onClose}>
-                Back to home
-              </button>
-            </>
-          )}
         </div>
+
+        <PasswordField
+          id={passwordId}
+          label="Password"
+          value={form.password}
+          onChange={updateField('password')}
+          placeholder={isSignIn ? undefined : 'Create a strong password'}
+          autoComplete={isSignIn ? 'current-password' : 'new-password'}
+          disabled={submitting}
+        />
+
+        {!isSignIn && (
+          <>
+            <ul className="auth-requirements">
+              <li>At least 8 characters</li>
+              <li>At least 1 number</li>
+              <li>At least 1 special character</li>
+            </ul>
+
+            <PasswordField
+              id={confirmId}
+              label="Confirm password"
+              value={form.confirmPassword}
+              onChange={updateField('confirmPassword')}
+              placeholder="Repeat your password"
+              autoComplete="new-password"
+              disabled={submitting}
+            />
+          </>
+        )}
+
+        {error && (
+          <p className="auth-error" role="alert">
+            {error}
+          </p>
+        )}
+
+        <Button
+          className="auth-submit"
+          type="submit"
+          variant="solid"
+          disabled={submitting}
+        >
+          {submitting
+            ? isSignIn
+              ? 'Signing in…'
+              : 'Creating account…'
+            : isSignIn
+              ? 'Sign in'
+              : 'Create account'}
+        </Button>
+      </form>
+
+      <div className="auth-footer">
+        {isSignIn ? (
+          <p>
+            Don&apos;t have an account?{' '}
+            <button type="button" className="auth-link" onClick={() => switchMode('signup')}>
+              Create an account
+            </button>
+          </p>
+        ) : (
+          <>
+            <p>
+              Already have an account?{' '}
+              <button type="button" className="auth-link" onClick={() => switchMode('signin')}>
+                Sign in
+              </button>
+            </p>
+            <button type="button" className="auth-link" onClick={handleClose}>
+              Back to home
+            </button>
+          </>
+        )}
       </div>
-    </div>
+    </Modal>
   )
 }
 

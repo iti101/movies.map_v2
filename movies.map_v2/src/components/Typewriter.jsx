@@ -31,17 +31,18 @@ function wait(ms, signal) {
  * Home intro: types “movie / show / episode”, then the logo, then Get Started.
  * Skips the typing show when the OS asks for reduced motion.
  */
+function prefersReducedMotion() {
+  return window.matchMedia('(prefers-reduced-motion: reduce)').matches
+}
+
 function Typewriter() {
   const [text, setText] = useState('')
-  const [phase, setPhase] = useState('typing')
-  const [showCta, setShowCta] = useState(false)
+  const [phase, setPhase] = useState(() => (prefersReducedMotion() ? 'brand' : 'typing'))
+  const [showCta, setShowCta] = useState(() => prefersReducedMotion())
 
   useEffect(() => {
-    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
-      setPhase('brand')
-      setShowCta(true)
-      return
-    }
+    if (prefersReducedMotion()) return undefined
+
 
     const ac = new AbortController()
     const { signal } = ac
