@@ -1,17 +1,18 @@
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import {
   applySearchFilters,
   fetchTmdbPage,
   getSearchLabel,
   getSearchSuggestion,
   isValidYear,
-  loadGenres,
 } from '../API/tmdb.js'
-import { isAbortError } from '../API/tmdb/client.js'
 import Button from '../components/Button.jsx'
 import ChipRow from '../components/ChipRow.jsx'
 import DidYouMean from '../components/DidYouMean.jsx'
 import ResultGrid from '../components/ResultGrid.jsx'
+import { useGenres } from '../hooks/useGenres.js'
+import { useLatestAbort } from '../hooks/useLatestAbort.js'
+import { isAbortError } from '../lib/async.js'
 import { SEARCH_TYPES } from '../lib/media.js'
 import searchIcon from '../assets/search_opsz24.svg'
 import './SearchSection.css'
@@ -26,35 +27,24 @@ function SearchSection({ onSeeAll, onSelect }) {
   const [releaseDateOn, setReleaseDateOn] = useState(false)
   const [year, setYear] = useState('')
   const [genreOn, setGenreOn] = useState(false)
-  const [genres, setGenres] = useState([])
   const [selectedGenre, setSelectedGenre] = useState(null)
   const [results, setResults] = useState([])
   const [status, setStatus] = useState('idle')
   const [error, setError] = useState('')
   const [searchedQuery, setSearchedQuery] = useState('')
   const [suggestion, setSuggestion] = useState('')
+  const genres = useGenres(type)
+  const nextSignal = useLatestAbort()
 
   const filtersDisabled = type === 'person'
   const hasResults = status === 'success' && results.length > 0
   const yearFilter = releaseDateOn && isValidYear(year) ? year : ''
   const genreFilter = genreOn && !filtersDisabled ? selectedGenre : null
 
-  useEffect(() => {
-    if (!genreOn || filtersDisabled) return undefined
-
-    const controller = new AbortController()
-    loadGenres(type, { signal: controller.signal })
-      .then((list) => setGenres(list))
-      .catch((err) => {
-        if (!isAbortError(err)) setGenres([])
-      })
-
-    return () => controller.abort()
-  }, [genreOn, filtersDisabled, type])
-
   async function runSearch(nextQuery = query) {
     const trimmed = nextQuery.trim()
     if (!trimmed && !yearFilter && !genreFilter) {
+      nextSignal()
       setStatus('idle')
       setResults([])
       setError('')
@@ -63,6 +53,7 @@ function SearchSection({ onSeeAll, onSelect }) {
       return
     }
 
+    const signal = nextSignal()
     setStatus('loading')
     setError('')
     setSearchedQuery(trimmed)
@@ -74,23 +65,27 @@ function SearchSection({ onSeeAll, onSelect }) {
         type,
         year: yearFilter,
         genre: genreFilter,
+        signal,
       })
       const filtered = applySearchFilters(items, {
         type,
         year: yearFilter,
         genre: genreFilter,
       })
-      setResults(filtered)
-      setSuggestion(
+      const nextSuggestion =
         (await getSearchSuggestion({
           query: trimmed,
           type,
           year: yearFilter,
           items,
-        })) ?? '',
-      )
+          signal,
+        })) ?? ''
+      if (signal.aborted) return
+      setResults(filtered)
+      setSuggestion(nextSuggestion)
       setStatus(filtered.length === 0 ? 'empty' : 'success')
     } catch (err) {
+      if (isAbortError(err) || signal.aborted) return
       setResults([])
       setSuggestion('')
       setStatus('error')

@@ -4,6 +4,15 @@ export const MEDIA_LABELS = {
   person: 'Person',
 }
 
+export function sameMedia(a, b) {
+  return Boolean(
+    a &&
+      b &&
+      a.mediaType === b.mediaType &&
+      Number(a.id) === Number(b.id),
+  )
+}
+
 export const SEARCH_TYPES = [
   { id: 'all', label: 'All' },
   { id: 'movie', label: 'Movies' },

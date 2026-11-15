@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { isAbortError } from '../API/tmdb/client.js'
+import { isAbortError } from '../lib/async.js'
 
 export function useAsync(factory, deps) {
   const [status, setStatus] = useState('loading')

@@ -1,4 +1,5 @@
 import { useId, useState } from 'react'
+import { listContains } from '../API/watchlist.js'
 import { useWatchlist } from '../context/watchlist-context.js'
 import Modal from './Modal.jsx'
 
@@ -32,9 +33,7 @@ function WatchlistModal({ isOpen, onClose, item = null, onPicked }) {
 
   function handlePick(list) {
     if (!item) return
-    const already = list.items.some(
-      (entry) => entry.mediaType === item.mediaType && Number(entry.id) === Number(item.id),
-    )
+    const already = listContains(list, item)
     const result = already ? 'already' : addItem(list.id, item)
     onPicked?.(list, result)
     close()
@@ -52,10 +51,7 @@ function WatchlistModal({ isOpen, onClose, item = null, onPicked }) {
           <p className="modal-subtitle">Choose a collection for this title.</p>
           <ul className="modal-choices">
             {lists.map((list) => {
-              const already = list.items.some(
-                (entry) =>
-                  entry.mediaType === item.mediaType && Number(entry.id) === Number(item.id),
-              )
+              const already = listContains(list, item)
               return (
                 <li key={list.id}>
                   <button

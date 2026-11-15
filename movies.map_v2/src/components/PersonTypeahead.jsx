@@ -1,6 +1,6 @@
 import { useEffect, useId, useRef, useState } from 'react'
 import { searchPeople } from '../API/tmdb.js'
-import { isAbortError } from '../API/tmdb/client.js'
+import { isAbortError } from '../lib/async.js'
 import { useDebouncedValue } from '../hooks/useDebouncedValue.js'
 import './PersonTypeahead.css'
 

@@ -1,3 +1,5 @@
+import { waitWithSignal } from '../lib/async.js'
+
 const PROJECT_HEADER = 'novi-education-project-id'
 const TOKEN_KEY = 'noviToken'
 const USER_KEY = 'noviUser'
@@ -230,8 +232,56 @@ function asList(data) {
   return []
 }
 
+const reviewLists = new Map()
+const reviewInflight = new Map()
+
+function reviewsKey(token) {
+  return token || 'anon'
+}
+
+function looksLikeReview(value) {
+  return Boolean(value && typeof value === 'object' && value.mediaType != null && value.mediaId != null)
+}
+
+async function loadAllReviews(token, { signal } = {}) {
+  const key = reviewsKey(token)
+  if (reviewLists.has(key)) return reviewLists.get(key)
+
+  let pending = reviewInflight.get(key)
+  if (!pending) {
+    pending = request('/api/reviews', { token })
+      .then(asList)
+      .then((list) => {
+        reviewInflight.delete(key)
+        reviewLists.set(key, list)
+        return list
+      })
+      .catch((error) => {
+        reviewInflight.delete(key)
+        throw error
+      })
+    reviewInflight.set(key, pending)
+  }
+
+  return waitWithSignal(pending, signal)
+}
+
+function rememberReview(token, review) {
+  const key = reviewsKey(token)
+  if (!looksLikeReview(review)) {
+    reviewLists.delete(key)
+    return
+  }
+
+  const list = reviewLists.get(key) ?? []
+  reviewLists.set(
+    key,
+    [review, ...list.filter((entry) => entry.id !== review.id)],
+  )
+}
+
 export async function getReviewsForMedia(mediaType, mediaId, token, { signal } = {}) {
-  const list = asList(await request('/api/reviews', { token, signal }))
+  const list = await loadAllReviews(token, { signal })
   return list
     .filter(
       (review) => review.mediaType === mediaType && Number(review.mediaId) === Number(mediaId),
@@ -248,5 +298,12 @@ export async function createReview({ userId, mediaType, mediaId, text, rating },
   const trimmed = text?.trim()
   if (trimmed) body.text = trimmed
   if (rating > 0) body.rating = Number(rating)
-  return request('/api/reviews', { method: 'POST', body, token })
+  const created = await request('/api/reviews', { method: 'POST', body, token })
+  rememberReview(
+    token,
+    looksLikeReview(created)
+      ? created
+      : { ...body, ...created, createdAt: created?.createdAt ?? new Date().toISOString() },
+  )
+  return created
 }

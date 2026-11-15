@@ -6,7 +6,7 @@ How the Search section and “See all” overlay talk to TMDB. Implementation: `
 
 Type a title, a 4-digit year, or pick a genre, then press the search button. The app asks TMDB for **one page** of matches and shows posters. **See all** asks for more pages (up to 10) and covers the screen. Year and genre are sometimes sent to TMDB and sometimes applied afterward in the browser, because not every TMDB URL accepts the same options.
 
-A request runs when the form has a trimmed query, a valid 4-digit year, **or** a selected genre.
+A request runs when the form has a trimmed query, a valid 4-digit year, **or** a selected genre. Submitting again (or unmounting) aborts the previous search so an older response cannot overwrite a newer one.
 
 ## Intent
 

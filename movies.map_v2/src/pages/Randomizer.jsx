@@ -1,10 +1,12 @@
-import { useEffect, useState } from 'react'
-import { discoverTmdb, loadGenres } from '../API/tmdb.js'
-import { isAbortError } from '../API/tmdb/client.js'
+import { useState } from 'react'
+import { discoverTmdb } from '../API/tmdb.js'
 import Button from '../components/Button.jsx'
 import ChipRow from '../components/ChipRow.jsx'
 import MovieCard from '../components/MovieCard.jsx'
 import PersonTypeahead from '../components/PersonTypeahead.jsx'
+import { useGenres } from '../hooks/useGenres.js'
+import { useLatestAbort } from '../hooks/useLatestAbort.js'
+import { isAbortError } from '../lib/async.js'
 import { cn } from '../lib/format.js'
 import { RANDOMIZER_TYPES } from '../lib/media.js'
 import { randomInt, shuffle, uniqueBy } from '../lib/shuffle.js'
@@ -62,7 +64,6 @@ function Randomizer({ onSelect }) {
   const [stepIndex, setStepIndex] = useState(0)
   const [phase, setPhase] = useState('setup')
   const [type, setType] = useState('movie')
-  const [genres, setGenres] = useState([])
   const [wantGenres, setWantGenres] = useState([])
   const [avoidGenres, setAvoidGenres] = useState([])
   const [personQuery, setPersonQuery] = useState('')
@@ -71,33 +72,17 @@ function Randomizer({ onSelect }) {
   const [index, setIndex] = useState(0)
   const [status, setStatus] = useState('idle')
   const [error, setError] = useState('')
+  const genres = useGenres(type)
+  const nextSignal = useLatestAbort()
 
   const step = STEPS[stepIndex]
   const isLastStep = stepIndex === STEPS.length - 1
   const pick = pool[index] ?? null
   const canBrowse = pool.length > 1
   const hasResult = phase === 'result' && Boolean(pick)
-
-  useEffect(() => {
-    const controller = new AbortController()
-    loadGenres(type, { signal: controller.signal })
-      .then((list) => {
-        setGenres(list)
-        const ids = new Set(list.map((genre) => genre.id))
-        setWantGenres((current) => {
-          const next = current.filter((genre) => ids.has(genre.id))
-          return next.length === current.length ? current : next
-        })
-        setAvoidGenres((current) => {
-          const next = current.filter((genre) => ids.has(genre.id))
-          return next.length === current.length ? current : next
-        })
-      })
-      .catch((err) => {
-        if (!isAbortError(err)) setGenres([])
-      })
-    return () => controller.abort()
-  }, [type])
+  const genreIds = new Set(genres.map((genre) => genre.id))
+  const activeWant = wantGenres.filter((genre) => genreIds.has(genre.id))
+  const activeAvoid = avoidGenres.filter((genre) => genreIds.has(genre.id))
 
   function resetRoll() {
     setPool([])
@@ -108,14 +93,16 @@ function Randomizer({ onSelect }) {
   }
 
   async function roll() {
+    const signal = nextSignal()
     setStatus('loading')
     setError('')
 
     const filters = {
       type,
-      genres: wantGenres,
-      excludeGenres: avoidGenres,
+      genres: activeWant,
+      excludeGenres: activeAvoid,
       personId: person?.id,
+      signal,
     }
 
     try {
@@ -123,6 +110,7 @@ function Randomizer({ onSelect }) {
       const lastPage = Math.min(Math.max(first.totalPages || 1, 1), MAX_RANDOM_PAGE)
       const page = randomInt(1, lastPage)
       const { items } = page === 1 ? first : await discoverTmdb({ ...filters, page })
+      if (signal.aborted) return
       const mixed = shuffle(uniqueBy(items, (item) => `${item.mediaType}-${item.id}`))
 
       if (!mixed.length) {
@@ -138,6 +126,7 @@ function Randomizer({ onSelect }) {
       setStatus('success')
       setPhase('result')
     } catch (err) {
+      if (isAbortError(err) || signal.aborted) return
       setPool([])
       setIndex(0)
       setStatus('error')
@@ -192,8 +181,8 @@ function Randomizer({ onSelect }) {
 
   function stepSummary(stepId) {
     if (stepId === 'type') return typeLabel(type)
-    if (stepId === 'want') return namesList(wantGenres, 'Open to anything')
-    if (stepId === 'avoid') return namesList(avoidGenres, 'Nothing excluded')
+    if (stepId === 'want') return namesList(activeWant, 'Open to anything')
+    if (stepId === 'avoid') return namesList(activeAvoid, 'Nothing excluded')
     if (stepId === 'person') return person?.name || 'No one specific'
     return ''
   }

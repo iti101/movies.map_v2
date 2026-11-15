@@ -1,6 +1,6 @@
 import { useId, useState } from 'react'
 import { createReview, getReviewsForMedia } from '../../API/novi.js'
-import { isAbortError } from '../../API/tmdb/client.js'
+import { isAbortError } from '../../lib/async.js'
 import Button from '../../components/Button.jsx'
 import StarRating from '../../components/StarRating.jsx'
 import { formatDate } from '../../lib/format.js'

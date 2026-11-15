@@ -1,3 +1,5 @@
+import { sameMedia } from '../lib/media.js'
+
 const STORAGE_KEY = 'watchlists'
 export const WATCHLISTS_CHANGED = 'watchlists-changed'
 
@@ -37,8 +39,8 @@ function listsFor(userId) {
   return [{ ...DEFAULT_LIST, items: [] }]
 }
 
-function sameTitle(entry, item) {
-  return entry.mediaType === item.mediaType && Number(entry.id) === Number(item.id)
+export function listContains(list, item) {
+  return Boolean(list?.items.some((entry) => sameMedia(entry, item)))
 }
 
 export function getLists(userId) {
@@ -48,7 +50,7 @@ export function getLists(userId) {
 
 export function isInWatchlist(userId, item) {
   if (userId == null || !item) return false
-  return getLists(userId).some((list) => list.items.some((entry) => sameTitle(entry, item)))
+  return getLists(userId).some((list) => listContains(list, item))
 }
 
 function asWatchlistEntry(item) {
@@ -72,7 +74,7 @@ export function addToList(userId, listId, item) {
   const target = lists.find((list) => list.id === listId)
   if (!target) return null
 
-  const exists = target.items.some((entry) => sameTitle(entry, item))
+  const exists = listContains(target, item)
   const nextLists = lists.map((list) => {
     if (list.id !== listId) return list
     return {
@@ -94,7 +96,7 @@ export function addToWatchlist(userId, item) {
 export function isInList(userId, listId, item) {
   if (userId == null || !item || !listId) return false
   const list = getLists(userId).find((entry) => entry.id === listId)
-  return Boolean(list?.items.some((entry) => sameTitle(entry, item)))
+  return listContains(list, item)
 }
 
 export function createList(userId, name) {
@@ -128,7 +130,7 @@ export function removeFromList(userId, listId, item) {
     if (list.id !== listId) return list
     return {
       ...list,
-      items: list.items.filter((entry) => !sameTitle(entry, item)),
+      items: list.items.filter((entry) => !sameMedia(entry, item)),
     }
   })
   writeAll(all)

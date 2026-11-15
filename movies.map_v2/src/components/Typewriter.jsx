@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import logoIcon from '../assets/logo_ICON.png'
 import moviesLogo from '../assets/moviesLOGO.png'
+import { delay } from '../lib/async.js'
 import { scrollToSection } from '../scrollToSection.js'
 import Button from './Button.jsx'
 import './Typewriter.css'
@@ -10,21 +11,6 @@ const ARROW_BARS = 4
 
 function rand(min, max) {
   return min + Math.random() * (max - min)
-}
-
-/** Promise delay that rejects if the component unmounts (AbortController). */
-function wait(ms, signal) {
-  return new Promise((resolve, reject) => {
-    const id = setTimeout(resolve, ms)
-    signal.addEventListener(
-      'abort',
-      () => {
-        clearTimeout(id)
-        reject(new DOMException('Aborted', 'AbortError'))
-      },
-      { once: true },
-    )
-  })
 }
 
 /**
@@ -54,42 +40,42 @@ function Typewriter() {
         current += ch
         setText(current)
 
-        let delay = rand(38, 82)
-        if (ch === ' ') delay = rand(80, 160)
-        else if (i === 0) delay = rand(60, 120)
-        else if (Math.random() < 0.14) delay = rand(120, 240)
-        await wait(delay, signal)
+        let ms = rand(38, 82)
+        if (ch === ' ') ms = rand(80, 160)
+        else if (i === 0) ms = rand(60, 120)
+        else if (Math.random() < 0.14) ms = rand(120, 240)
+        await delay(ms, signal)
       }
     }
 
     const backspace = async (count) => {
-      await wait(rand(60, 140), signal)
+      await delay(rand(60, 140), signal)
       for (let i = 0; i < count; i++) {
         current = current.slice(0, -1)
         setText(current)
-        const delay = i === 0 ? rand(50, 90) : i === 1 ? rand(36, 58) : rand(16, 34)
-        await wait(delay, signal)
+        const ms = i === 0 ? rand(50, 90) : i === 1 ? rand(36, 58) : rand(16, 34)
+        await delay(ms, signal)
       }
     }
 
     ;(async () => {
       try {
         await type('Find any')
-        await wait(rand(160, 280), signal)
+        await delay(rand(160, 280), signal)
         await type(' movie')
-        await wait(rand(380, 520), signal)
+        await delay(rand(380, 520), signal)
         await backspace(5)
-        await wait(rand(70, 140), signal)
+        await delay(rand(70, 140), signal)
         await type('show')
-        await wait(500, signal)
+        await delay(500, signal)
         await backspace(4)
-        await wait(rand(80, 150), signal)
+        await delay(rand(80, 150), signal)
         await type('episode')
-        await wait(rand(420, 580), signal)
+        await delay(rand(420, 580), signal)
         await backspace(current.length)
-        await wait(320, signal)
+        await delay(320, signal)
         setPhase('brand')
-        await wait(1300, signal)
+        await delay(1300, signal)
         setShowCta(true)
       } catch {
         // unmounted

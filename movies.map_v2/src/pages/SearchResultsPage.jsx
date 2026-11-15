@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { getSearchLabel, getSearchSuggestion, searchTmdbAll } from '../API/tmdb.js'
-import { isAbortError } from '../API/tmdb/client.js'
+import { isAbortError } from '../lib/async.js'
 import DidYouMean from '../components/DidYouMean.jsx'
 import OverlayPage from '../components/OverlayPage.jsx'
 import ResultGrid from '../components/ResultGrid.jsx'

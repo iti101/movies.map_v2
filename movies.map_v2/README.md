@@ -68,14 +68,18 @@ App
 | --- | --- |
 | Theme + session | `src/App.jsx`, `src/API/novi.js` |
 | Overlay history | `src/hooks/useOverlayHistory.js` |
+| Abort / delay helpers | `src/lib/async.js` |
 | TMDB HTTP | `src/API/tmdb/` (`client`, `search`, `details`, `watch`) |
+| Genre lists | `src/hooks/useGenres.js` |
 | First-page search UI | `src/pages/SearchSection.jsx` |
 | Multi-page results overlay | `src/pages/SearchResultsPage.jsx` |
 | Title / person detail | `src/pages/detail/` |
 | Shared overlay / modal / chips | `src/components/` |
 | Smooth scroll helper | `src/scrollToSection.js` |
 
-TMDB GETs share an LRU cache and coalesce in-flight requests in `src/API/tmdb/client.js`. Overlay unmounts abort waiting on the result; the network response can still fill the cache.
+TMDB GETs share an LRU cache and coalesce in-flight requests in `src/API/tmdb/client.js`. Overlay unmounts abort waiting on the result; the network response can still fill the cache. Search and Randomizer cancel the previous in-flight request when a newer one starts.
+
+Novi has no per-title review endpoint, so `getReviewsForMedia` loads `/api/reviews` once per session token, caches it, and filters in memory. Publishing a review updates that cache instead of downloading the whole list again.
 
 ### Snap layout
 

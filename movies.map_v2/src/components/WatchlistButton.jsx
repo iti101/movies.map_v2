@@ -1,19 +1,14 @@
 import { useState } from 'react'
+import { listContains } from '../API/watchlist.js'
 import { useWatchlist } from '../context/watchlist-context.js'
 import Button from './Button.jsx'
 import WatchlistModal from './WatchlistModal.jsx'
-
-function inList(list, item) {
-  return list.items.some(
-    (entry) => entry.mediaType === item.mediaType && Number(entry.id) === Number(item.id),
-  )
-}
 
 export default function WatchlistButton({ item, isLoggedIn, onRequestLogin }) {
   const { lists, addItem } = useWatchlist()
   const [note, setNote] = useState('')
   const [pickerOpen, setPickerOpen] = useState(false)
-  const saved = lists.some((list) => inList(list, item))
+  const saved = lists.some((list) => listContains(list, item))
 
   function handleClick() {
     if (!isLoggedIn) {

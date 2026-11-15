@@ -1,4 +1,5 @@
 import { MEDIA_LABELS } from '../API/tmdb.js'
+import { cn } from '../lib/format.js'
 import MediaImage from './MediaImage.jsx'
 import './MovieCard.css'
 
@@ -7,7 +8,7 @@ function MovieCard({ item, onSelect, className = '', children }) {
   const subtitle = year || MEDIA_LABELS[item.mediaType] || item.mediaType
 
   return (
-    <li className={['movie-card', className].filter(Boolean).join(' ')}>
+    <li className={cn('movie-card', className)}>
       <button type="button" className="movie-card__open" onClick={() => onSelect?.(item)}>
         <MediaImage
           className="movie-card__poster"

@@ -1,3 +1,4 @@
+import { cn } from '../lib/format.js'
 import './Button.css'
 
 /** Token name (`accent-btn`) → `var(--color-accent-btn)`; raw CSS colors pass through. */
@@ -38,17 +39,14 @@ export default function Button({
   style,
   ...props
 }) {
-  const sizeClass = SIZE_PRESETS.has(size) ? `ui-button--${size}` : ''
-  const classes = [
+  const classes = cn(
     'ui-button',
     `ui-button--${variant}`,
-    sizeClass,
+    SIZE_PRESETS.has(size) && `ui-button--${size}`,
     active && 'is-active',
     round && 'ui-button--round',
     className,
-  ]
-    .filter(Boolean)
-    .join(' ')
+  )
 
   return (
     <button

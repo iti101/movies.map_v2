@@ -1,3 +1,4 @@
+import { waitWithSignal } from '../../lib/async.js'
 import { tmdbGet } from './client.js'
 
 const WATCH_REGION_KEY = 'watchRegion'
@@ -127,26 +128,7 @@ export function getWatchRegions({ signal } = {}) {
       .catch(() => getFallbackWatchRegions())
   }
 
-  if (!signal) return watchRegionsRequest
-  return new Promise((resolve, reject) => {
-    const onAbort = () => reject(new DOMException('Aborted', 'AbortError'))
-    if (signal.aborted) {
-      onAbort()
-      return
-    }
-    signal.addEventListener('abort', onAbort, { once: true })
-    watchRegionsRequest.then(
-      (value) => {
-        signal.removeEventListener('abort', onAbort)
-        if (signal.aborted) onAbort()
-        else resolve(value)
-      },
-      (error) => {
-        signal.removeEventListener('abort', onAbort)
-        reject(error)
-      },
-    )
-  })
+  return waitWithSignal(watchRegionsRequest, signal)
 }
 
 export function providerWatchUrl(name, title, fallback) {

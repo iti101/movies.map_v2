@@ -1,16 +1,8 @@
 import MediaImage from '../../components/MediaImage.jsx'
 import WatchlistButton from '../../components/WatchlistButton.jsx'
 import { formatDate, formatRuntime } from '../../lib/format.js'
+import { uniqueBy } from '../../lib/shuffle.js'
 import { Cast, Facts, Rating, Related, Section } from './bits.jsx'
-
-function uniquePeople(people) {
-  const seen = new Set()
-  return people.filter((person) => {
-    if (!person?.id || seen.has(person.id)) return false
-    seen.add(person.id)
-    return true
-  })
-}
 import Reviews from './Reviews.jsx'
 import SeasonEpisodes from './SeasonEpisodes.jsx'
 import WhereToWatch from './WhereToWatch.jsx'
@@ -20,7 +12,12 @@ export default function TitleView({ item, onOpen, isLoggedIn, user, token, onReq
   const date = formatDate(isTv ? item.firstAirDate : item.releaseDate)
   const creators = isTv ? item.createdBy : (item.directors ?? [])
   const runtime = isTv ? null : formatRuntime(item.runtime)
-  const people = isTv ? uniquePeople([...(item.directors ?? []), ...item.cast]) : item.cast
+  const people = isTv
+    ? uniqueBy(
+        [...(item.directors ?? []), ...item.cast].filter((person) => person?.id),
+        (person) => person.id,
+      )
+    : item.cast
   const facts = [
     date && { label: isTv ? 'First aired' : 'Release date', value: date },
     !isTv &&

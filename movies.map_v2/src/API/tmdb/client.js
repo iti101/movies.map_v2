@@ -1,3 +1,7 @@
+import { waitWithSignal } from '../../lib/async.js'
+
+export { isAbortError } from '../../lib/async.js'
+
 const API_BASE = 'https://api.themoviedb.org/3'
 const CACHE_LIMIT = 80
 
@@ -68,29 +72,4 @@ export async function tmdbGet(path, params = {}, options = {}) {
   }
 
   return waitWithSignal(pending, signal)
-}
-
-export function isAbortError(error) {
-  return error?.name === 'AbortError'
-}
-
-function waitWithSignal(pending, signal) {
-  if (!signal) return pending
-  if (signal.aborted) return Promise.reject(new DOMException('Aborted', 'AbortError'))
-
-  return new Promise((resolve, reject) => {
-    const onAbort = () => reject(new DOMException('Aborted', 'AbortError'))
-    signal.addEventListener('abort', onAbort, { once: true })
-    pending.then(
-      (value) => {
-        signal.removeEventListener('abort', onAbort)
-        if (signal.aborted) reject(new DOMException('Aborted', 'AbortError'))
-        else resolve(value)
-      },
-      (error) => {
-        signal.removeEventListener('abort', onAbort)
-        reject(error)
-      },
-    )
-  })
 }

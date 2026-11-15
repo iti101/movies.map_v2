@@ -1,4 +1,6 @@
-import { useEffect, useState } from 'react'
+import { useCallback, useState } from 'react'
+import { useEscape } from '../hooks/useEscape.js'
+import { scrollToSection } from '../scrollToSection.js'
 import Button from './Button.jsx'
 import './NavBar.css'
 import loginIcon from '../assets/login_opsz24.svg'
@@ -23,26 +25,15 @@ function NavBar({ isLoggedIn, theme, onToggleAuth, onToggleTheme, onNavigate, on
   const themeIcon = isDark ? lightModeIcon : darkModeIcon
   const authLabel = isLoggedIn ? 'Log out' : 'Log in'
   const authIcon = isLoggedIn ? logoutIcon : loginIcon
+  const closeMenu = useCallback(() => setMenuOpen(false), [])
 
-  useEffect(() => {
-    function onKeyDown(event) {
-      if (event.key === 'Escape') setMenuOpen(false)
-    }
-    window.addEventListener('keydown', onKeyDown)
-    return () => window.removeEventListener('keydown', onKeyDown)
-  }, [])
-
-  function closeMenu() {
-    setMenuOpen(false)
-  }
+  useEscape(menuOpen, closeMenu)
 
   function goTo(sectionId) {
     closeMenu()
     onNavigate?.(sectionId)
     // Defer scroll so the overlay unmounts first
-    window.setTimeout(() => {
-      document.getElementById(sectionId)?.scrollIntoView({ behavior: 'smooth' })
-    }, 0)
+    window.setTimeout(() => scrollToSection(sectionId), 0)
   }
 
   /** Logged out: menu item logs you in. Logged in: opens the watchlist. */
