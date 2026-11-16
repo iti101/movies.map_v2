@@ -1,9 +1,10 @@
 import { useEffect, useState } from 'react'
 import { getSearchLabel, getSearchSuggestion, searchTmdbAll } from '../API/tmdb.js'
-import { isAbortError } from '../lib/async.js'
-import DidYouMean from '../components/DidYouMean.jsx'
 import OverlayPage from '../components/OverlayPage.jsx'
 import ResultGrid from '../components/ResultGrid.jsx'
+import SearchStatus from '../components/SearchStatus.jsx'
+import { isAbortError } from '../lib/async.js'
+import { pluralize } from '../lib/format.js'
 import './SearchResultsPage.css'
 
 function searchKeyOf(search) {
@@ -15,20 +16,21 @@ function searchKeyOf(search) {
  * replaces it with up to 10 TMDB pages. If that deeper fetch fails, keep the seed.
  */
 function SearchResultsPage({ search, onBack, onSelect }) {
+  const seedKey = searchKeyOf(search)
   const [queryOverride, setQueryOverride] = useState(null)
-  const searchKey = searchKeyOf(search)
   const activeSearch =
-    queryOverride?.key === searchKey
+    queryOverride?.key === seedKey
       ? { ...search, query: queryOverride.query, results: [] }
       : search
   const activeKey = searchKeyOf(activeSearch)
   const seeded = activeSearch.results ?? []
 
   const [fetched, setFetched] = useState(null)
-  const [suggestion, setSuggestion] = useState({ key: '', value: '' })
-  const [error, setError] = useState('')
+  const [suggestion, setSuggestion] = useState('')
+  const [error, setError] = useState({ key: '', value: '' })
 
   const results = fetched?.key === activeKey ? fetched.items : seeded
+  const activeError = error.key === activeKey ? error.value : ''
   const status =
     fetched?.key === activeKey
       ? fetched.items.length
@@ -36,7 +38,7 @@ function SearchResultsPage({ search, onBack, onSelect }) {
         : 'empty'
       : seeded.length
         ? 'success'
-        : error
+        : activeError
           ? 'error'
           : 'loading'
 
@@ -61,29 +63,30 @@ function SearchResultsPage({ search, onBack, onSelect }) {
           signal: controller.signal,
         })
         if (!controller.signal.aborted) {
-          setSuggestion({ key, value: nextSuggestion ?? '' })
+          setSuggestion(nextSuggestion ?? '')
         }
       })
       .catch((err) => {
         if (isAbortError(err) || seeded.length) return
-        setError(err.message || 'Something went wrong.')
+        setError({ key, value: err.message || 'Something went wrong.' })
       })
 
-    return () => controller.abort()
-  }, [activeKey, activeSearch.query, activeSearch.type, activeSearch.year, activeSearch.genre, seeded.length])
+    return () => {
+      controller.abort()
+      setSuggestion('')
+    }
+    // activeKey is the serialized search; reading fields from that same render is safe.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeKey])
 
   const label = getSearchLabel(activeSearch)
   const count = results.length
-  const summary =
-    count > 0
-      ? `${count} result${count === 1 ? '' : 's'} for “${label}”`
-      : `Results for “${label}”`
+  const summary = count > 0 ? `${pluralize(count, 'result')} for “${label}”` : `Results for “${label}”`
 
   return (
     <OverlayPage
       className="results-page"
       contentClass="results-page__inner"
-      backClass="results-page__back"
       onBack={onBack}
       labelledBy="results-title"
     >
@@ -94,22 +97,13 @@ function SearchResultsPage({ search, onBack, onSelect }) {
         <p className="results-page__query">{summary}</p>
       </header>
 
-      {status === 'loading' && <p className="search-message">Searching…</p>}
-
-      {status === 'error' && (
-        <p className="search-message search-message-error">{error}</p>
-      )}
-
-      {status === 'empty' && (
-        <p className="search-message">No results found for “{label}”.</p>
-      )}
-
-      {(status === 'empty' || status === 'success') && (
-        <DidYouMean
-          suggestion={suggestion.key === activeKey ? suggestion.value : ''}
-          onAccept={(nextQuery) => setQueryOverride({ key: searchKey, query: nextQuery })}
-        />
-      )}
+      <SearchStatus
+        status={status}
+        error={activeError}
+        label={label}
+        suggestion={status === 'empty' || status === 'success' ? suggestion : ''}
+        onAcceptSuggestion={(nextQuery) => setQueryOverride({ key: seedKey, query: nextQuery })}
+      />
 
       {count > 0 && (
         <ResultGrid items={results} onSelect={onSelect} className="search-grid results-page__grid" />

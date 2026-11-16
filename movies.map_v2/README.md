@@ -69,13 +69,14 @@ App
 | Theme + session | `src/App.jsx`, `src/API/novi.js` |
 | Overlay history | `src/hooks/useOverlayHistory.js` |
 | Abort / delay helpers | `src/lib/async.js` |
+| List helpers | `src/lib/list.js` |
+| Smooth scroll | `src/lib/scroll.js` |
 | TMDB HTTP | `src/API/tmdb/` (`client`, `search`, `details`, `watch`) |
 | Genre lists | `src/hooks/useGenres.js` |
 | First-page search UI | `src/pages/SearchSection.jsx` |
 | Multi-page results overlay | `src/pages/SearchResultsPage.jsx` |
 | Title / person detail | `src/pages/detail/` |
-| Shared overlay / modal / chips | `src/components/` |
-| Smooth scroll helper | `src/scrollToSection.js` |
+| Shared overlay / modal / chips | `src/components/` (`OverlayPage` owns the full-screen shell CSS) |
 
 TMDB GETs share an LRU cache and coalesce in-flight requests in `src/API/tmdb/client.js`. Overlay unmounts abort waiting on the result; the network response can still fill the cache. Search and Randomizer cancel the previous in-flight request when a newer one starts.
 
@@ -110,7 +111,7 @@ The **theme** icon always toggles light/dark. The **login** icon opens the Novi 
 
 ### Theme
 
-Default is **dark**. `index.html` reads `localStorage.theme` before React mounts to avoid a flash. `App` keeps `theme` in state, writes `data-theme` and `color-scheme` on `<html>`, and persists `'light'` or `'dark'`. Tokens live in `src/App.css` under `html[data-theme='dark']` and `html[data-theme='light']`.
+Default is **dark**. `index.html` reads `localStorage.theme` before React mounts and sets both `data-theme` and `color-scheme` to avoid a flash. `App` keeps `theme` in state, writes the same attributes on `<html>`, and persists `'light'` or `'dark'`. Tokens live in `src/App.css` under `html[data-theme='dark']` and `html[data-theme='light']`.
 
 ### Auth and watchlists
 
@@ -129,7 +130,7 @@ Novi JWT + profile are stored in `localStorage` (`noviToken`, `noviUser`). Watch
 | `color`, `background`, `hoverBackground` | — | CSS color, or a token name that becomes `var(--color-<name>)`. |
 | `font` | `'body'` | `'body'` → `--font-body`, `'display'` → `--font-display`. |
 
-`OverlayPage`, `Modal`, `ChipRow`, `ResultGrid`, `MediaImage`, and `PersonTypeahead` wrap the repeated overlay, dialog, chip, poster-grid, and actor-search patterns.
+`OverlayPage`, `Modal`, `ChipRow`, `ResultGrid`, `MediaImage`, `SearchStatus`, and `PersonTypeahead` wrap the repeated overlay, dialog, chip, poster-grid, search-status, and actor-search patterns. Poster `<img>` tags send a TMDB `srcset` so cards can pick `w185` / `w342` / `w500` from the same path.
 
 ## Constraints and known gaps
 

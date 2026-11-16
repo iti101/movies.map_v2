@@ -1,4 +1,4 @@
-export { getImageUrl, POSTER_BASE } from './tmdb/images.js'
+export { getImageUrl, getImageSrcSet } from './tmdb/images.js'
 export { MEDIA_LABELS } from '../lib/media.js'
 export {
   applySearchFilters,

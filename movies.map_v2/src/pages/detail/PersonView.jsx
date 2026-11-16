@@ -16,6 +16,7 @@ export default function PersonView({ person, onOpen }) {
           className="detail__poster"
           path={person.profilePath}
           size="w500"
+          sizes="(max-width: 40rem) 60vw, 17rem"
           alt={person.name}
           empty="No photo"
         />

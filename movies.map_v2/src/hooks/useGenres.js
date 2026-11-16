@@ -3,9 +3,12 @@ import { useAsync } from './useAsync.js'
 
 export function useGenres(type) {
   const enabled = type !== 'person'
-  const { data } = useAsync(
+  const { data, status } = useAsync(
     (signal) => (enabled ? loadGenres(type, { signal }) : Promise.resolve([])),
     [type, enabled],
   )
-  return data ?? []
+  return {
+    genres: data ?? [],
+    loading: enabled && status === 'loading',
+  }
 }

@@ -60,6 +60,7 @@ export function Cast({ people, onOpen }) {
                 className="detail__cast-photo"
                 path={member.profilePath}
                 size="w185"
+                sizes="7.5rem"
                 alt={member.name}
                 empty="No photo"
                 lazy

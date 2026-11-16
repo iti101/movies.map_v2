@@ -8,8 +8,9 @@ import { useGenres } from '../hooks/useGenres.js'
 import { useLatestAbort } from '../hooks/useLatestAbort.js'
 import { isAbortError } from '../lib/async.js'
 import { cn } from '../lib/format.js'
+import { toggleById, uniqueBy } from '../lib/list.js'
 import { RANDOMIZER_TYPES } from '../lib/media.js'
-import { randomInt, shuffle, uniqueBy } from '../lib/shuffle.js'
+import { randomInt, shuffle } from '../lib/shuffle.js'
 import './Randomizer.css'
 
 const STEPS = [
@@ -45,12 +46,6 @@ const STEPS = [
 
 const MAX_RANDOM_PAGE = 20
 
-function toggleGenre(list, genre) {
-  return list.some((entry) => entry.id === genre.id)
-    ? list.filter((entry) => entry.id !== genre.id)
-    : [...list, genre]
-}
-
 function namesList(list, empty = 'Any') {
   if (!list.length) return empty
   return list.map((entry) => entry.name).join(', ')
@@ -72,7 +67,7 @@ function Randomizer({ onSelect }) {
   const [index, setIndex] = useState(0)
   const [status, setStatus] = useState('idle')
   const [error, setError] = useState('')
-  const genres = useGenres(type)
+  const { genres, loading: genresLoading } = useGenres(type)
   const nextSignal = useLatestAbort()
 
   const step = STEPS[stepIndex]
@@ -168,13 +163,13 @@ function Randomizer({ onSelect }) {
   }
 
   function handleWant(genre) {
-    setWantGenres((current) => toggleGenre(current, genre))
+    setWantGenres((current) => toggleById(current, genre))
     setAvoidGenres((current) => current.filter((entry) => entry.id !== genre.id))
     resetRoll()
   }
 
   function handleAvoid(genre) {
-    setAvoidGenres((current) => toggleGenre(current, genre))
+    setAvoidGenres((current) => toggleById(current, genre))
     setWantGenres((current) => current.filter((entry) => entry.id !== genre.id))
     resetRoll()
   }
@@ -185,6 +180,18 @@ function Randomizer({ onSelect }) {
     if (stepId === 'avoid') return namesList(activeAvoid, 'Nothing excluded')
     if (stepId === 'person') return person?.name || 'No one specific'
     return ''
+  }
+
+  function renderGenres(isActive, onSelect) {
+    if (genresLoading) return <p className="randomizer__message">Loading genres…</p>
+    return (
+      <ChipRow
+        className="randomizer__genre-row"
+        items={genres}
+        isActive={isActive}
+        onSelect={onSelect}
+      />
+    )
   }
 
   return (
@@ -250,23 +257,17 @@ function Randomizer({ onSelect }) {
               />
             )}
 
-            {step.id === 'want' && (
-              <ChipRow
-                className="randomizer__genre-row"
-                items={genres}
-                isActive={(genre) => wantGenres.some((entry) => entry.id === genre.id)}
-                onSelect={handleWant}
-              />
-            )}
+            {step.id === 'want' &&
+              renderGenres(
+                (genre) => wantGenres.some((entry) => entry.id === genre.id),
+                handleWant,
+              )}
 
-            {step.id === 'avoid' && (
-              <ChipRow
-                className="randomizer__genre-row"
-                items={genres}
-                isActive={(genre) => avoidGenres.some((entry) => entry.id === genre.id)}
-                onSelect={handleAvoid}
-              />
-            )}
+            {step.id === 'avoid' &&
+              renderGenres(
+                (genre) => avoidGenres.some((entry) => entry.id === genre.id),
+                handleAvoid,
+              )}
 
             {step.id === 'person' && (
               <PersonTypeahead

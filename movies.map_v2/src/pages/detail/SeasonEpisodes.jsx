@@ -1,6 +1,6 @@
 import { useId, useState } from 'react'
 import { getTvSeason } from '../../API/tmdb.js'
-import { formatDate, formatRuntime } from '../../lib/format.js'
+import { formatDate, formatRuntime, pluralize } from '../../lib/format.js'
 import { useAsync } from '../../hooks/useAsync.js'
 import { useEscape } from '../../hooks/useEscape.js'
 import { Section } from './bits.jsx'
@@ -41,8 +41,7 @@ export default function SeasonEpisodes({ showId, seasons }) {
           >
             {seasons.map((season) => (
               <option key={season.number} value={season.number}>
-                {season.name} · {season.episodeCount}{' '}
-                {season.episodeCount === 1 ? 'episode' : 'episodes'}
+                {season.name} · {pluralize(season.episodeCount, 'episode')}
               </option>
             ))}
           </select>

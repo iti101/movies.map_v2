@@ -8,8 +8,8 @@ import {
 } from '../API/tmdb.js'
 import Button from '../components/Button.jsx'
 import ChipRow from '../components/ChipRow.jsx'
-import DidYouMean from '../components/DidYouMean.jsx'
 import ResultGrid from '../components/ResultGrid.jsx'
+import SearchStatus from '../components/SearchStatus.jsx'
 import { useGenres } from '../hooks/useGenres.js'
 import { useLatestAbort } from '../hooks/useLatestAbort.js'
 import { isAbortError } from '../lib/async.js'
@@ -31,9 +31,9 @@ function SearchSection({ onSeeAll, onSelect }) {
   const [results, setResults] = useState([])
   const [status, setStatus] = useState('idle')
   const [error, setError] = useState('')
-  const [searchedQuery, setSearchedQuery] = useState('')
+  const [submitted, setSubmitted] = useState(null)
   const [suggestion, setSuggestion] = useState('')
-  const genres = useGenres(type)
+  const { genres, loading: genresLoading } = useGenres(type)
   const nextSignal = useLatestAbort()
 
   const filtersDisabled = type === 'person'
@@ -43,12 +43,19 @@ function SearchSection({ onSeeAll, onSelect }) {
 
   async function runSearch(nextQuery = query) {
     const trimmed = nextQuery.trim()
+    const nextSubmitted = {
+      query: trimmed,
+      type,
+      year: yearFilter,
+      genre: genreFilter,
+    }
+
     if (!trimmed && !yearFilter && !genreFilter) {
       nextSignal()
       setStatus('idle')
       setResults([])
       setError('')
-      setSearchedQuery('')
+      setSubmitted(null)
       setSuggestion('')
       return
     }
@@ -56,27 +63,15 @@ function SearchSection({ onSeeAll, onSelect }) {
     const signal = nextSignal()
     setStatus('loading')
     setError('')
-    setSearchedQuery(trimmed)
+    setSubmitted(nextSubmitted)
     setSuggestion('')
 
     try {
-      const { items } = await fetchTmdbPage({
-        query: trimmed,
-        type,
-        year: yearFilter,
-        genre: genreFilter,
-        signal,
-      })
-      const filtered = applySearchFilters(items, {
-        type,
-        year: yearFilter,
-        genre: genreFilter,
-      })
+      const { items } = await fetchTmdbPage({ ...nextSubmitted, signal })
+      const filtered = applySearchFilters(items, nextSubmitted)
       const nextSuggestion =
         (await getSearchSuggestion({
-          query: trimmed,
-          type,
-          year: yearFilter,
+          ...nextSubmitted,
           items,
           signal,
         })) ?? ''
@@ -128,20 +123,11 @@ function SearchSection({ onSeeAll, onSelect }) {
   }
 
   function handleSeeAll() {
-    onSeeAll?.({
-      query: searchedQuery,
-      type,
-      year: yearFilter,
-      genre: genreFilter,
-      results,
-    })
+    if (!submitted) return
+    onSeeAll?.({ ...submitted, results })
   }
 
-  const searchLabel = getSearchLabel({
-    query: searchedQuery,
-    year: yearFilter,
-    genre: genreFilter,
-  })
+  const searchLabel = getSearchLabel(submitted ?? {})
 
   return (
     <div className={`search-section${hasResults || status === 'empty' ? ' search-section--has-results' : ''}`}>
@@ -203,31 +189,29 @@ function SearchSection({ onSeeAll, onSelect }) {
         )}
 
         {genreOn && (
-          <ChipRow
-            className="search-genres"
-            items={genres}
-            isActive={(genre) => selectedGenre?.id === genre.id}
-            onSelect={(genre) =>
-              setSelectedGenre((current) => (current?.id === genre.id ? null : genre))
-            }
-          />
+          genresLoading ? (
+            <p className="search-message">Loading genres…</p>
+          ) : (
+            <ChipRow
+              className="search-genres"
+              items={genres}
+              isActive={(genre) => selectedGenre?.id === genre.id}
+              onSelect={(genre) =>
+                setSelectedGenre((current) => (current?.id === genre.id ? null : genre))
+              }
+            />
+          )
         )}
       </form>
 
       <div className="search-results" aria-live="polite">
-        {status === 'loading' && <p className="search-message">Searching…</p>}
-
-        {status === 'error' && (
-          <p className="search-message search-message-error">{error}</p>
-        )}
-
-        {status === 'empty' && (
-          <p className="search-message">No results found for “{searchLabel}”.</p>
-        )}
-
-        {(status === 'empty' || status === 'success') && (
-          <DidYouMean suggestion={suggestion} onAccept={handleAcceptSuggestion} />
-        )}
+        <SearchStatus
+          status={status}
+          error={error}
+          label={searchLabel}
+          suggestion={suggestion}
+          onAcceptSuggestion={handleAcceptSuggestion}
+        />
 
         {status === 'success' && (
           <>

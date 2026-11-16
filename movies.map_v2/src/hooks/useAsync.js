@@ -8,16 +8,19 @@ export function useAsync(factory, deps) {
 
   useEffect(() => {
     const controller = new AbortController()
+    let started = false
 
     Promise.resolve()
       .then(() => {
-        if (controller.signal.aborted) return null
+        if (controller.signal.aborted) return
+        started = true
         setStatus('loading')
         setError('')
+        setData(null)
         return factory(controller.signal)
       })
       .then((value) => {
-        if (controller.signal.aborted || value === null) return
+        if (controller.signal.aborted || !started) return
         setData(value)
         setStatus('success')
       })

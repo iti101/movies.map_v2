@@ -4,8 +4,7 @@ import MediaImage from './MediaImage.jsx'
 import './MovieCard.css'
 
 function MovieCard({ item, onSelect, className = '', children }) {
-  const year = item.year || (item.date ? item.date.slice(0, 4) : null)
-  const subtitle = year || MEDIA_LABELS[item.mediaType] || item.mediaType
+  const subtitle = item.year || MEDIA_LABELS[item.mediaType] || item.mediaType
 
   return (
     <li className={cn('movie-card', className)}>
@@ -14,6 +13,7 @@ function MovieCard({ item, onSelect, className = '', children }) {
           className="movie-card__poster"
           path={item.imagePath}
           size="w342"
+          sizes="(max-width: 40rem) 42vw, 154px"
           alt={`${item.title} poster`}
           empty="No poster"
           lazy

@@ -19,3 +19,7 @@ export function formatRuntime(minutes) {
 export function cn(...parts) {
   return parts.flat().filter(Boolean).join(' ')
 }
+
+export function pluralize(count, singular, plural = `${singular}s`) {
+  return `${count} ${count === 1 ? singular : plural}`
+}

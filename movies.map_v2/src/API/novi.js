@@ -3,7 +3,6 @@ import { waitWithSignal } from '../lib/async.js'
 const PROJECT_HEADER = 'novi-education-project-id'
 const TOKEN_KEY = 'noviToken'
 const USER_KEY = 'noviUser'
-const LOGGED_IN_KEY = 'isLoggedIn'
 
 function getProjectId() {
   const projectId = import.meta.env.VITE_NOVI_PROJECT_ID
@@ -130,13 +129,11 @@ export function loadSession() {
 export function saveSession({ token, user }) {
   localStorage.setItem(TOKEN_KEY, token)
   localStorage.setItem(USER_KEY, JSON.stringify(user ?? null))
-  localStorage.setItem(LOGGED_IN_KEY, 'true')
 }
 
 export function clearSession() {
   localStorage.removeItem(TOKEN_KEY)
   localStorage.removeItem(USER_KEY)
-  localStorage.setItem(LOGGED_IN_KEY, 'false')
 }
 
 export async function login({ email, password }) {

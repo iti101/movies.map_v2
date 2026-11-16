@@ -23,7 +23,6 @@ function DetailPage({ mediaType, id, onBack, onOpen, isLoggedIn, user, token, on
     <OverlayPage
       className="detail"
       contentClass="detail__content"
-      backClass="detail__back"
       onBack={onBack}
       labelledBy="detail-title"
       before={

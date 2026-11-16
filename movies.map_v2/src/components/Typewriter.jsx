@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import logoIcon from '../assets/logo_ICON.png'
 import moviesLogo from '../assets/moviesLOGO.png'
 import { delay } from '../lib/async.js'
-import { scrollToSection } from '../scrollToSection.js'
+import { scrollToSection } from '../lib/scroll.js'
 import Button from './Button.jsx'
 import './Typewriter.css'
 
@@ -28,7 +28,6 @@ function Typewriter() {
 
   useEffect(() => {
     if (prefersReducedMotion()) return undefined
-
 
     const ac = new AbortController()
     const { signal } = ac

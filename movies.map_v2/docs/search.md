@@ -39,7 +39,7 @@ Normalized item shape used by `MovieCard`:
 { id, mediaType, title, year, imagePath, genreIds }
 ```
 
-Posters use `https://image.tmdb.org/t/p/w342` plus `imagePath`. Missing images render a “No poster” placeholder. People use `profile_path` and have `year: null` and empty `genreIds`.
+Posters use `https://image.tmdb.org/t/p/w342` plus `imagePath`, with a `srcset` of nearby TMDB widths. Missing images render a “No poster” placeholder. People use `profile_path` and have `year: null` and empty `genreIds`.
 
 ## Filters
 
@@ -69,13 +69,7 @@ TMDB does not accept the same params on every endpoint, so some filters are serv
 
 ## See all overlay
 
-`handleSeeAll` builds the overlay payload from mixed state:
-
-| Field | Source |
-| --- | --- |
-| `query` | Last **submitted** text (`searchedQuery`), not the live input |
-| `type`, `year`, `genre` | **Live** chips (changing them without searching again can disagree with the seeded grid) |
-| `results` | First-page list from the last successful submit |
+`handleSeeAll` reuses the last **submitted** search (`query`, `type`, `year`, `genre`) plus that run’s first-page `results`. Changing chips without searching again no longer sends a different filter set than the grid on screen.
 
 `SearchResultsPage`:
 
@@ -107,4 +101,4 @@ Empty submit (no query, year, or genre) resets to `idle` rather than erroring.
 - **All + discover concatenates movie and TV pages** for the same page number (not a single mixed TMDB list). `totalPages` is `Math.max` of the two.
 - **Genre list fetch failures fail closed.** `loadGenres` errors set `genres` to `[]` with no error banner.
 - **Keys in the grid** are `` `${mediaType}-${id}` `` because the same TMDB id can exist as both a movie and a TV show.
-- **See all after changing chips without resubmitting** can seed movie posters then refetch as TV (or with a new year/genre). Resubmit first if you want the overlay to match the grid.
+- **See all uses the last submit.** Changing chips after a search updates the next submit, not the open overlay payload.

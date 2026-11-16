@@ -10,15 +10,3 @@ export function shuffle(items) {
   }
   return next
 }
-
-export function uniqueBy(items, keyOf) {
-  const seen = new Set()
-  const unique = []
-  for (const item of items) {
-    const key = keyOf(item)
-    if (seen.has(key)) continue
-    seen.add(key)
-    unique.push(item)
-  }
-  return unique
-}

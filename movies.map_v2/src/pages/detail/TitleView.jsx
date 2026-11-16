@@ -1,7 +1,7 @@
 import MediaImage from '../../components/MediaImage.jsx'
 import WatchlistButton from '../../components/WatchlistButton.jsx'
 import { formatDate, formatRuntime } from '../../lib/format.js'
-import { uniqueBy } from '../../lib/shuffle.js'
+import { uniqueBy } from '../../lib/list.js'
 import { Cast, Facts, Rating, Related, Section } from './bits.jsx'
 import Reviews from './Reviews.jsx'
 import SeasonEpisodes from './SeasonEpisodes.jsx'
@@ -40,6 +40,7 @@ export default function TitleView({ item, onOpen, isLoggedIn, user, token, onReq
           className="detail__poster"
           path={item.posterPath}
           size="w500"
+          sizes="(max-width: 40rem) 60vw, 17rem"
           alt={`${item.title} poster`}
           empty="No poster"
         />

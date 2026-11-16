@@ -1,6 +1,6 @@
 import { useCallback, useState } from 'react'
 import { useEscape } from '../hooks/useEscape.js'
-import { scrollToSection } from '../scrollToSection.js'
+import { scrollToSection } from '../lib/scroll.js'
 import Button from './Button.jsx'
 import './NavBar.css'
 import loginIcon from '../assets/login_opsz24.svg'

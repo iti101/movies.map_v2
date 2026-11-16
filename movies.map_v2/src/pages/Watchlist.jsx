@@ -4,6 +4,7 @@ import ResultGrid from '../components/ResultGrid.jsx'
 import Select from '../components/Select.jsx'
 import WatchlistModal from '../components/WatchlistModal.jsx'
 import { useWatchlist } from '../context/watchlist-context.js'
+import { pluralize } from '../lib/format.js'
 import './Watchlist.css'
 
 function Watchlist({ onBack, onSelect, onFindTitle }) {
@@ -34,7 +35,6 @@ function Watchlist({ onBack, onSelect, onFindTitle }) {
     <OverlayPage
       className="watchlist"
       contentClass="watchlist__content"
-      backClass="watchlist__back"
       onBack={onBack}
       labelledBy="watchlist-title"
     >
@@ -100,9 +100,7 @@ function Watchlist({ onBack, onSelect, onFindTitle }) {
               <h2 id="watchlist-list-name" className="watchlist__list-name">
                 {activeList.name}
               </h2>
-              <p className="watchlist__count">
-                {count} {count === 1 ? 'title' : 'titles'}
-              </p>
+              <p className="watchlist__count">{pluralize(count, 'title')}</p>
             </div>
 
             <button

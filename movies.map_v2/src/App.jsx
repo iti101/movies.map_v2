@@ -9,7 +9,7 @@ import { WatchlistProvider } from './context/WatchlistContext.jsx'
 import { useOverlayHistory } from './hooks/useOverlayHistory.js'
 import Randomizer from './pages/Randomizer.jsx'
 import SearchSection from './pages/SearchSection.jsx'
-import { scrollToSection } from './scrollToSection.js'
+import { scrollToSection } from './lib/scroll.js'
 
 const DetailPage = lazy(() => import('./pages/DetailPage.jsx'))
 const SearchResultsPage = lazy(() => import('./pages/SearchResultsPage.jsx'))

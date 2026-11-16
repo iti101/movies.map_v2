@@ -1,0 +1,24 @@
+.overlay-page {
+  position: fixed;
+  inset: 0;
+  z-index: 5;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  min-height: 100%;
+  padding: calc(var(--navbar-height) + 1.5rem) 1.5rem 2.5rem;
+  background: var(--color-search);
+  color: var(--color-text);
+  font-family: var(--font-body);
+}
+
+.overlay-page__content {
+  position: relative;
+  width: min(64rem, 100%);
+  margin-inline: auto;
+  display: flex;
+  flex-direction: column;
+}
+
+.overlay-page__back {
+  align-self: flex-start;
+}

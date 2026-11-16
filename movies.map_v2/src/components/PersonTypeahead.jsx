@@ -48,7 +48,7 @@ export default function PersonTypeahead({ value, query, onQueryChange, onSelect,
 
   const trimmedQuery = query.trim()
   const showHint = !value && trimmedQuery.length >= 2
-  const showMatches = !value && matches.length > 0
+  const showMatches = showHint && matches.length > 0
 
   return (
     <div className="typeahead" ref={boxRef}>

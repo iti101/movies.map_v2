@@ -151,7 +151,6 @@ function AuthModal({ open, onClose, onAuthenticated }) {
       open={open}
       onClose={handleClose}
       labelledBy={titleId}
-      overlayClass="auth-overlay"
       dialogClass="auth-dialog"
     >
       <button

@@ -1,18 +1,5 @@
-.watchlist {
-  position: fixed;
-  inset: 0;
-  z-index: 5;
-  overflow-y: auto;
-  overscroll-behavior: contain;
-  min-height: 100%;
-  padding: calc(var(--navbar-height) + 1.5rem) 1.5rem 4rem;
-  background: var(--color-search);
-  color: var(--color-text);
-  transition: background-color 0.25s ease, color 0.25s ease;
-}
-
-.watchlist__back {
-  align-self: flex-start;
+.overlay-page.watchlist {
+  padding-bottom: 4rem;
 }
 
 .watchlist h1,
@@ -22,10 +9,6 @@
 }
 
 .watchlist__content {
-  width: min(64rem, 100%);
-  margin: 0 auto;
-  display: flex;
-  flex-direction: column;
   gap: 2.25rem;
 }
 
