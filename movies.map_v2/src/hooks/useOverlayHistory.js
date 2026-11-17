@@ -1,62 +1,75 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 
 function currentState() {
   return window.history.state ?? {}
 }
 
-function closeFlag(flag, fallback) {
-  if (currentState()[flag]) window.history.back()
-  else fallback()
-}
-
 /**
  * Overlay open/close plus a history.pushState / popstate pair so Back works.
- * Results replace history state; detail and watchlist stack on top of it.
+ * Results, detail, and watchlist each push; dismissOverlays pops the whole stack
+ * so Home / section links cannot leave a phantom overlay for the next Back.
  */
 export function useOverlayHistory() {
   const [resultsSearch, setResultsSearch] = useState(null)
   const [detail, setDetail] = useState(null)
   const [watchlistOpen, setWatchlistOpen] = useState(false)
+  const depthRef = useRef(0)
+  const ignoringPopRef = useRef(false)
 
-  const openResults = useCallback((search) => {
-    setResultsSearch(search)
-    window.history.pushState({ results: true }, '')
+  const pushOverlay = useCallback((state) => {
+    window.history.pushState(state, '')
+    depthRef.current += 1
   }, [])
+
+  const openResults = useCallback(
+    (search) => {
+      setResultsSearch(search)
+      pushOverlay({ results: true })
+    },
+    [pushOverlay],
+  )
 
   const closeResults = useCallback(() => {
-    closeFlag('results', () => setResultsSearch(null))
+    if (currentState().results) window.history.back()
+    else setResultsSearch(null)
   }, [])
 
-  const openDetail = useCallback((item) => {
-    if (!item?.id || !item.mediaType) return
-    const next = { mediaType: item.mediaType, id: item.id }
-    setDetail(next)
-    window.history.pushState({ ...currentState(), detail: next }, '')
-  }, [])
+  const openDetail = useCallback(
+    (item) => {
+      if (!item?.id || !item.mediaType) return
+      const next = { mediaType: item.mediaType, id: item.id }
+      setDetail(next)
+      pushOverlay({ ...currentState(), detail: next })
+    },
+    [pushOverlay],
+  )
 
   const closeDetail = useCallback(() => {
-    closeFlag('detail', () => setDetail(null))
+    if (currentState().detail) window.history.back()
+    else setDetail(null)
   }, [])
 
   const openWatchlist = useCallback(() => {
     setWatchlistOpen(true)
     if (!currentState().watchlist) {
-      window.history.pushState({ ...currentState(), watchlist: true }, '')
+      pushOverlay({ ...currentState(), watchlist: true })
     }
-  }, [])
+  }, [pushOverlay])
 
   const closeWatchlist = useCallback(() => {
-    closeFlag('watchlist', () => setWatchlistOpen(false))
+    if (currentState().watchlist) window.history.back()
+    else setWatchlistOpen(false)
   }, [])
 
   const dismissOverlays = useCallback(() => {
     setResultsSearch(null)
     setDetail(null)
     setWatchlistOpen(false)
-    const state = currentState()
-    if (state.results || state.detail || state.watchlist) {
-      window.history.replaceState({}, '')
-    }
+    const depth = depthRef.current
+    if (depth <= 0) return
+    ignoringPopRef.current = true
+    depthRef.current = 0
+    window.history.go(-depth)
   }, [])
 
   const clearWatchlistHistory = useCallback(() => {
@@ -69,6 +82,11 @@ export function useOverlayHistory() {
 
   useEffect(() => {
     function onPopState() {
+      if (ignoringPopRef.current) {
+        ignoringPopRef.current = false
+        return
+      }
+      depthRef.current = Math.max(0, depthRef.current - 1)
       const state = window.history.state
       setDetail(state?.detail ?? null)
       setWatchlistOpen(Boolean(state?.watchlist))
@@ -82,7 +100,6 @@ export function useOverlayHistory() {
     resultsSearch,
     detail,
     watchlistOpen,
-    overlayOpen: Boolean(resultsSearch || detail || watchlistOpen),
     openResults,
     closeResults,
     openDetail,

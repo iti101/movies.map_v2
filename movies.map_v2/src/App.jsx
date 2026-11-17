@@ -1,4 +1,4 @@
-import { lazy, Suspense, useEffect, useLayoutEffect, useState } from 'react'
+import { lazy, Suspense, useEffect, useState } from 'react'
 import './App.css'
 import { clearSession, loadSession, saveSession } from './API/novi.js'
 import AuthModal from './components/AuthModal.jsx'
@@ -7,36 +7,25 @@ import NavBar from './components/NavBar.jsx'
 import Typewriter from './components/Typewriter.jsx'
 import { WatchlistProvider } from './context/WatchlistContext.jsx'
 import { useOverlayHistory } from './hooks/useOverlayHistory.js'
+import { useTheme } from './hooks/useTheme.js'
 import Randomizer from './pages/Randomizer.jsx'
 import SearchSection from './pages/SearchSection.jsx'
+import { mediaKey } from './lib/media.js'
 import { scrollToSection } from './lib/scroll.js'
 
 const DetailPage = lazy(() => import('./pages/DetailPage.jsx'))
 const SearchResultsPage = lazy(() => import('./pages/SearchResultsPage.jsx'))
 const Watchlist = lazy(() => import('./pages/Watchlist.jsx'))
 
-function getStoredTheme() {
-  return localStorage.getItem('theme') === 'light' ? 'light' : 'dark'
-}
-
-function applyTheme(theme) {
-  const root = document.documentElement
-  root.setAttribute('data-theme', theme)
-  root.style.colorScheme = theme
-  localStorage.setItem('theme', theme)
-}
-
 function App() {
   'use no memo'
   const [session, setSession] = useState(loadSession)
   const [authOpen, setAuthOpen] = useState(false)
-  const [theme, setTheme] = useState(getStoredTheme)
+  const { theme, toggleTheme } = useTheme()
   const overlays = useOverlayHistory()
   const dismissOverlays = overlays.dismissOverlays
-
-  useLayoutEffect(() => {
-    applyTheme(theme)
-  }, [theme])
+  const watchlistVisible = overlays.watchlistOpen && session.isLoggedIn
+  const overlayOpen = Boolean(overlays.resultsSearch || overlays.detail || watchlistVisible)
 
   useEffect(() => {
     function onKeyDown(event) {
@@ -82,7 +71,7 @@ function App() {
 
   return (
     <WatchlistProvider userId={session.user?.id}>
-      <div className="app" data-theme={theme}>
+      <div className="app">
         <a className="skip-link" href="#search">
           Skip to search
         </a>
@@ -90,11 +79,11 @@ function App() {
           isLoggedIn={session.isLoggedIn}
           theme={theme}
           onToggleAuth={handleToggleAuth}
-          onToggleTheme={() => setTheme((current) => (current === 'dark' ? 'light' : 'dark'))}
+          onToggleTheme={toggleTheme}
           onNavigate={overlays.dismissOverlays}
           onOpenWatchlist={handleOpenWatchlist}
         />
-        <main className="snap-container" inert={overlays.overlayOpen || undefined}>
+        <main className="snap-container" inert={overlayOpen || undefined}>
           <section id="home" className="snap-section snap-section-1">
             <Typewriter />
           </section>
@@ -114,7 +103,7 @@ function App() {
                 onSelect={overlays.openDetail}
               />
             )}
-            {overlays.watchlistOpen && session.isLoggedIn && (
+            {watchlistVisible && (
               <Watchlist
                 onBack={overlays.closeWatchlist}
                 onSelect={overlays.openDetail}
@@ -123,7 +112,7 @@ function App() {
             )}
             {overlays.detail && (
               <DetailPage
-                key={`${overlays.detail.mediaType}-${overlays.detail.id}`}
+                key={mediaKey(overlays.detail)}
                 mediaType={overlays.detail.mediaType}
                 id={overlays.detail.id}
                 onBack={overlays.closeDetail}

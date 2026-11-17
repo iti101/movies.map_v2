@@ -4,6 +4,10 @@ export const MEDIA_LABELS = {
   person: 'Person',
 }
 
+export function mediaKey(item) {
+  return `${item.mediaType}-${item.id}`
+}
+
 export function sameMedia(a, b) {
   return Boolean(
     a &&

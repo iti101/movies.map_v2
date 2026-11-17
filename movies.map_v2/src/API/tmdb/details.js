@@ -1,3 +1,4 @@
+import { mediaKey } from '../../lib/media.js'
 import { tmdbGet } from './client.js'
 import { normalizeItem } from './normalize.js'
 import { normalizeWatchProviders } from './watch.js'
@@ -109,9 +110,7 @@ export async function getMovieDetails(id, { signal } = {}) {
     releaseDate: data.release_date || null,
     runtime: data.runtime || null,
     genres: (data.genres ?? []).map((genre) => genre.name),
-    directors: (data.credits?.crew ?? [])
-      .filter((member) => member.job === 'Director')
-      .map((member) => member.name),
+    directors: mapDirectors(data),
     cast: mapCast(data.credits),
     trailerUrl: trailerUrl(data.videos),
     watch: normalizeWatchProviders(data['watch/providers']),
@@ -179,7 +178,7 @@ export async function getPersonDetails(id, { signal } = {}) {
     const mediaType = credit.media_type
     if (mediaType !== 'movie' && mediaType !== 'tv') continue
     if (mediaType === 'tv' && (credit.episode_count ?? 0) < 4) continue
-    const key = `${mediaType}-${credit.id}`
+    const key = mediaKey({ mediaType, id: credit.id })
     if (!credit.id || seen.has(key)) continue
     seen.add(key)
     knownFor.push({

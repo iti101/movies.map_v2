@@ -66,7 +66,7 @@ App
 
 | Concern | Where it lives |
 | --- | --- |
-| Theme + session | `src/App.jsx`, `src/API/novi.js` |
+| Theme + session | `src/hooks/useTheme.js`, `src/API/novi.js` |
 | Overlay history | `src/hooks/useOverlayHistory.js` |
 | Abort / delay helpers | `src/lib/async.js` |
 | List helpers | `src/lib/list.js` |
@@ -84,7 +84,7 @@ Novi has no per-title review endpoint, so `getReviewsForMedia` loads `/api/revie
 
 ### Snap layout
 
-`.snap-container` uses `scroll-snap-type: y mandatory`. Each `.snap-section` is one viewport tall, with top padding for the fixed navbar (`--navbar-height: 3.5rem`). Menu items and the intro **Get Started** button scroll to `#home`, `#search`, or `#randomizer`. Press **/** from outside a field to jump to Search.
+`.snap-container` uses `scroll-snap-type: y mandatory`. Each `.snap-section` is one viewport tall, with top padding for the fixed navbar (`--navbar-height: 3.5rem`). Menu items and the intro **Get Started** button scroll to `#home`, `#search`, or `#randomizer`. Press **/** from outside a field to jump to Search. **Escape** closes the topmost overlay, modal, menu, or episode accordion.
 
 ### Home intro (`Typewriter`)
 
@@ -107,11 +107,12 @@ The **theme** icon always toggles light/dark. The **login** icon opens the Novi 
 - **See all** pushes `{ results: true }`.
 - Opening a title stacks `{ detail }` on the current state.
 - Watchlist stacks `{ watchlist: true }`.
-- Navbar navigation dismisses overlays with `replaceState`.
+- Navbar navigation pops every overlay entry (`history.go(-n)`), so Back cannot reopen a dismissed overlay.
+- **Escape** on an overlay calls the same Back handler as the on-screen button. Open modals, the nav menu, and episode accordions sit higher on the Escape stack and close first.
 
 ### Theme
 
-Default is **dark**. `index.html` reads `localStorage.theme` before React mounts and sets both `data-theme` and `color-scheme` to avoid a flash. `App` keeps `theme` in state, writes the same attributes on `<html>`, and persists `'light'` or `'dark'`. Tokens live in `src/App.css` under `html[data-theme='dark']` and `html[data-theme='light']`.
+Default is **dark**. `index.html` reads `localStorage.theme` before React mounts and sets both `data-theme` and `color-scheme` to avoid a flash. `useTheme` keeps `theme` in state, writes the same attributes on `<html>`, and persists `'light'` or `'dark'`. Tokens live in `src/App.css` under `html[data-theme='dark']` and `html[data-theme='light']`.
 
 ### Auth and watchlists
 

@@ -1,6 +1,7 @@
 import MovieCard from '../../components/MovieCard.jsx'
 import MediaImage from '../../components/MediaImage.jsx'
 import ResultGrid from '../../components/ResultGrid.jsx'
+import { mediaKey } from '../../lib/media.js'
 
 export function Facts({ facts }) {
   if (!facts.length) return null
@@ -82,7 +83,7 @@ export function Related({ title, items, onOpen, rows = false }) {
       {rows ? (
         <ul className="detail__grid detail__grid--rows">
           {items.map((item) => (
-            <MovieCard key={`${item.mediaType}-${item.id}`} item={item} onSelect={onOpen} />
+            <MovieCard key={mediaKey(item)} item={item} onSelect={onOpen} />
           ))}
         </ul>
       ) : (

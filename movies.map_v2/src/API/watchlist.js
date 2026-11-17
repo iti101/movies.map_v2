@@ -5,6 +5,10 @@ export const WATCHLISTS_CHANGED = 'watchlists-changed'
 
 const DEFAULT_LIST = { id: 'watchlist', name: 'Watchlist', items: [] }
 
+function defaultLists() {
+  return [{ ...DEFAULT_LIST, items: [] }]
+}
+
 function readAll() {
   try {
     const data = JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}')
@@ -36,7 +40,7 @@ function storedLists(userId) {
 function listsFor(userId) {
   const lists = storedLists(userId)
   if (lists?.length) return lists
-  return [{ ...DEFAULT_LIST, items: [] }]
+  return defaultLists()
 }
 
 export function listContains(list, item) {
@@ -45,7 +49,7 @@ export function listContains(list, item) {
 
 export function getLists(userId) {
   if (userId == null) return []
-  return storedLists(userId) ?? [{ ...DEFAULT_LIST, items: [] }]
+  return storedLists(userId) ?? defaultLists()
 }
 
 export function isInWatchlist(userId, item) {
@@ -104,7 +108,7 @@ export function createList(userId, name) {
   if (!trimmed || userId == null) return null
 
   const all = readAll()
-  const lists = storedLists(userId) ?? [{ ...DEFAULT_LIST, items: [] }]
+  const lists = storedLists(userId) ?? defaultLists()
   const list = { id: crypto.randomUUID(), name: trimmed, items: [] }
   all[String(userId)] = [...lists, list]
   writeAll(all)
@@ -114,7 +118,7 @@ export function createList(userId, name) {
 export function deleteList(userId, listId) {
   if (userId == null) return []
   const all = readAll()
-  const lists = (storedLists(userId) ?? [{ ...DEFAULT_LIST, items: [] }]).filter(
+  const lists = (storedLists(userId) ?? defaultLists()).filter(
     (list) => list.id !== listId,
   )
   all[String(userId)] = lists

@@ -11,9 +11,7 @@ import { WatchlistContext } from './watchlist-context.js'
 
 export function WatchlistProvider({ userId, children }) {
   const [lists, setLists] = useState(() => getLists(userId))
-  const [activeListId, setActiveListId] = useState(
-    () => getLists(userId)[0]?.id ?? null,
-  )
+  const [activeListId, setActiveListId] = useState(lists[0]?.id ?? null)
 
   useEffect(() => {
     function refresh() {

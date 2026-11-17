@@ -9,7 +9,7 @@ import { useLatestAbort } from '../hooks/useLatestAbort.js'
 import { isAbortError } from '../lib/async.js'
 import { cn } from '../lib/format.js'
 import { toggleById, uniqueBy } from '../lib/list.js'
-import { RANDOMIZER_TYPES } from '../lib/media.js'
+import { mediaKey, RANDOMIZER_TYPES } from '../lib/media.js'
 import { randomInt, shuffle } from '../lib/shuffle.js'
 import './Randomizer.css'
 
@@ -106,7 +106,7 @@ function Randomizer({ onSelect }) {
       const page = randomInt(1, lastPage)
       const { items } = page === 1 ? first : await discoverTmdb({ ...filters, page })
       if (signal.aborted) return
-      const mixed = shuffle(uniqueBy(items, (item) => `${item.mediaType}-${item.id}`))
+      const mixed = shuffle(uniqueBy(items, mediaKey))
 
       if (!mixed.length) {
         setPool([])

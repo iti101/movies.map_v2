@@ -1,3 +1,4 @@
+import { mediaKey } from '../lib/media.js'
 import MovieCard from './MovieCard.jsx'
 
 export default function ResultGrid({
@@ -11,7 +12,7 @@ export default function ResultGrid({
     <ul className={className}>
       {items.map((item) => (
         <MovieCard
-          key={`${item.mediaType}-${item.id}`}
+          key={mediaKey(item)}
           className={cardClassName}
           item={item}
           onSelect={onSelect}

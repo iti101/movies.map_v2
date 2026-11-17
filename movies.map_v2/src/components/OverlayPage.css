@@ -11,6 +11,10 @@
   font-family: var(--font-body);
 }
 
+.overlay-page:focus {
+  outline: none;
+}
+
 .overlay-page__content {
   position: relative;
   width: min(64rem, 100%);
