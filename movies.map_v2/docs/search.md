@@ -10,7 +10,7 @@ A request runs when the form has a trimmed query, a valid 4-digit year, **or** a
 
 ## Intent
 
-The search page shows **one TMDB page** (20 items, then local filters). **See all** re-fetches up to **10 pages**, applies the same filters, and renders them in a full-screen overlay.
+The search page shows **one TMDB page** (20 items, then local filters). **See all** reuses that first page and fetches pages 2–10, applies the same filters, and renders them in a full-screen overlay.
 
 ## Data flow
 
@@ -20,9 +20,9 @@ SearchSection.handleSubmit
   → applySearchFilters(...)                       // client-side year/genre when needed
   → MovieCard grid + “See all”
 
-See all → App.openResults(search)
+See all → App.openResults(search)                 // includes page-1 results + totalPages
   → SearchResultsPage
-  → searchTmdbAll(...)                            // pages 1..min(totalPages, 10)
+  → searchTmdbAll({ seedItems, totalPages })      // skip page 1 when seeded
   → applySearchFilters(...)
 ```
 
@@ -69,14 +69,15 @@ TMDB does not accept the same params on every endpoint, so some filters are serv
 
 ## See all overlay
 
-`handleSeeAll` reuses the last **submitted** search (`query`, `type`, `year`, `genre`) plus that run’s first-page `results`. Changing chips without searching again no longer sends a different filter set than the grid on screen.
+`handleSeeAll` reuses the last **submitted** search (`query`, `type`, `year`, `genre`) plus that run’s first-page `results` and `totalPages`. Changing chips without searching again no longer sends a different filter set than the grid on screen.
 
 `SearchResultsPage`:
 
 1. Renders the seeded first page immediately when it is non-empty.
-2. Always calls `searchTmdbAll` (max 10 pages, parallel after page 1).
+2. Calls `searchTmdbAll` with that seed so page 1 is not fetched again. Later pages (2..min(totalPages, 10)) load in parallel.
 3. Replaces the list with the full filtered set.
 4. If the multi-page fetch fails **and** seeded results exist, it keeps the seed and does not show an error.
+5. Accepting a Did you mean suggestion starts a fresh fetch (no seed).
 
 `App` owns overlay visibility and browser history (see the README).
 

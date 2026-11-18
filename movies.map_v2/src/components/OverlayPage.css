@@ -23,6 +23,11 @@
   flex-direction: column;
 }
 
+.overlay-page--buried {
+  visibility: hidden;
+  pointer-events: none;
+}
+
 .overlay-page__back {
   align-self: flex-start;
 }

@@ -23,7 +23,6 @@ const SIZE_PRESETS = new Set(['sm', 'md', 'lg', 'xl'])
  */
 export default function Button({
   children,
-  text,
   className = '',
   type = 'button',
   variant = 'chip',
@@ -65,7 +64,7 @@ export default function Button({
       aria-pressed={active || undefined}
       {...props}
     >
-      {children ?? text}
+      {children}
     </button>
   )
 }

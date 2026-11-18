@@ -52,11 +52,6 @@ export function getLists(userId) {
   return storedLists(userId) ?? defaultLists()
 }
 
-export function isInWatchlist(userId, item) {
-  if (userId == null || !item) return false
-  return getLists(userId).some((list) => listContains(list, item))
-}
-
 function asWatchlistEntry(item) {
   return {
     id: item.id,
@@ -90,17 +85,6 @@ export function addToList(userId, listId, item) {
   all[String(userId)] = nextLists
   writeAll(all)
   return exists ? 'already' : 'added'
-}
-
-export function addToWatchlist(userId, item) {
-  const lists = listsFor(userId)
-  return addToList(userId, lists[0].id, item)
-}
-
-export function isInList(userId, listId, item) {
-  if (userId == null || !item || !listId) return false
-  const list = getLists(userId).find((entry) => entry.id === listId)
-  return listContains(list, item)
 }
 
 export function createList(userId, name) {

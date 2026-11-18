@@ -3,7 +3,7 @@ import WatchlistButton from '../../components/WatchlistButton.jsx'
 import { formatDate, formatRuntime } from '../../lib/format.js'
 import { uniqueBy } from '../../lib/list.js'
 import { mediaKey } from '../../lib/media.js'
-import { Cast, Facts, Rating, Related, Section } from './bits.jsx'
+import { Cast, Facts, PeopleLinks, Rating, Related, Section } from './bits.jsx'
 import Reviews from './Reviews.jsx'
 import SeasonEpisodes from './SeasonEpisodes.jsx'
 import WhereToWatch from './WhereToWatch.jsx'
@@ -11,19 +11,19 @@ import WhereToWatch from './WhereToWatch.jsx'
 export default function TitleView({ item, onOpen, isLoggedIn, user, token, onRequestLogin }) {
   const isTv = item.mediaType === 'tv'
   const date = formatDate(isTv ? item.firstAirDate : item.releaseDate)
-  const creatorNames = isTv
-    ? item.createdBy
-    : (item.directors ?? []).map((person) => person.name)
+  const talent = isTv ? (item.createdBy ?? []) : (item.directors ?? [])
   const runtime = isTv ? null : formatRuntime(item.runtime)
   const people = uniqueBy(
-    [...(item.directors ?? []), ...(item.cast ?? [])].filter((person) => person?.id),
+    [...(item.createdBy ?? []), ...(item.directors ?? []), ...(item.cast ?? [])].filter(
+      (person) => person?.id,
+    ),
     (person) => person.id,
   )
   const facts = [
     date && { label: isTv ? 'First aired' : 'Release date', value: date },
-    creatorNames.length > 0 && {
-      label: isTv ? 'Created by' : creatorNames.length > 1 ? 'Directors' : 'Director',
-      value: creatorNames.join(', '),
+    talent.length > 0 && {
+      label: isTv ? 'Created by' : talent.length > 1 ? 'Directors' : 'Director',
+      value: <PeopleLinks people={talent} onOpen={onOpen} />,
     },
     runtime && { label: 'Runtime', value: runtime },
     item.genres.length > 0 && {

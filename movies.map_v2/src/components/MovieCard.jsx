@@ -1,4 +1,4 @@
-import { MEDIA_LABELS } from '../API/tmdb.js'
+import { MEDIA_LABELS } from '../lib/media.js'
 import { cn } from '../lib/format.js'
 import MediaImage from './MediaImage.jsx'
 import './MovieCard.css'

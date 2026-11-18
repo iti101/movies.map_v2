@@ -1,3 +1,4 @@
+import { useId } from 'react'
 import MovieCard from '../../components/MovieCard.jsx'
 import MediaImage from '../../components/MediaImage.jsx'
 import ResultGrid from '../../components/ResultGrid.jsx'
@@ -14,6 +15,34 @@ export function Facts({ facts }) {
         </div>
       ))}
     </dl>
+  )
+}
+
+export function PeopleLinks({ people, onOpen }) {
+  if (!people?.length) return null
+  return people.map((person, index) => (
+    <span key={person.id}>
+      {index > 0 ? ', ' : ''}
+      <button
+        type="button"
+        className="detail__person-link"
+        onClick={() => onOpen({ mediaType: 'person', id: person.id })}
+      >
+        {person.name}
+      </button>
+    </span>
+  ))
+}
+
+export function DetailSelect({ label, value, onChange, children }) {
+  const selectId = useId()
+  return (
+    <label className="detail__region" htmlFor={selectId}>
+      <span className="detail__kicker">{label}</span>
+      <select id={selectId} className="detail__select" value={value} onChange={onChange}>
+        {children}
+      </select>
+    </label>
   )
 }
 

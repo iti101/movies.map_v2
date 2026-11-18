@@ -72,7 +72,7 @@ async function request(path, { method = 'GET', body, token, signal } = {}) {
   }
 }
 
-export function decodeTokenPayload(token) {
+function decodeTokenPayload(token) {
   if (!token) return null
   try {
     const payload = token.split('.')[1]

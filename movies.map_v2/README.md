@@ -109,6 +109,7 @@ The **theme** icon always toggles light/dark. The **login** icon opens the Novi 
 - Watchlist stacks `{ watchlist: true }`.
 - Navbar navigation pops every overlay entry (`history.go(-n)`), so Back cannot reopen a dismissed overlay.
 - **Escape** on an overlay calls the same Back handler as the on-screen button. Open modals, the nav menu, and episode accordions sit higher on the Escape stack and close first.
+- Stacked overlays stay mounted so Back can restore them instantly, but only the top one is active (`inert` / `aria-hidden` hide the rest from assistive tech and pointer events).
 
 ### Theme
 

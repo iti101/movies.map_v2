@@ -1,7 +1,5 @@
 import { waitWithSignal } from '../../lib/async.js'
 
-export { isAbortError } from '../../lib/async.js'
-
 const API_BASE = 'https://api.themoviedb.org/3'
 const CACHE_LIMIT = 80
 

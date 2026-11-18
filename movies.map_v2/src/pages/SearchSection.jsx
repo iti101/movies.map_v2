@@ -29,6 +29,7 @@ function SearchSection({ onSeeAll, onSelect }) {
   const [genreOn, setGenreOn] = useState(false)
   const [selectedGenre, setSelectedGenre] = useState(null)
   const [results, setResults] = useState([])
+  const [totalPages, setTotalPages] = useState(0)
   const [status, setStatus] = useState('idle')
   const [error, setError] = useState('')
   const [submitted, setSubmitted] = useState(null)
@@ -54,6 +55,7 @@ function SearchSection({ onSeeAll, onSelect }) {
       nextSignal()
       setStatus('idle')
       setResults([])
+      setTotalPages(0)
       setError('')
       setSubmitted(null)
       setSuggestion('')
@@ -67,7 +69,7 @@ function SearchSection({ onSeeAll, onSelect }) {
     setSuggestion('')
 
     try {
-      const { items } = await fetchTmdbPage({ ...nextSubmitted, signal })
+      const { items, totalPages: pages } = await fetchTmdbPage({ ...nextSubmitted, signal })
       const filtered = applySearchFilters(items, nextSubmitted)
       const nextSuggestion =
         (await getSearchSuggestion({
@@ -77,11 +79,13 @@ function SearchSection({ onSeeAll, onSelect }) {
         })) ?? ''
       if (signal.aborted) return
       setResults(filtered)
+      setTotalPages(pages || 1)
       setSuggestion(nextSuggestion)
       setStatus(filtered.length === 0 ? 'empty' : 'success')
     } catch (err) {
       if (isAbortError(err) || signal.aborted) return
       setResults([])
+      setTotalPages(0)
       setSuggestion('')
       setStatus('error')
       setError(err.message || 'Something went wrong.')
@@ -124,7 +128,7 @@ function SearchSection({ onSeeAll, onSelect }) {
 
   function handleSeeAll() {
     if (!submitted) return
-    onSeeAll?.({ ...submitted, results })
+    onSeeAll?.({ ...submitted, results, totalPages })
   }
 
   const searchLabel = getSearchLabel(submitted ?? {})

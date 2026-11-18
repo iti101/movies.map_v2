@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { getSearchLabel, getSearchSuggestion, searchTmdbAll } from '../API/tmdb.js'
+import { getSearchLabel, getSearchSuggestion, searchKeyOf, searchTmdbAll } from '../API/tmdb.js'
 import OverlayPage from '../components/OverlayPage.jsx'
 import ResultGrid from '../components/ResultGrid.jsx'
 import SearchStatus from '../components/SearchStatus.jsx'
@@ -7,20 +7,16 @@ import { isAbortError } from '../lib/async.js'
 import { pluralize } from '../lib/format.js'
 import './SearchResultsPage.css'
 
-function searchKeyOf(search) {
-  return `${search.query ?? ''}|${search.type}|${search.year ?? ''}|${search.genre?.id ?? ''}`
-}
-
 /**
  * Full-screen “See all” overlay. Shows the first page immediately, then
- * replaces it with up to 10 TMDB pages. If that deeper fetch fails, keep the seed.
+ * fills in later TMDB pages. If that deeper fetch fails, keep the seed.
  */
-function SearchResultsPage({ search, onBack, onSelect }) {
+function SearchResultsPage({ search, active, onBack, onSelect }) {
   const seedKey = searchKeyOf(search)
   const [queryOverride, setQueryOverride] = useState(null)
   const activeSearch =
     queryOverride?.key === seedKey
-      ? { ...search, query: queryOverride.query, results: [] }
+      ? { ...search, query: queryOverride.query, results: [], totalPages: 0 }
       : search
   const activeKey = searchKeyOf(activeSearch)
   const seeded = activeSearch.results ?? []
@@ -51,6 +47,8 @@ function SearchResultsPage({ search, onBack, onSelect }) {
       type: activeSearch.type,
       year: activeSearch.year,
       genre: activeSearch.genre,
+      seedItems: activeSearch.results,
+      totalPages: activeSearch.totalPages,
       signal: controller.signal,
     })
       .then(async (items) => {
@@ -87,6 +85,7 @@ function SearchResultsPage({ search, onBack, onSelect }) {
     <OverlayPage
       className="results-page"
       contentClass="results-page__inner"
+      active={active}
       onBack={onBack}
       labelledBy="results-title"
     >

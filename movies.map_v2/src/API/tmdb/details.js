@@ -27,16 +27,37 @@ function trailerUrl(videos) {
   return clipUrl(trailer)
 }
 
+function mapPerson(person, character) {
+  if (!person?.id) return null
+  return {
+    id: person.id,
+    name: person.name,
+    character,
+    profilePath: person.profile_path ?? null,
+  }
+}
+
+function uniquePeople(people, character) {
+  const seen = new Set()
+  const list = []
+  for (const person of people ?? []) {
+    const mapped = mapPerson(person, character)
+    if (!mapped || seen.has(mapped.id)) continue
+    seen.add(mapped.id)
+    list.push(mapped)
+  }
+  return list
+}
+
 function mapCast(credits) {
-  return (credits?.cast ?? []).slice(0, CAST_LIMIT).map((member) => ({
-    id: member.id,
-    name: member.name,
-    character:
+  return (credits?.cast ?? []).slice(0, CAST_LIMIT).map((member) =>
+    mapPerson(
+      member,
       member.character ||
-      (member.roles ?? []).map((role) => role.character).filter(Boolean).join(', ') ||
-      null,
-    profilePath: member.profile_path,
-  }))
+        (member.roles ?? []).map((role) => role.character).filter(Boolean).join(', ') ||
+        null,
+    ),
+  ).filter(Boolean)
 }
 
 function mapRelated(data, mediaType, excludeId, limit = RELATED_LIMIT) {
@@ -56,30 +77,14 @@ function mapRelated(data, mediaType, excludeId, limit = RELATED_LIMIT) {
 }
 
 function mapDirectors(data) {
-  const seen = new Set()
-  const people = []
-
-  function add(person) {
-    if (!person?.id || seen.has(person.id)) return
-    seen.add(person.id)
-    people.push({
-      id: person.id,
-      name: person.name,
-      character: 'Director',
-      profilePath: person.profile_path,
-    })
-  }
-
-  for (const person of data.aggregate_credits?.crew ?? []) {
-    if ((person.jobs ?? []).some((job) => job.job === 'Director')) add(person)
-  }
-  if (!people.length) {
-    for (const person of data.credits?.crew ?? []) {
-      if (person.job === 'Director') add(person)
-    }
-  }
-
-  return people.slice(0, DIRECTOR_LIMIT)
+  const fromAggregate = (data.aggregate_credits?.crew ?? []).filter((person) =>
+    (person.jobs ?? []).some((job) => job.job === 'Director'),
+  )
+  const fromCredits = (data.credits?.crew ?? []).filter((person) => person.job === 'Director')
+  return uniquePeople(fromAggregate.length ? fromAggregate : fromCredits, 'Director').slice(
+    0,
+    DIRECTOR_LIMIT,
+  )
 }
 
 function score(data) {
@@ -139,7 +144,7 @@ export async function getTvDetails(id, { signal } = {}) {
     backdropPath: data.backdrop_path,
     firstAirDate: data.first_air_date || null,
     genres: (data.genres ?? []).map((genre) => genre.name),
-    createdBy: (data.created_by ?? []).map((person) => person.name),
+    createdBy: uniquePeople(data.created_by, 'Creator'),
     seasons: (data.seasons ?? [])
       .filter((season) => season.episode_count > 0)
       .map((season) => ({

@@ -1,4 +1,4 @@
-import { useId, useState } from 'react'
+import { useState } from 'react'
 import {
   getFallbackWatchRegions,
   getSavedWatchRegion,
@@ -9,10 +9,9 @@ import {
 } from '../../API/tmdb.js'
 import MediaImage from '../../components/MediaImage.jsx'
 import { useAsync } from '../../hooks/useAsync.js'
-import { Section } from './bits.jsx'
+import { DetailSelect, Section } from './bits.jsx'
 
 export default function WhereToWatch({ title, watchByRegion }) {
-  const labelId = useId()
   const [region, setRegion] = useState(getSavedWatchRegion)
   const { data } = useAsync((signal) => getWatchRegions({ signal }), [])
   const regions = data ?? getFallbackWatchRegions()
@@ -36,21 +35,13 @@ export default function WhereToWatch({ title, watchByRegion }) {
     <Section
       title="Where to watch"
       extra={
-        <label className="detail__region" htmlFor={labelId}>
-          <span className="detail__kicker">Location</span>
-          <select
-            id={labelId}
-            className="detail__select"
-            value={region}
-            onChange={handleRegionChange}
-          >
-            {options.map((option) => (
-              <option key={option.code} value={option.code}>
-                {option.name}
-              </option>
-            ))}
-          </select>
-        </label>
+        <DetailSelect label="Location" value={region} onChange={handleRegionChange}>
+          {options.map((option) => (
+            <option key={option.code} value={option.code}>
+              {option.name}
+            </option>
+          ))}
+        </DetailSelect>
       }
     >
       {providers.length === 0 ? (

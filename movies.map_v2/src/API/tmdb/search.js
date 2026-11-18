@@ -34,6 +34,11 @@ export function getSearchLabel({ query, year, genre }) {
   return query?.trim() || year || genre?.name || ''
 }
 
+/** Stable identity for a search so overlay state can stay keyed to one request. */
+export function searchKeyOf({ query, type, year, genre } = {}) {
+  return `${query ?? ''}|${type}|${year ?? ''}|${genre?.id ?? ''}`
+}
+
 function normalizeTitle(value) {
   return String(value ?? '')
     .toLowerCase()
@@ -226,8 +231,13 @@ export async function searchTmdbAll({
   genre,
   maxPages = MAX_RESULT_PAGES,
   signal,
+  seedItems,
+  totalPages,
 } = {}) {
-  const first = await fetchTmdbPage({ query, type, year, genre, page: 1, signal })
+  const hasSeed = Array.isArray(seedItems) && seedItems.length > 0 && Number(totalPages) > 0
+  const first = hasSeed
+    ? { items: seedItems, totalPages: Number(totalPages) }
+    : await fetchTmdbPage({ query, type, year, genre, page: 1, signal })
   const pages = Math.min(first.totalPages, maxPages)
 
   const rest = await Promise.all(

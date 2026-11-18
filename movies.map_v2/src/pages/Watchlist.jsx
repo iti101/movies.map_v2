@@ -7,7 +7,7 @@ import { useWatchlist } from '../context/watchlist-context.js'
 import { pluralize } from '../lib/format.js'
 import './Watchlist.css'
 
-function Watchlist({ onBack, onSelect, onFindTitle }) {
+function Watchlist({ active, onBack, onSelect, onFindTitle }) {
   const {
     lists,
     activeList,
@@ -35,6 +35,7 @@ function Watchlist({ onBack, onSelect, onFindTitle }) {
     <OverlayPage
       className="watchlist"
       contentClass="watchlist__content"
+      active={active}
       onBack={onBack}
       labelledBy="watchlist-title"
     >

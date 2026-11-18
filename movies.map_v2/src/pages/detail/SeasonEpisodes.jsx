@@ -1,9 +1,9 @@
-import { useId, useState } from 'react'
+import { useState } from 'react'
 import { getTvSeason } from '../../API/tmdb.js'
 import { formatDate, formatRuntime, pluralize } from '../../lib/format.js'
 import { useAsync } from '../../hooks/useAsync.js'
 import { useEscape } from '../../hooks/useEscape.js'
-import { Section } from './bits.jsx'
+import { DetailSelect, Section } from './bits.jsx'
 
 function defaultSeasonNumber(seasons) {
   if (!seasons.length) return null
@@ -11,7 +11,6 @@ function defaultSeasonNumber(seasons) {
 }
 
 export default function SeasonEpisodes({ showId, seasons }) {
-  const selectId = useId()
   const [seasonNumber, setSeasonNumber] = useState(() => defaultSeasonNumber(seasons))
   const [openEpisodeId, setOpenEpisodeId] = useState(null)
   const { status, data, error } = useAsync((signal) => {
@@ -28,24 +27,20 @@ export default function SeasonEpisodes({ showId, seasons }) {
     <Section
       title="Episodes"
       extra={
-        <label className="detail__region" htmlFor={selectId}>
-          <span className="detail__kicker">Season</span>
-          <select
-            id={selectId}
-            className="detail__select"
-            value={seasonNumber ?? ''}
-            onChange={(event) => {
-              setSeasonNumber(Number(event.target.value))
-              setOpenEpisodeId(null)
-            }}
-          >
-            {seasons.map((season) => (
-              <option key={season.number} value={season.number}>
-                {season.name} · {pluralize(season.episodeCount, 'episode')}
-              </option>
-            ))}
-          </select>
-        </label>
+        <DetailSelect
+          label="Season"
+          value={seasonNumber ?? ''}
+          onChange={(event) => {
+            setSeasonNumber(Number(event.target.value))
+            setOpenEpisodeId(null)
+          }}
+        >
+          {seasons.map((season) => (
+            <option key={season.number} value={season.number}>
+              {season.name} · {pluralize(season.episodeCount, 'episode')}
+            </option>
+          ))}
+        </DetailSelect>
       }
     >
       {status === 'loading' && <p className="detail__text">Loading episodes…</p>}

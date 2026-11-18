@@ -6,7 +6,7 @@ import PersonView from './detail/PersonView.jsx'
 import TitleView from './detail/TitleView.jsx'
 import './DetailPage.css'
 
-function DetailPage({ mediaType, id, onBack, onOpen, isLoggedIn, user, token, onRequestLogin }) {
+function DetailPage({ mediaType, id, active, onBack, onOpen, isLoggedIn, user, token, onRequestLogin }) {
   const loader = DETAIL_LOADERS[mediaType]
   const { status, data: item, error } = useAsync((signal) => {
     if (!loader) throw new Error('Unknown title type.')
@@ -23,6 +23,7 @@ function DetailPage({ mediaType, id, onBack, onOpen, isLoggedIn, user, token, on
     <OverlayPage
       className="detail"
       contentClass="detail__content"
+      active={active}
       onBack={onBack}
       labelledBy="detail-title"
       before={

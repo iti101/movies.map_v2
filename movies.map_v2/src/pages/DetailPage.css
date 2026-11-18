@@ -111,6 +111,21 @@
   font-weight: 600;
 }
 
+.detail__person-link {
+  padding: 0;
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+  text-decoration: underline;
+  text-underline-offset: 0.18em;
+}
+
+.detail__person-link:hover {
+  color: var(--color-text-muted);
+}
+
 .detail__actions {
   display: flex;
   flex-direction: column;
@@ -275,6 +290,7 @@
 }
 
 .detail__cast-card:focus-visible,
+.detail__person-link:focus-visible,
 .detail__select:focus-visible,
 .detail__trailer:focus-visible,
 .detail__provider:focus-visible,

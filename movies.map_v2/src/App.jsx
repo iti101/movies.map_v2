@@ -26,6 +26,13 @@ function App() {
   const dismissOverlays = overlays.dismissOverlays
   const watchlistVisible = overlays.watchlistOpen && session.isLoggedIn
   const overlayOpen = Boolean(overlays.resultsSearch || overlays.detail || watchlistVisible)
+  const topOverlay = overlays.detail
+    ? 'detail'
+    : watchlistVisible
+      ? 'watchlist'
+      : overlays.resultsSearch
+        ? 'results'
+        : null
 
   useEffect(() => {
     function onKeyDown(event) {
@@ -99,12 +106,14 @@ function App() {
             {overlays.resultsSearch && (
               <SearchResultsPage
                 search={overlays.resultsSearch}
+                active={topOverlay === 'results'}
                 onBack={overlays.closeResults}
                 onSelect={overlays.openDetail}
               />
             )}
             {watchlistVisible && (
               <Watchlist
+                active={topOverlay === 'watchlist'}
                 onBack={overlays.closeWatchlist}
                 onSelect={overlays.openDetail}
                 onFindTitle={handleFindTitle}
@@ -115,6 +124,7 @@ function App() {
                 key={mediaKey(overlays.detail)}
                 mediaType={overlays.detail.mediaType}
                 id={overlays.detail.id}
+                active={topOverlay === 'detail'}
                 onBack={overlays.closeDetail}
                 onOpen={overlays.openDetail}
                 isLoggedIn={session.isLoggedIn}

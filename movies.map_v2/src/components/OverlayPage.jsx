@@ -4,6 +4,7 @@ import { cn } from '../lib/format.js'
 import Button from './Button.jsx'
 import './OverlayPage.css'
 
+/** Full-screen overlay. `active={false}` keeps it mounted but hidden/inert under another overlay. */
 export default function OverlayPage({
   className,
   contentClass,
@@ -12,22 +13,25 @@ export default function OverlayPage({
   labelledBy,
   before,
   children,
+  active = true,
 }) {
   const rootRef = useRef(null)
 
-  useEscape(true, onBack)
+  useEscape(active, onBack)
 
   useEffect(() => {
-    rootRef.current?.focus()
-  }, [])
+    if (active) rootRef.current?.focus()
+  }, [active])
 
   return (
     <article
       ref={rootRef}
-      className={cn('overlay-page', className)}
+      className={cn('overlay-page', !active && 'overlay-page--buried', className)}
       tabIndex={-1}
       role="dialog"
-      aria-modal="true"
+      aria-modal={active ? 'true' : undefined}
+      aria-hidden={active ? undefined : true}
+      inert={active ? undefined : true}
       aria-labelledby={labelledBy}
     >
       {before}

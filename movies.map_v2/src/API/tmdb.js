@@ -1,5 +1,4 @@
 export { getImageUrl, getImageSrcSet } from './tmdb/images.js'
-export { MEDIA_LABELS } from '../lib/media.js'
 export {
   applySearchFilters,
   discoverTmdb,
@@ -9,6 +8,7 @@ export {
   getSearchSuggestion,
   isValidYear,
   loadGenres,
+  searchKeyOf,
   searchPeople,
   searchTmdb,
   searchTmdbAll,
