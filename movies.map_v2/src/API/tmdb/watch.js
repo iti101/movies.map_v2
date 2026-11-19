@@ -1,4 +1,5 @@
 import { waitWithSignal } from '../../lib/async.js'
+import { readStorage, writeStorage } from '../../lib/storage.js'
 import { tmdbGet } from './client.js'
 
 const WATCH_REGION_KEY = 'watchRegion'
@@ -69,22 +70,14 @@ export function getFallbackWatchRegions() {
 }
 
 export function getSavedWatchRegion() {
-  try {
-    const saved = localStorage.getItem(WATCH_REGION_KEY)
-    if (saved && /^[A-Z]{2}$/.test(saved)) return saved
-  } catch {
-    // Private browsing can block storage.
-  }
+  const saved = readStorage(WATCH_REGION_KEY)
+  if (saved && /^[A-Z]{2}$/.test(saved)) return saved
   const region = navigator.language?.split('-')[1]
   return region && /^[A-Za-z]{2}$/.test(region) ? region.toUpperCase() : 'US'
 }
 
 export function saveWatchRegion(region) {
-  try {
-    localStorage.setItem(WATCH_REGION_KEY, region)
-  } catch {
-    // Ignore storage failures.
-  }
+  writeStorage(WATCH_REGION_KEY, region)
 }
 
 export function normalizeWatchProviders(watchProviders) {

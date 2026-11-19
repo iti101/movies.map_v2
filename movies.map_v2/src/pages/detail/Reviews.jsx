@@ -3,12 +3,14 @@ import { createReview, getReviewsForMedia } from '../../API/novi.js'
 import { isAbortError } from '../../lib/async.js'
 import Button from '../../components/Button.jsx'
 import StarRating from '../../components/StarRating.jsx'
+import { useSession } from '../../context/session-context.js'
 import { formatDate } from '../../lib/format.js'
 import { useAsync } from '../../hooks/useAsync.js'
 import { Section } from './bits.jsx'
 
-export default function Reviews({ item, isLoggedIn, user, token, onRequestLogin }) {
+export default function Reviews({ item }) {
   const fieldId = useId()
+  const { isLoggedIn, user, token, openAuth } = useSession()
   const [open, setOpen] = useState(false)
   const [rating, setRating] = useState(0)
   const [text, setText] = useState('')
@@ -22,7 +24,7 @@ export default function Reviews({ item, isLoggedIn, user, token, onRequestLogin 
 
   function handleWrite() {
     if (!isLoggedIn || user?.id == null) {
-      onRequestLogin()
+      openAuth()
       return
     }
     setOpen((current) => !current)
@@ -36,7 +38,7 @@ export default function Reviews({ item, isLoggedIn, user, token, onRequestLogin 
       return
     }
     if (!token || user?.id == null) {
-      onRequestLogin()
+      openAuth()
       return
     }
 

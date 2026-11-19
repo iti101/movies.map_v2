@@ -2,6 +2,7 @@ import { useId, useState } from 'react'
 import Button from './Button.jsx'
 import Modal from './Modal.jsx'
 import { createAccount, login } from '../API/novi.js'
+import { useSession } from '../context/session-context.js'
 import visibilityIcon from '../assets/visibility_opsz24.svg'
 import visibilityOffIcon from '../assets/visibility_off_opsz24.svg'
 import './AuthModal.css'
@@ -13,6 +14,15 @@ function EyeIcon({ slashed }) {
       alt=""
       aria-hidden="true"
     />
+  )
+}
+
+function TextField({ id, label, ...props }) {
+  return (
+    <div className="auth-field">
+      <label htmlFor={id}>{label}</label>
+      <input id={id} className="auth-input" {...props} />
+    </div>
   )
 }
 
@@ -66,12 +76,13 @@ function isStrongPassword(password) {
   return password.length >= 8 && /\d/.test(password) && /[^A-Za-z0-9]/.test(password)
 }
 
-function AuthModal({ open, onClose, onAuthenticated }) {
+function AuthModal() {
   const titleId = useId()
   const emailId = useId()
   const passwordId = useId()
   const usernameId = useId()
   const confirmId = useId()
+  const { authOpen: open, closeAuth, signIn } = useSession()
 
   const [mode, setMode] = useState('signin')
   const [form, setForm] = useState(INITIAL_FORM)
@@ -85,7 +96,7 @@ function AuthModal({ open, onClose, onAuthenticated }) {
     setForm(INITIAL_FORM)
     setError('')
     setSubmitting(false)
-    onClose()
+    closeAuth()
   }
 
   function updateField(field) {
@@ -137,7 +148,7 @@ function AuthModal({ open, onClose, onAuthenticated }) {
       const session = isSignIn
         ? await login({ email, password })
         : await createAccount({ username, email, password })
-      onAuthenticated(session)
+      signIn(session)
       handleClose()
     } catch (err) {
       setError(err.message || 'Something went wrong. Please try again.')
@@ -174,36 +185,30 @@ function AuthModal({ open, onClose, onAuthenticated }) {
 
       <form className="auth-form" onSubmit={handleSubmit}>
         {!isSignIn && (
-          <div className="auth-field">
-            <label htmlFor={usernameId}>Username</label>
-            <input
-              id={usernameId}
-              className="auth-input"
-              type="text"
-              value={form.username}
-              onChange={updateField('username')}
-              placeholder="Choose a username"
-              autoComplete="username"
-              minLength={2}
-              maxLength={40}
-              disabled={submitting}
-            />
-          </div>
-        )}
-
-        <div className="auth-field">
-          <label htmlFor={emailId}>Email</label>
-          <input
-            id={emailId}
-            className="auth-input"
-            type="email"
-            value={form.email}
-            onChange={updateField('email')}
-            placeholder={isSignIn ? undefined : 'you@example.com'}
-            autoComplete="email"
+          <TextField
+            id={usernameId}
+            label="Username"
+            type="text"
+            value={form.username}
+            onChange={updateField('username')}
+            placeholder="Choose a username"
+            autoComplete="username"
+            minLength={2}
+            maxLength={40}
             disabled={submitting}
           />
-        </div>
+        )}
+
+        <TextField
+          id={emailId}
+          label="Email"
+          type="email"
+          value={form.email}
+          onChange={updateField('email')}
+          placeholder={isSignIn ? undefined : 'you@example.com'}
+          autoComplete="email"
+          disabled={submitting}
+        />
 
         <PasswordField
           id={passwordId}

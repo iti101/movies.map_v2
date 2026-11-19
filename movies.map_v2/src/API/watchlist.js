@@ -1,4 +1,5 @@
 import { sameMedia } from '../lib/media.js'
+import { readJson, writeJson } from '../lib/storage.js'
 
 const STORAGE_KEY = 'watchlists'
 export const WATCHLISTS_CHANGED = 'watchlists-changed'
@@ -10,16 +11,12 @@ function defaultLists() {
 }
 
 function readAll() {
-  try {
-    const data = JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}')
-    return data && typeof data === 'object' ? data : {}
-  } catch {
-    return {}
-  }
+  const data = readJson(STORAGE_KEY, {})
+  return data && typeof data === 'object' ? data : {}
 }
 
 function writeAll(data) {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(data))
+  writeJson(STORAGE_KEY, data)
   window.dispatchEvent(new Event(WATCHLISTS_CHANGED))
 }
 

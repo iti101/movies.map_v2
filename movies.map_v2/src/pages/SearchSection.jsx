@@ -11,8 +11,8 @@ import ChipRow from '../components/ChipRow.jsx'
 import ResultGrid from '../components/ResultGrid.jsx'
 import SearchStatus from '../components/SearchStatus.jsx'
 import { useGenres } from '../hooks/useGenres.js'
-import { useLatestAbort } from '../hooks/useLatestAbort.js'
-import { isAbortError } from '../lib/async.js'
+import { useTask } from '../hooks/useTask.js'
+import { cn } from '../lib/format.js'
 import { SEARCH_TYPES } from '../lib/media.js'
 import searchIcon from '../assets/search_opsz24.svg'
 import './SearchSection.css'
@@ -30,17 +30,21 @@ function SearchSection({ onSeeAll, onSelect }) {
   const [selectedGenre, setSelectedGenre] = useState(null)
   const [results, setResults] = useState([])
   const [totalPages, setTotalPages] = useState(0)
-  const [status, setStatus] = useState('idle')
-  const [error, setError] = useState('')
   const [submitted, setSubmitted] = useState(null)
   const [suggestion, setSuggestion] = useState('')
+  const { status, error, setStatus, run, reset } = useTask()
   const { genres, loading: genresLoading } = useGenres(type)
-  const nextSignal = useLatestAbort()
 
   const filtersDisabled = type === 'person'
   const hasResults = status === 'success' && results.length > 0
   const yearFilter = releaseDateOn && isValidYear(year) ? year : ''
   const genreFilter = genreOn && !filtersDisabled ? selectedGenre : null
+
+  function clearResults() {
+    setResults([])
+    setTotalPages(0)
+    setSuggestion('')
+  }
 
   async function runSearch(nextQuery = query) {
     const trimmed = nextQuery.trim()
@@ -52,23 +56,16 @@ function SearchSection({ onSeeAll, onSelect }) {
     }
 
     if (!trimmed && !yearFilter && !genreFilter) {
-      nextSignal()
-      setStatus('idle')
-      setResults([])
-      setTotalPages(0)
-      setError('')
+      reset()
+      clearResults()
       setSubmitted(null)
-      setSuggestion('')
       return
     }
 
-    const signal = nextSignal()
-    setStatus('loading')
-    setError('')
     setSubmitted(nextSubmitted)
     setSuggestion('')
 
-    try {
+    const result = await run(async (signal) => {
       const { items, totalPages: pages } = await fetchTmdbPage({ ...nextSubmitted, signal })
       const filtered = applySearchFilters(items, nextSubmitted)
       const nextSuggestion =
@@ -77,19 +74,19 @@ function SearchSection({ onSeeAll, onSelect }) {
           items,
           signal,
         })) ?? ''
-      if (signal.aborted) return
-      setResults(filtered)
-      setTotalPages(pages || 1)
-      setSuggestion(nextSuggestion)
-      setStatus(filtered.length === 0 ? 'empty' : 'success')
-    } catch (err) {
-      if (isAbortError(err) || signal.aborted) return
-      setResults([])
-      setTotalPages(0)
-      setSuggestion('')
-      setStatus('error')
-      setError(err.message || 'Something went wrong.')
+      return { filtered, pages, nextSuggestion }
+    })
+
+    if (result.aborted) return
+    if (result.error) {
+      clearResults()
+      return
     }
+
+    setResults(result.value.filtered)
+    setTotalPages(result.value.pages || 1)
+    setSuggestion(result.value.nextSuggestion)
+    setStatus(result.value.filtered.length === 0 ? 'empty' : 'success')
   }
 
   function handleSubmit(event) {
@@ -134,7 +131,7 @@ function SearchSection({ onSeeAll, onSelect }) {
   const searchLabel = getSearchLabel(submitted ?? {})
 
   return (
-    <div className={`search-section${hasResults || status === 'empty' ? ' search-section--has-results' : ''}`}>
+    <div className={cn('search-section', (hasResults || status === 'empty') && 'search-section--has-results')}>
       <h2 className="search-title">Search</h2>
 
       <form className="search-form" onSubmit={handleSubmit} role="search">
@@ -162,23 +159,19 @@ function SearchSection({ onSeeAll, onSelect }) {
           </Button>
         </div>
 
-        <div className="search-chips">
-          {SEARCH_TYPES.map((option) => (
-            <Button
-              key={option.id}
-              active={type === option.id}
-              onClick={() => selectType(option.id)}
-            >
-              {option.label}
-            </Button>
-          ))}
+        <ChipRow
+          className="search-chips"
+          items={SEARCH_TYPES}
+          isActive={(option) => type === option.id}
+          onSelect={(option) => selectType(option.id)}
+        >
           <Button active={releaseDateOn} onClick={toggleReleaseDate} disabled={filtersDisabled}>
             Release date
           </Button>
           <Button active={genreOn} onClick={toggleGenre} disabled={filtersDisabled}>
             Genre
           </Button>
-        </div>
+        </ChipRow>
 
         {releaseDateOn && (
           <input

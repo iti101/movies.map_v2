@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { getTvSeason } from '../../API/tmdb.js'
-import { formatDate, formatRuntime, pluralize } from '../../lib/format.js'
+import { cn, formatDate, formatRuntime, pluralize } from '../../lib/format.js'
 import { useAsync } from '../../hooks/useAsync.js'
 import { useEscape } from '../../hooks/useEscape.js'
 import { DetailSelect, Section } from './bits.jsx'
@@ -59,7 +59,7 @@ export default function SeasonEpisodes({ showId, seasons }) {
             return (
               <li
                 key={episode.id}
-                className={`detail__episode${isOpen ? ' detail__episode--open' : ''}`}
+                className={cn('detail__episode', isOpen && 'detail__episode--open')}
               >
                 <button
                   type="button"

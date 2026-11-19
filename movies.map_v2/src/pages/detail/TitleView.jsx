@@ -8,7 +8,7 @@ import Reviews from './Reviews.jsx'
 import SeasonEpisodes from './SeasonEpisodes.jsx'
 import WhereToWatch from './WhereToWatch.jsx'
 
-export default function TitleView({ item, onOpen, isLoggedIn, user, token, onRequestLogin }) {
+export default function TitleView({ item, onOpen }) {
   const isTv = item.mediaType === 'tv'
   const date = formatDate(isTv ? item.firstAirDate : item.releaseDate)
   const talent = isTv ? (item.createdBy ?? []) : (item.directors ?? [])
@@ -50,12 +50,7 @@ export default function TitleView({ item, onOpen, isLoggedIn, user, token, onReq
           <div className="detail__actions">
             <Rating rating={item.rating} voteCount={item.voteCount} />
             <div className="detail__cta">
-              <WatchlistButton
-                key={mediaKey(item)}
-                item={item}
-                isLoggedIn={isLoggedIn}
-                onRequestLogin={onRequestLogin}
-              />
+              <WatchlistButton key={mediaKey(item)} item={item} />
               {item.trailerUrl ? (
                 <a className="detail__trailer" href={item.trailerUrl} target="_blank" rel="noreferrer">
                   Watch Trailer
@@ -74,13 +69,7 @@ export default function TitleView({ item, onOpen, isLoggedIn, user, token, onReq
       <Cast people={people} onOpen={onOpen} />
       {isTv && <SeasonEpisodes showId={item.id} seasons={item.seasons ?? []} />}
       <WhereToWatch title={item.title} watchByRegion={item.watch} />
-      <Reviews
-        item={item}
-        isLoggedIn={isLoggedIn}
-        user={user}
-        token={token}
-        onRequestLogin={onRequestLogin}
-      />
+      <Reviews item={item} />
       <Related
         title={isTv ? 'Similar titles' : 'Similar movies'}
         items={item.similar}

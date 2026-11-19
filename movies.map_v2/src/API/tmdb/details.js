@@ -1,3 +1,4 @@
+import { uniqueBy } from '../../lib/list.js'
 import { mediaKey } from '../../lib/media.js'
 import { tmdbGet } from './client.js'
 import { normalizeItem } from './normalize.js'
@@ -38,15 +39,10 @@ function mapPerson(person, character) {
 }
 
 function uniquePeople(people, character) {
-  const seen = new Set()
-  const list = []
-  for (const person of people ?? []) {
-    const mapped = mapPerson(person, character)
-    if (!mapped || seen.has(mapped.id)) continue
-    seen.add(mapped.id)
-    list.push(mapped)
-  }
-  return list
+  return uniqueBy(
+    (people ?? []).map((person) => mapPerson(person, character)).filter(Boolean),
+    (person) => person.id,
+  )
 }
 
 function mapCast(credits) {
@@ -61,19 +57,30 @@ function mapCast(credits) {
 }
 
 function mapRelated(data, mediaType, excludeId, limit = RELATED_LIMIT) {
-  const seen = new Set([Number(excludeId)])
-  const items = []
+  const exclude = Number(excludeId)
+  const items = [data.recommendations?.results, data.similar?.results].flatMap((source) =>
+    (source ?? [])
+      .filter((raw) => raw?.id && raw.id !== exclude)
+      .map((raw) => normalizeItem(raw, mediaType)),
+  )
+  return uniqueBy(items, (item) => item.id).slice(0, limit)
+}
 
-  for (const source of [data.recommendations?.results, data.similar?.results]) {
-    for (const raw of source ?? []) {
-      if (!raw?.id || seen.has(raw.id)) continue
-      seen.add(raw.id)
-      items.push(normalizeItem(raw, mediaType))
-      if (items.length === limit) return items
-    }
+function mapTitle(data, mediaType, extras) {
+  return {
+    id: data.id,
+    mediaType,
+    title: data.title || data.name || 'Untitled',
+    overview: data.overview || '',
+    posterPath: data.poster_path,
+    backdropPath: data.backdrop_path,
+    genres: (data.genres ?? []).map((genre) => genre.name),
+    directors: mapDirectors(data),
+    trailerUrl: trailerUrl(data.videos),
+    watch: normalizeWatchProviders(data['watch/providers']),
+    ...score(data),
+    ...extras,
   }
-
-  return items
 }
 
 function mapDirectors(data) {
@@ -104,24 +111,13 @@ export async function getMovieDetails(id, { signal } = {}) {
     { signal },
   )
 
-  return {
-    id: data.id,
-    mediaType: 'movie',
-    title: data.title || 'Untitled',
+  return mapTitle(data, 'movie', {
     tagline: data.tagline || null,
-    overview: data.overview || '',
-    posterPath: data.poster_path,
-    backdropPath: data.backdrop_path,
     releaseDate: data.release_date || null,
     runtime: data.runtime || null,
-    genres: (data.genres ?? []).map((genre) => genre.name),
-    directors: mapDirectors(data),
     cast: mapCast(data.credits),
-    trailerUrl: trailerUrl(data.videos),
-    watch: normalizeWatchProviders(data['watch/providers']),
     similar: mapRelated(data, 'movie', data.id),
-    ...score(data),
-  }
+  })
 }
 
 export async function getTvDetails(id, { signal } = {}) {
@@ -135,15 +131,8 @@ export async function getTvDetails(id, { signal } = {}) {
   )
   const credits = data.aggregate_credits?.cast?.length ? data.aggregate_credits : data.credits
 
-  return {
-    id: data.id,
-    mediaType: 'tv',
-    title: data.name || 'Untitled',
-    overview: data.overview || '',
-    posterPath: data.poster_path,
-    backdropPath: data.backdrop_path,
+  return mapTitle(data, 'tv', {
     firstAirDate: data.first_air_date || null,
-    genres: (data.genres ?? []).map((genre) => genre.name),
     createdBy: uniquePeople(data.created_by, 'Creator'),
     seasons: (data.seasons ?? [])
       .filter((season) => season.episode_count > 0)
@@ -152,13 +141,9 @@ export async function getTvDetails(id, { signal } = {}) {
         name: season.name,
         episodeCount: season.episode_count,
       })),
-    directors: mapDirectors(data),
     cast: mapCast(credits),
-    trailerUrl: trailerUrl(data.videos),
-    watch: normalizeWatchProviders(data['watch/providers']),
     similar: mapRelated(data, 'tv', data.id, SIMILAR_ROW_LIMIT),
-    ...score(data),
-  }
+  })
 }
 
 export async function getTvSeason(showId, seasonNumber, { signal } = {}) {

@@ -8,6 +8,7 @@ export default function ChipRow({
   getKey = (item) => item.id,
   getLabel = (item) => item.label ?? item.name,
   disabled = false,
+  children,
 }) {
   return (
     <div className={className}>
@@ -21,6 +22,7 @@ export default function ChipRow({
           {getLabel(item)}
         </Button>
       ))}
+      {children}
     </div>
   )
 }

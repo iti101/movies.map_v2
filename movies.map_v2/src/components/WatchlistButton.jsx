@@ -1,10 +1,12 @@
 import { useState } from 'react'
 import { listContains } from '../API/watchlist.js'
+import { useSession } from '../context/session-context.js'
 import { useWatchlist } from '../context/watchlist-context.js'
 import Button from './Button.jsx'
 import WatchlistModal from './WatchlistModal.jsx'
 
-export default function WatchlistButton({ item, isLoggedIn, onRequestLogin }) {
+export default function WatchlistButton({ item }) {
+  const { isLoggedIn, openAuth } = useSession()
   const { lists, addItem } = useWatchlist()
   const [note, setNote] = useState('')
   const [pickerOpen, setPickerOpen] = useState(false)
@@ -12,7 +14,7 @@ export default function WatchlistButton({ item, isLoggedIn, onRequestLogin }) {
 
   function handleClick() {
     if (!isLoggedIn) {
-      onRequestLogin()
+      openAuth()
       return
     }
     if (lists.length > 1) {

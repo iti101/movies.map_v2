@@ -1,14 +1,15 @@
 import { useLayoutEffect, useState } from 'react'
+import { readStorage, writeStorage } from '../lib/storage.js'
 
 function getStoredTheme() {
-  return localStorage.getItem('theme') === 'light' ? 'light' : 'dark'
+  return readStorage('theme') === 'light' ? 'light' : 'dark'
 }
 
 function applyTheme(theme) {
   const root = document.documentElement
   root.setAttribute('data-theme', theme)
   root.style.colorScheme = theme
-  localStorage.setItem('theme', theme)
+  writeStorage('theme', theme)
 }
 
 export function useTheme() {

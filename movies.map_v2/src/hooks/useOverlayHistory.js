@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 
 function currentState() {
   return window.history.state ?? {}
@@ -96,17 +96,32 @@ export function useOverlayHistory() {
     return () => window.removeEventListener('popstate', onPopState)
   }, [])
 
-  return {
-    resultsSearch,
-    detail,
-    watchlistOpen,
-    openResults,
-    closeResults,
-    openDetail,
-    closeDetail,
-    openWatchlist,
-    closeWatchlist,
-    dismissOverlays,
-    clearWatchlistHistory,
-  }
+  return useMemo(
+    () => ({
+      resultsSearch,
+      detail,
+      watchlistOpen,
+      openResults,
+      closeResults,
+      openDetail,
+      closeDetail,
+      openWatchlist,
+      closeWatchlist,
+      dismissOverlays,
+      clearWatchlistHistory,
+    }),
+    [
+      resultsSearch,
+      detail,
+      watchlistOpen,
+      openResults,
+      closeResults,
+      openDetail,
+      closeDetail,
+      openWatchlist,
+      closeWatchlist,
+      dismissOverlays,
+      clearWatchlistHistory,
+    ],
+  )
 }

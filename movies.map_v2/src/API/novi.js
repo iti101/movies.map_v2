@@ -1,4 +1,5 @@
 import { waitWithSignal } from '../lib/async.js'
+import { readJson, readStorage, removeStorage, writeJson, writeStorage } from '../lib/storage.js'
 
 const PROJECT_HEADER = 'novi-education-project-id'
 const TOKEN_KEY = 'noviToken'
@@ -110,30 +111,23 @@ function readUsername(source) {
 }
 
 export function loadSession() {
-  const token = localStorage.getItem(TOKEN_KEY)
+  const token = readStorage(TOKEN_KEY)
   if (!token || !isTokenValid(token)) {
     clearSession()
     return { isLoggedIn: false, token: null, user: null }
   }
 
-  let user
-  try {
-    user = JSON.parse(localStorage.getItem(USER_KEY) || 'null')
-  } catch {
-    user = null
-  }
-
-  return { isLoggedIn: true, token, user }
+  return { isLoggedIn: true, token, user: readJson(USER_KEY, null) }
 }
 
 export function saveSession({ token, user }) {
-  localStorage.setItem(TOKEN_KEY, token)
-  localStorage.setItem(USER_KEY, JSON.stringify(user ?? null))
+  writeStorage(TOKEN_KEY, token)
+  writeJson(USER_KEY, user ?? null)
 }
 
 export function clearSession() {
-  localStorage.removeItem(TOKEN_KEY)
-  localStorage.removeItem(USER_KEY)
+  removeStorage(TOKEN_KEY)
+  removeStorage(USER_KEY)
 }
 
 export async function login({ email, password }) {

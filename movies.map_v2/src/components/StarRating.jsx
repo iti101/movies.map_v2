@@ -1,4 +1,5 @@
 import { useId, useState } from 'react'
+import { cn } from '../lib/format.js'
 import './StarRating.css'
 
 function clampHalfStar(value) {
@@ -41,7 +42,7 @@ export default function StarRating({
 
   return (
     <div
-      className={`star-rating${interactive ? ' star-rating--interactive' : ''}`}
+      className={cn('star-rating', interactive && 'star-rating--interactive')}
       role={interactive ? 'radiogroup' : 'img'}
       aria-label={label}
       onMouseLeave={handleLeave}

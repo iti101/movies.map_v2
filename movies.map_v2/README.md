@@ -138,7 +138,7 @@ Novi JWT + profile are stored in `localStorage` (`noviToken`, `noviUser`). Watch
 
 - Adult titles are always excluded (`include_adult=false`).
 - The intro typewriter skips animation when `prefers-reduced-motion: reduce` is set.
-- React Compiler is enabled (`babel-plugin-react-compiler` in `vite.config.js`). `App` is marked `'use no memo'` so compiler memoization does not wrap that component.
+- React Compiler is enabled (`babel-plugin-react-compiler` in `vite.config.js`). `AppShell` is marked `'use no memo'` so compiler memoization does not wrap that component.
 - Novi reviews are fetched as a list, then filtered to the current title in the client.
 
 ## Troubleshooting

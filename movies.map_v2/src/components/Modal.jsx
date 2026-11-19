@@ -16,7 +16,8 @@ export default function Modal({
 
   useEffect(() => {
     if (!open) return undefined
-    const previous = document.body.style.overflow
+    const previousOverflow = document.body.style.overflow
+    const previousFocus = document.activeElement
     document.body.style.overflow = 'hidden'
     const timer = window.setTimeout(() => {
       const root = dialogRef.current
@@ -25,8 +26,9 @@ export default function Modal({
       focusable?.focus()
     }, 0)
     return () => {
-      document.body.style.overflow = previous
+      document.body.style.overflow = previousOverflow
       window.clearTimeout(timer)
+      if (previousFocus instanceof HTMLElement) previousFocus.focus()
     }
   }, [open])
 

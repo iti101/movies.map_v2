@@ -4,7 +4,7 @@ import ResultGrid from '../components/ResultGrid.jsx'
 import Select from '../components/Select.jsx'
 import WatchlistModal from '../components/WatchlistModal.jsx'
 import { useWatchlist } from '../context/watchlist-context.js'
-import { pluralize } from '../lib/format.js'
+import { cn, pluralize } from '../lib/format.js'
 import './Watchlist.css'
 
 function Watchlist({ active, onBack, onSelect, onFindTitle }) {
@@ -106,7 +106,7 @@ function Watchlist({ active, onBack, onSelect, onFindTitle }) {
 
             <button
               type="button"
-              className={`watchlist__delete${confirmDelete ? ' watchlist__delete--confirm' : ''}`}
+              className={cn('watchlist__delete', confirmDelete && 'watchlist__delete--confirm')}
               onClick={handleDeleteList}
               onBlur={() => setConfirmDelete(false)}
             >

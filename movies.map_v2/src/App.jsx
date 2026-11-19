@@ -1,30 +1,25 @@
-import { lazy, Suspense, useEffect, useState } from 'react'
+import { useCallback } from 'react'
 import './App.css'
-import { clearSession, loadSession, saveSession } from './API/novi.js'
-import AuthModal from './components/AuthModal.jsx'
-import ErrorBoundary from './components/ErrorBoundary.jsx'
+import AppOverlays from './components/AppOverlays.jsx'
 import NavBar from './components/NavBar.jsx'
 import Typewriter from './components/Typewriter.jsx'
+import { SessionProvider } from './context/SessionContext.jsx'
 import { WatchlistProvider } from './context/WatchlistContext.jsx'
+import { useSession } from './context/session-context.js'
 import { useOverlayHistory } from './hooks/useOverlayHistory.js'
+import { useSearchHotkey } from './hooks/useSearchHotkey.js'
 import { useTheme } from './hooks/useTheme.js'
+import { scrollToSection } from './lib/scroll.js'
 import Randomizer from './pages/Randomizer.jsx'
 import SearchSection from './pages/SearchSection.jsx'
-import { mediaKey } from './lib/media.js'
-import { scrollToSection } from './lib/scroll.js'
 
-const DetailPage = lazy(() => import('./pages/DetailPage.jsx'))
-const SearchResultsPage = lazy(() => import('./pages/SearchResultsPage.jsx'))
-const Watchlist = lazy(() => import('./pages/Watchlist.jsx'))
-
-function App() {
+function AppShell() {
   'use no memo'
-  const [session, setSession] = useState(loadSession)
-  const [authOpen, setAuthOpen] = useState(false)
+  const { isLoggedIn, user, openAuth } = useSession()
   const { theme, toggleTheme } = useTheme()
   const overlays = useOverlayHistory()
   const dismissOverlays = overlays.dismissOverlays
-  const watchlistVisible = overlays.watchlistOpen && session.isLoggedIn
+  const watchlistVisible = overlays.watchlistOpen && isLoggedIn
   const overlayOpen = Boolean(overlays.resultsSearch || overlays.detail || watchlistVisible)
   const topOverlay = overlays.detail
     ? 'detail'
@@ -34,38 +29,19 @@ function App() {
         ? 'results'
         : null
 
-  useEffect(() => {
-    function onKeyDown(event) {
-      if (event.key !== '/' || event.metaKey || event.ctrlKey || event.altKey) return
-      const tag = event.target.tagName
-      if (tag === 'INPUT' || tag === 'TEXTAREA' || event.target.isContentEditable) return
-      event.preventDefault()
-      dismissOverlays()
-      scrollToSection('search')
-      window.setTimeout(() => document.querySelector('.search-input')?.focus(), 320)
-    }
-    window.addEventListener('keydown', onKeyDown)
-    return () => window.removeEventListener('keydown', onKeyDown)
+  const goToSearch = useCallback(() => {
+    dismissOverlays()
+    scrollToSection('search')
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => document.querySelector('.search-input')?.focus())
+    })
   }, [dismissOverlays])
 
-  function handleToggleAuth() {
-    if (session.isLoggedIn) {
-      clearSession()
-      setSession({ isLoggedIn: false, token: null, user: null })
-      overlays.clearWatchlistHistory()
-      return
-    }
-    setAuthOpen(true)
-  }
-
-  function handleAuthenticated(next) {
-    saveSession(next)
-    setSession({ isLoggedIn: true, token: next.token, user: next.user })
-  }
+  useSearchHotkey(goToSearch)
 
   function handleOpenWatchlist() {
-    if (!session.isLoggedIn) {
-      setAuthOpen(true)
+    if (!isLoggedIn) {
+      openAuth()
       return
     }
     overlays.openWatchlist()
@@ -77,18 +53,17 @@ function App() {
   }
 
   return (
-    <WatchlistProvider userId={session.user?.id}>
+    <WatchlistProvider userId={user?.id}>
       <div className="app">
         <a className="skip-link" href="#search">
           Skip to search
         </a>
         <NavBar
-          isLoggedIn={session.isLoggedIn}
           theme={theme}
-          onToggleAuth={handleToggleAuth}
           onToggleTheme={toggleTheme}
-          onNavigate={overlays.dismissOverlays}
+          onNavigate={dismissOverlays}
           onOpenWatchlist={handleOpenWatchlist}
+          onLogout={overlays.clearWatchlistHistory}
         />
         <main className="snap-container" inert={overlayOpen || undefined}>
           <section id="home" className="snap-section snap-section-1">
@@ -101,47 +76,22 @@ function App() {
             <Randomizer onSelect={overlays.openDetail} />
           </section>
         </main>
-        <ErrorBoundary>
-          <Suspense fallback={null}>
-            {overlays.resultsSearch && (
-              <SearchResultsPage
-                search={overlays.resultsSearch}
-                active={topOverlay === 'results'}
-                onBack={overlays.closeResults}
-                onSelect={overlays.openDetail}
-              />
-            )}
-            {watchlistVisible && (
-              <Watchlist
-                active={topOverlay === 'watchlist'}
-                onBack={overlays.closeWatchlist}
-                onSelect={overlays.openDetail}
-                onFindTitle={handleFindTitle}
-              />
-            )}
-            {overlays.detail && (
-              <DetailPage
-                key={mediaKey(overlays.detail)}
-                mediaType={overlays.detail.mediaType}
-                id={overlays.detail.id}
-                active={topOverlay === 'detail'}
-                onBack={overlays.closeDetail}
-                onOpen={overlays.openDetail}
-                isLoggedIn={session.isLoggedIn}
-                user={session.user}
-                token={session.token}
-                onRequestLogin={() => setAuthOpen(true)}
-              />
-            )}
-          </Suspense>
-        </ErrorBoundary>
-        <AuthModal
-          open={authOpen}
-          onClose={() => setAuthOpen(false)}
-          onAuthenticated={handleAuthenticated}
+        <AppOverlays
+          overlays={overlays}
+          watchlistVisible={watchlistVisible}
+          topOverlay={topOverlay}
+          onFindTitle={handleFindTitle}
         />
       </div>
     </WatchlistProvider>
+  )
+}
+
+function App() {
+  return (
+    <SessionProvider>
+      <AppShell />
+    </SessionProvider>
   )
 }
 

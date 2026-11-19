@@ -1,5 +1,7 @@
 import { useCallback, useState } from 'react'
+import { useSession } from '../context/session-context.js'
 import { useEscape } from '../hooks/useEscape.js'
+import { cn } from '../lib/format.js'
 import { scrollToSection } from '../lib/scroll.js'
 import Button from './Button.jsx'
 import './NavBar.css'
@@ -18,7 +20,8 @@ const MENU_SECTIONS = [
  * Fixed top bar: hamburger overlay menu, theme toggle, and auth/watchlist.
  * Menu links scroll to snap sections; onNavigate also closes overlays.
  */
-function NavBar({ isLoggedIn, theme, onToggleAuth, onToggleTheme, onNavigate, onOpenWatchlist }) {
+function NavBar({ theme, onToggleTheme, onNavigate, onOpenWatchlist, onLogout }) {
+  const { isLoggedIn, openAuth, signOut } = useSession()
   const [menuOpen, setMenuOpen] = useState(false)
   const isDark = theme === 'dark'
   const themeLabel = isDark ? 'Switch to light mode' : 'Switch to dark mode'
@@ -36,12 +39,21 @@ function NavBar({ isLoggedIn, theme, onToggleAuth, onToggleTheme, onNavigate, on
     window.setTimeout(() => scrollToSection(sectionId), 0)
   }
 
+  function handleToggleAuth() {
+    if (isLoggedIn) {
+      signOut()
+      onLogout?.()
+    } else {
+      openAuth()
+    }
+  }
+
   /** Logged out: menu item logs you in. Logged in: opens the watchlist. */
   function handleAuthMenuClick() {
     if (isLoggedIn) {
       onOpenWatchlist?.()
     } else {
-      onToggleAuth()
+      handleToggleAuth()
     }
     closeMenu()
   }
@@ -50,7 +62,7 @@ function NavBar({ isLoggedIn, theme, onToggleAuth, onToggleTheme, onNavigate, on
     <>
       <header className="navbar">
         <button
-          className={`navbar-hamburger${menuOpen ? ' is-open' : ''}`}
+          className={cn('navbar-hamburger', menuOpen && 'is-open')}
           type="button"
           aria-label={menuOpen ? 'Close menu' : 'Open menu'}
           aria-expanded={menuOpen}
@@ -77,7 +89,7 @@ function NavBar({ isLoggedIn, theme, onToggleAuth, onToggleTheme, onNavigate, on
           <Button
             variant="icon"
             className="navbar-auth"
-            onClick={onToggleAuth}
+            onClick={handleToggleAuth}
             aria-label={authLabel}
           >
             <img src={authIcon} alt="" className="navbar-icon" />
@@ -87,7 +99,7 @@ function NavBar({ isLoggedIn, theme, onToggleAuth, onToggleTheme, onNavigate, on
 
       <nav
         id="main-menu"
-        className={`navbar-menu${menuOpen ? ' is-open' : ''}`}
+        className={cn('navbar-menu', menuOpen && 'is-open')}
         aria-label="Main"
         hidden={!menuOpen}
       >

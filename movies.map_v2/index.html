@@ -13,9 +13,13 @@
     />
     <title>movies.map_v2</title>
     <script>
-      const theme = localStorage.getItem('theme') === 'light' ? 'light' : 'dark'
-      document.documentElement.dataset.theme = theme
-      document.documentElement.style.colorScheme = theme
+      try {
+        const theme = localStorage.getItem('theme') === 'light' ? 'light' : 'dark'
+        document.documentElement.dataset.theme = theme
+        document.documentElement.style.colorScheme = theme
+      } catch {
+        // Private browsing can block storage; keep the markup default.
+      }
     </script>
   </head>
   <body>
