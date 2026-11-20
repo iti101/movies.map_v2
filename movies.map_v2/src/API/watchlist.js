@@ -35,9 +35,7 @@ function storedLists(userId) {
 }
 
 function listsFor(userId) {
-  const lists = storedLists(userId)
-  if (lists?.length) return lists
-  return defaultLists()
+  return storedLists(userId) ?? defaultLists()
 }
 
 export function listContains(list, item) {
@@ -46,7 +44,7 @@ export function listContains(list, item) {
 
 export function getLists(userId) {
   if (userId == null) return []
-  return storedLists(userId) ?? defaultLists()
+  return listsFor(userId)
 }
 
 function asWatchlistEntry(item) {
@@ -89,7 +87,7 @@ export function createList(userId, name) {
   if (!trimmed || userId == null) return null
 
   const all = readAll()
-  const lists = storedLists(userId) ?? defaultLists()
+  const lists = listsFor(userId)
   const list = { id: crypto.randomUUID(), name: trimmed, items: [] }
   all[String(userId)] = [...lists, list]
   writeAll(all)
@@ -99,9 +97,7 @@ export function createList(userId, name) {
 export function deleteList(userId, listId) {
   if (userId == null) return []
   const all = readAll()
-  const lists = (storedLists(userId) ?? defaultLists()).filter(
-    (list) => list.id !== listId,
-  )
+  const lists = listsFor(userId).filter((list) => list.id !== listId)
   all[String(userId)] = lists
   writeAll(all)
   return lists
@@ -110,7 +106,7 @@ export function deleteList(userId, listId) {
 export function removeFromList(userId, listId, item) {
   if (userId == null) return
   const all = readAll()
-  const lists = storedLists(userId) ?? listsFor(userId)
+  const lists = listsFor(userId)
   all[String(userId)] = lists.map((list) => {
     if (list.id !== listId) return list
     return {

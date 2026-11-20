@@ -1,4 +1,4 @@
-import { waitWithSignal } from '../lib/async.js'
+import { createCachedResource } from '../lib/cache.js'
 import { readJson, readStorage, removeStorage, writeJson, writeStorage } from '../lib/storage.js'
 
 const PROJECT_HEADER = 'novi-education-project-id'
@@ -223,8 +223,7 @@ function asList(data) {
   return []
 }
 
-const reviewLists = new Map()
-const reviewInflight = new Map()
+const reviewLists = createCachedResource()
 
 function reviewsKey(token) {
   return token || 'anon'
@@ -234,27 +233,12 @@ function looksLikeReview(value) {
   return Boolean(value && typeof value === 'object' && value.mediaType != null && value.mediaId != null)
 }
 
-async function loadAllReviews(token, { signal } = {}) {
-  const key = reviewsKey(token)
-  if (reviewLists.has(key)) return reviewLists.get(key)
-
-  let pending = reviewInflight.get(key)
-  if (!pending) {
-    pending = request('/api/reviews', { token })
-      .then(asList)
-      .then((list) => {
-        reviewInflight.delete(key)
-        reviewLists.set(key, list)
-        return list
-      })
-      .catch((error) => {
-        reviewInflight.delete(key)
-        throw error
-      })
-    reviewInflight.set(key, pending)
-  }
-
-  return waitWithSignal(pending, signal)
+function loadAllReviews(token, { signal } = {}) {
+  return reviewLists.load(
+    reviewsKey(token),
+    () => request('/api/reviews', { token }).then(asList),
+    { signal },
+  )
 }
 
 function rememberReview(token, review) {

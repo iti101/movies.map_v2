@@ -1,11 +1,11 @@
 import { useId, useState } from 'react'
 import { createReview, getReviewsForMedia } from '../../API/novi.js'
-import { isAbortError } from '../../lib/async.js'
 import Button from '../../components/Button.jsx'
 import StarRating from '../../components/StarRating.jsx'
 import { useSession } from '../../context/session-context.js'
 import { formatDate } from '../../lib/format.js'
 import { useAsync } from '../../hooks/useAsync.js'
+import { useTask } from '../../hooks/useTask.js'
 import { Section } from './bits.jsx'
 
 export default function Reviews({ item }) {
@@ -14,8 +14,8 @@ export default function Reviews({ item }) {
   const [open, setOpen] = useState(false)
   const [rating, setRating] = useState(0)
   const [text, setText] = useState('')
-  const [submitting, setSubmitting] = useState(false)
-  const [formError, setFormError] = useState('')
+  const { status: publishStatus, error: formError, setError: setFormError, run: publish } = useTask()
+  const submitting = publishStatus === 'loading'
   const { status, data, setData: setReviews } = useAsync(
     (signal) => getReviewsForMedia(item.mediaType, item.id, token, { signal }),
     [item.id, item.mediaType, token],
@@ -42,9 +42,7 @@ export default function Reviews({ item }) {
       return
     }
 
-    setSubmitting(true)
-    setFormError('')
-    try {
+    const result = await publish(async () => {
       await createReview(
         {
           userId: user.id,
@@ -55,16 +53,13 @@ export default function Reviews({ item }) {
         },
         token,
       )
-      setReviews(await getReviewsForMedia(item.mediaType, item.id, token))
-      setText('')
-      setRating(0)
-      setOpen(false)
-    } catch (err) {
-      if (isAbortError(err)) return
-      setFormError(err.message || 'Could not publish your review.')
-    } finally {
-      setSubmitting(false)
-    }
+      return getReviewsForMedia(item.mediaType, item.id, token)
+    })
+    if (result.aborted || result.error) return
+    setReviews(result.value)
+    setText('')
+    setRating(0)
+    setOpen(false)
   }
 
   return (

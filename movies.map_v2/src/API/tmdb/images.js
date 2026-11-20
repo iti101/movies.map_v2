@@ -1,6 +1,7 @@
 const IMAGE_BASE = 'https://image.tmdb.org/t/p'
 
 const SRCSET = {
+  w92: ['w92', 'w154', 'w185'],
   w185: ['w185', 'w342'],
   w342: ['w185', 'w342', 'w500'],
   w500: ['w342', 'w500', 'w780'],

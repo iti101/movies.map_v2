@@ -1,6 +1,6 @@
 import { useEffect, useId, useRef, useState } from 'react'
 import { searchPeople } from '../API/tmdb.js'
-import { isAbortError } from '../lib/async.js'
+import { useAsync } from '../hooks/useAsync.js'
 import { useDebouncedValue } from '../hooks/useDebouncedValue.js'
 import './PersonTypeahead.css'
 
@@ -8,47 +8,28 @@ export default function PersonTypeahead({ value, query, onQueryChange, onSelect,
   const fieldId = useId()
   const boxRef = useRef(null)
   const debouncedQuery = useDebouncedValue(query, 280)
-  const [matches, setMatches] = useState([])
-  const [status, setStatus] = useState('idle')
-
-  useEffect(() => {
-    if (value) return undefined
-
-    const trimmed = debouncedQuery.trim()
-    if (trimmed.length < 2) return undefined
-
-    const controller = new AbortController()
-    const pending = Promise.resolve().then(() => {
-      setStatus('loading')
-      return searchPeople(trimmed, { signal: controller.signal })
-    })
-
-    pending
-      .then((people) => {
-        if (controller.signal.aborted) return
-        setMatches(people)
-        setStatus(people.length ? 'ready' : 'empty')
-      })
-      .catch((error) => {
-        if (isAbortError(error) || controller.signal.aborted) return
-        setMatches([])
-        setStatus('empty')
-      })
-
-    return () => controller.abort()
-  }, [debouncedQuery, value])
+  const trimmed = value ? '' : debouncedQuery.trim()
+  const enabled = trimmed.length >= 2
+  const { data, status } = useAsync(
+    (signal) => (enabled ? searchPeople(trimmed, { signal }) : Promise.resolve([])),
+    [trimmed, enabled],
+  )
+  const [dismissedQuery, setDismissedQuery] = useState(null)
+  const dismissed = dismissedQuery === trimmed
+  const people = dismissed ? [] : (data ?? [])
 
   useEffect(() => {
     function onPointerDown(event) {
-      if (!boxRef.current?.contains(event.target)) setMatches([])
+      if (!boxRef.current?.contains(event.target)) setDismissedQuery(trimmed)
     }
     window.addEventListener('pointerdown', onPointerDown)
     return () => window.removeEventListener('pointerdown', onPointerDown)
-  }, [])
+  }, [trimmed])
 
-  const trimmedQuery = query.trim()
-  const showHint = !value && trimmedQuery.length >= 2
-  const showMatches = showHint && matches.length > 0
+  const liveHint = !value && query.trim().length >= 2
+  const showMatches = liveHint && people.length > 0
+  const showLoading = liveHint && enabled && status === 'loading'
+  const showEmpty = liveHint && enabled && !dismissed && status === 'success' && people.length === 0
 
   return (
     <div className="typeahead" ref={boxRef}>
@@ -76,20 +57,18 @@ export default function PersonTypeahead({ value, query, onQueryChange, onSelect,
             aria-label="Filter by actor or director"
             autoComplete="off"
           />
-          {showHint && status === 'loading' && <p className="typeahead__hint">Searching…</p>}
-          {showHint && status === 'empty' && (
-            <p className="typeahead__hint">No people found.</p>
-          )}
+          {showLoading && <p className="typeahead__hint">Searching…</p>}
+          {showEmpty && <p className="typeahead__hint">No people found.</p>}
           {showMatches && (
             <ul className="typeahead__matches" role="listbox">
-              {matches.map((match) => (
+              {people.map((match) => (
                 <li key={match.id}>
                   <button
                     type="button"
                     role="option"
                     onClick={() => {
                       onSelect(match)
-                      setMatches([])
+                      setDismissedQuery(trimmed)
                     }}
                   >
                     {match.name}

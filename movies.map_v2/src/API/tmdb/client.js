@@ -1,10 +1,7 @@
-import { waitWithSignal } from '../../lib/async.js'
+import { createCachedResource } from '../../lib/cache.js'
 
 const API_BASE = 'https://api.themoviedb.org/3'
-const CACHE_LIMIT = 80
-
-const cache = new Map()
-const inflight = new Map()
+const resources = createCachedResource({ limit: 80 })
 
 /** Vite inlines VITE_* at startup — restart the dev server after editing .env.local. */
 export function getApiKey() {
@@ -26,15 +23,6 @@ export function tmdbUrl(path, params = {}) {
   return url
 }
 
-function remember(key, value) {
-  if (cache.has(key)) cache.delete(key)
-  cache.set(key, value)
-  if (cache.size > CACHE_LIMIT) {
-    cache.delete(cache.keys().next().value)
-  }
-  return value
-}
-
 /**
  * Shared TMDB GET with an LRU cache and in-flight coalescing.
  * Caller abort only ignores the result — the network request still fills the cache.
@@ -47,27 +35,14 @@ export async function tmdbGet(path, params = {}, options = {}) {
   } = options
 
   const url = tmdbUrl(path, params)
-  const key = url.toString()
 
-  if (useCache && cache.has(key)) return cache.get(key)
-
-  let pending = inflight.get(key)
-  if (!pending) {
-    pending = fetch(url)
-      .then(async (response) => {
+  return resources.load(
+    url.toString(),
+    () =>
+      fetch(url).then((response) => {
         if (!response.ok) throw new Error(errorMessage)
         return response.json()
-      })
-      .then((data) => {
-        inflight.delete(key)
-        return useCache ? remember(key, data) : data
-      })
-      .catch((error) => {
-        inflight.delete(key)
-        throw error
-      })
-    inflight.set(key, pending)
-  }
-
-  return waitWithSignal(pending, signal)
+      }),
+    { signal, store: useCache },
+  )
 }

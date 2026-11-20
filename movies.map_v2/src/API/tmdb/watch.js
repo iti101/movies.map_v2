@@ -1,4 +1,4 @@
-import { waitWithSignal } from '../../lib/async.js'
+import { createCachedResource } from '../../lib/cache.js'
 import { readStorage, writeStorage } from '../../lib/storage.js'
 import { tmdbGet } from './client.js'
 
@@ -109,19 +109,20 @@ export function normalizeWatchProviders(watchProviders) {
   return regions
 }
 
-let watchRegionsRequest
+const watchRegions = createCachedResource()
 
 export function getWatchRegions({ signal } = {}) {
-  if (!watchRegionsRequest) {
-    watchRegionsRequest = tmdbGet('/watch/providers/regions')
-      .then((data) => {
-        const codes = (data.results ?? []).map((region) => region.iso_3166_1?.toUpperCase())
-        return toRegionOptions(codes.length ? codes : FALLBACK_REGIONS)
-      })
-      .catch(() => getFallbackWatchRegions())
-  }
-
-  return waitWithSignal(watchRegionsRequest, signal)
+  return watchRegions.load(
+    'regions',
+    () =>
+      tmdbGet('/watch/providers/regions')
+        .then((data) => {
+          const codes = (data.results ?? []).map((region) => region.iso_3166_1?.toUpperCase())
+          return toRegionOptions(codes.length ? codes : FALLBACK_REGIONS)
+        })
+        .catch(() => getFallbackWatchRegions()),
+    { signal },
+  )
 }
 
 export function providerWatchUrl(name, title, fallback) {

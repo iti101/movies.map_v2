@@ -3,6 +3,7 @@ import Button from './Button.jsx'
 import Modal from './Modal.jsx'
 import { createAccount, login } from '../API/novi.js'
 import { useSession } from '../context/session-context.js'
+import { useTask } from '../hooks/useTask.js'
 import visibilityIcon from '../assets/visibility_opsz24.svg'
 import visibilityOffIcon from '../assets/visibility_off_opsz24.svg'
 import './AuthModal.css'
@@ -86,16 +87,22 @@ function AuthModal() {
 
   const [mode, setMode] = useState('signin')
   const [form, setForm] = useState(INITIAL_FORM)
-  const [error, setError] = useState('')
-  const [submitting, setSubmitting] = useState(false)
+  const { status, error, setError, run, reset } = useTask()
 
   const isSignIn = mode === 'signin'
+  const submitting = status === 'loading'
+  const submitLabel = submitting
+    ? isSignIn
+      ? 'Signing in…'
+      : 'Creating account…'
+    : isSignIn
+      ? 'Sign in'
+      : 'Create account'
 
   function handleClose() {
     setMode('signin')
     setForm(INITIAL_FORM)
-    setError('')
-    setSubmitting(false)
+    reset()
     closeAuth()
   }
 
@@ -141,20 +148,12 @@ function AuthModal() {
       }
     }
 
-    setSubmitting(true)
-    setError('')
-
-    try {
-      const session = isSignIn
-        ? await login({ email, password })
-        : await createAccount({ username, email, password })
-      signIn(session)
-      handleClose()
-    } catch (err) {
-      setError(err.message || 'Something went wrong. Please try again.')
-    } finally {
-      setSubmitting(false)
-    }
+    const result = await run(() =>
+      isSignIn ? login({ email, password }) : createAccount({ username, email, password }),
+    )
+    if (result.aborted || result.error) return
+    signIn(result.value)
+    handleClose()
   }
 
   return (
@@ -252,13 +251,7 @@ function AuthModal() {
           variant="solid"
           disabled={submitting}
         >
-          {submitting
-            ? isSignIn
-              ? 'Signing in…'
-              : 'Creating account…'
-            : isSignIn
-              ? 'Sign in'
-              : 'Create account'}
+          {submitLabel}
         </Button>
       </form>
 

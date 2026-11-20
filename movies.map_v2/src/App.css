@@ -114,8 +114,8 @@ html[data-theme='light'] {
   font-size: clamp(2.25rem, 6.5vw, 5.5rem);
 }
 
-.snap-section-2 {
-  background: var(--color-search);
+.snap-section-2,
+.snap-section-3 {
   display: flex;
   align-items: center;
   justify-content: center;
@@ -124,14 +124,12 @@ html[data-theme='light'] {
   font-weight: 400;
 }
 
+.snap-section-2 {
+  background: var(--color-search);
+}
+
 .snap-section-3 {
   background: var(--color-bg-muted);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: calc(var(--navbar-height) + 1.5rem) 1.5rem 1.5rem;
-  font-size: 1rem;
-  font-weight: 400;
 }
 
 .search-results {
