@@ -1,8 +1,8 @@
 import { useId } from 'react'
-import MovieCard from '../../components/MovieCard.jsx'
 import MediaImage from '../../components/MediaImage.jsx'
 import ResultGrid from '../../components/ResultGrid.jsx'
-import { mediaKey } from '../../lib/media.js'
+import Select from '../../components/Select.jsx'
+import { cn } from '../../lib/format.js'
 
 export function Facts({ facts }) {
   if (!facts.length) return null
@@ -39,9 +39,9 @@ export function DetailSelect({ label, value, onChange, children }) {
   return (
     <label className="detail__region" htmlFor={selectId}>
       <span className="detail__kicker">{label}</span>
-      <select id={selectId} className="detail__select" value={value} onChange={onChange}>
+      <Select id={selectId} className="detail__select" value={value} onChange={onChange}>
         {children}
-      </select>
+      </Select>
     </label>
   )
 }
@@ -109,15 +109,11 @@ export function Related({ title, items, onOpen, rows = false }) {
   if (!items?.length) return null
   return (
     <Section title={title}>
-      {rows ? (
-        <ul className="detail__grid detail__grid--rows">
-          {items.map((item) => (
-            <MovieCard key={mediaKey(item)} item={item} onSelect={onOpen} />
-          ))}
-        </ul>
-      ) : (
-        <ResultGrid items={items} onSelect={onOpen} className="detail__grid" />
-      )}
+      <ResultGrid
+        items={items}
+        onSelect={onOpen}
+        className={cn('detail__grid', rows && 'detail__grid--rows')}
+      />
     </Section>
   )
 }

@@ -113,6 +113,14 @@ export async function getSearchSuggestion({ query, type, year, items, signal }) 
   }
 }
 
+function toTmdbPage(data, page, items) {
+  return {
+    items,
+    page: data.page ?? page,
+    totalPages: data.total_pages ?? 1,
+  }
+}
+
 /**
  * Extra local filters TMDB cannot always take as query params.
  * Genre after a text search, and year when type is “all” (multi search has no year field).
@@ -139,13 +147,13 @@ export async function searchTmdb({ query, type, year, page = 1, signal } = {}) {
   if (year && type === 'tv') params.first_air_date_year = year
 
   const data = await tmdbGet(TMDB_SEARCH[type], params, searchOptions(signal))
-  return {
-    items: (data.results ?? []).map((item) =>
+  return toTmdbPage(
+    data,
+    page,
+    (data.results ?? []).map((item) =>
       normalizeItem(item, type === 'all' ? item.media_type : type),
     ),
-    page: data.page ?? page,
-    totalPages: data.total_pages ?? 1,
-  }
+  )
 }
 
 function genreIds(value) {
@@ -175,11 +183,11 @@ async function discoverByMedia(
   if (personId) params.with_people = String(personId)
 
   const data = await tmdbGet(TMDB_DISCOVER[mediaType], params, searchOptions(signal))
-  return {
-    items: (data.results ?? []).map((item) => normalizeItem(item, mediaType)),
-    page: data.page ?? page,
-    totalPages: data.total_pages ?? 1,
-  }
+  return toTmdbPage(
+    data,
+    page,
+    (data.results ?? []).map((item) => normalizeItem(item, mediaType)),
+  )
 }
 
 /** Discover wrapper: people are unsupported; “all” fetches movie + TV in parallel. */

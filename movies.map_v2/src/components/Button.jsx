@@ -18,7 +18,7 @@ function resolveFont(font) {
 const SIZE_PRESETS = new Set(['sm', 'md', 'lg', 'xl'])
 
 /**
- * Shared chip / ghost / solid / icon button.
+ * Shared chip / ghost / solid / accent / outline / icon button.
  * Colors are CSS variables from App.css unless you pass a full color string.
  */
 export default function Button({

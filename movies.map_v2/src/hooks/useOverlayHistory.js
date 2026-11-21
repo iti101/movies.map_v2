@@ -4,6 +4,11 @@ function currentState() {
   return window.history.state ?? {}
 }
 
+function closeFromHistory(key, reset) {
+  if (currentState()[key]) window.history.back()
+  else reset()
+}
+
 /**
  * Overlay open/close plus a history.pushState / popstate pair so Back works.
  * Results, detail, and watchlist each push; dismissOverlays pops the whole stack
@@ -30,8 +35,7 @@ export function useOverlayHistory() {
   )
 
   const closeResults = useCallback(() => {
-    if (currentState().results) window.history.back()
-    else setResultsSearch(null)
+    closeFromHistory('results', () => setResultsSearch(null))
   }, [])
 
   const openDetail = useCallback(
@@ -45,8 +49,7 @@ export function useOverlayHistory() {
   )
 
   const closeDetail = useCallback(() => {
-    if (currentState().detail) window.history.back()
-    else setDetail(null)
+    closeFromHistory('detail', () => setDetail(null))
   }, [])
 
   const openWatchlist = useCallback(() => {
@@ -57,8 +60,7 @@ export function useOverlayHistory() {
   }, [pushOverlay])
 
   const closeWatchlist = useCallback(() => {
-    if (currentState().watchlist) window.history.back()
-    else setWatchlistOpen(false)
+    closeFromHistory('watchlist', () => setWatchlistOpen(false))
   }, [])
 
   const dismissOverlays = useCallback(() => {

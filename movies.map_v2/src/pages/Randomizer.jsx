@@ -40,16 +40,12 @@ function Randomizer({ onSelect }) {
     stepSummary,
   } = useRandomizer()
 
-  function renderGenres(isActive, onPick) {
-    if (genresLoading) return <p className="randomizer__message">Loading genres…</p>
-    return (
-      <ChipRow
-        className="randomizer__genre-row"
-        items={genres}
-        isActive={isActive}
-        onSelect={onPick}
-      />
-    )
+  const genreChips = {
+    className: 'randomizer__genre-row',
+    loading: genresLoading,
+    loadingLabel: 'Loading genres…',
+    messageClassName: 'randomizer__message',
+    items: genres,
   }
 
   return (
@@ -112,17 +108,21 @@ function Randomizer({ onSelect }) {
               />
             )}
 
-            {step.id === 'want' &&
-              renderGenres(
-                (genre) => wantGenres.some((entry) => entry.id === genre.id),
-                handleWant,
-              )}
+            {step.id === 'want' && (
+              <ChipRow
+                {...genreChips}
+                isActive={(genre) => wantGenres.some((entry) => entry.id === genre.id)}
+                onSelect={handleWant}
+              />
+            )}
 
-            {step.id === 'avoid' &&
-              renderGenres(
-                (genre) => avoidGenres.some((entry) => entry.id === genre.id),
-                handleAvoid,
-              )}
+            {step.id === 'avoid' && (
+              <ChipRow
+                {...genreChips}
+                isActive={(genre) => avoidGenres.some((entry) => entry.id === genre.id)}
+                onSelect={handleAvoid}
+              />
+            )}
 
             {step.id === 'person' && (
               <PersonTypeahead

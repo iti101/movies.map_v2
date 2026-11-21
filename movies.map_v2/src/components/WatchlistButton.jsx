@@ -33,7 +33,7 @@ export default function WatchlistButton({ item }) {
 
   return (
     <div className="detail__watchlist">
-      <Button variant="solid" onClick={handleClick}>
+      <Button variant="accent" onClick={handleClick}>
         {saved || note ? 'In watchlist' : 'Add to Watchlist'}
       </Button>
       {note && (

@@ -14,6 +14,7 @@
   font-size: var(--button-size, 0.9rem);
   line-height: 1.2;
   letter-spacing: var(--button-tracking, normal);
+  text-decoration: none;
   cursor: pointer;
 }
 
@@ -62,6 +63,29 @@
 
 .ui-button--solid:hover:not(:disabled) {
   opacity: 0.9;
+}
+
+.ui-button--accent {
+  --button-bg: var(--color-accent-btn);
+  --button-hover-bg: var(--color-accent-btn-hover);
+  --button-color: #f4f6f8;
+  --button-border: none;
+  --button-weight: 600;
+  --button-padding: 0.65rem 1.25rem;
+  --button-size: 1rem;
+}
+
+.ui-button--accent:hover:not(:disabled) {
+  opacity: 1;
+}
+
+.ui-button--outline {
+  --button-bg: transparent;
+  --button-hover-bg: var(--color-control);
+  --button-border: 1px solid var(--color-border);
+  --button-weight: 600;
+  --button-padding: 0.65rem 1.1rem;
+  --button-size: 0.95rem;
 }
 
 .ui-button--icon {

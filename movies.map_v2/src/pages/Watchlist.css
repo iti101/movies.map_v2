@@ -46,36 +46,8 @@
   gap: 0.7rem;
 }
 
-.watchlist__create {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  padding: 0.65rem 1.25rem;
-  border: none;
-  border-radius: 999px;
-  background: var(--color-accent-btn);
-  color: #f4f6f8;
-  font: inherit;
-  font-size: 0.95rem;
-  font-weight: 600;
-  cursor: pointer;
-  transition: background 0.15s ease, transform 0.15s ease;
-}
-
-.watchlist__create:hover {
-  background: var(--color-accent-btn-hover);
-  transform: translateY(-1px);
-}
-
 .watchlist__select {
   min-width: 16rem;
-  height: 2.5rem;
-  padding: 0 0.9rem;
-  border: 1px solid var(--color-border);
-  border-radius: 999px;
-  background: var(--color-control);
-  color: var(--color-text);
-  font: inherit;
 }
 
 .watchlist__empty {
@@ -198,7 +170,6 @@
   background: rgba(20, 20, 20, 0.9);
 }
 
-.watchlist__create:focus-visible,
 .watchlist__delete:focus-visible,
 .watchlist__remove:focus-visible,
 .watchlist__link:focus-visible {

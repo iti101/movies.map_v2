@@ -96,18 +96,17 @@ function SearchSection({ onSeeAll, onSelect }) {
         )}
 
         {genreOn && (
-          genresLoading ? (
-            <p className="search-message">Loading genres…</p>
-          ) : (
-            <ChipRow
-              className="search-genres"
-              items={genres}
-              isActive={(genre) => selectedGenre?.id === genre.id}
-              onSelect={(genre) =>
-                setSelectedGenre((current) => (current?.id === genre.id ? null : genre))
-              }
-            />
-          )
+          <ChipRow
+            className="search-genres"
+            loading={genresLoading}
+            loadingLabel="Loading genres…"
+            messageClassName="search-message"
+            items={genres}
+            isActive={(genre) => selectedGenre?.id === genre.id}
+            onSelect={(genre) =>
+              setSelectedGenre((current) => (current?.id === genre.id ? null : genre))
+            }
+          />
         )}
       </form>
 

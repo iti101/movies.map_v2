@@ -8,8 +8,15 @@ export default function ChipRow({
   getKey = (item) => item.id,
   getLabel = (item) => item.label ?? item.name,
   disabled = false,
+  loading = false,
+  loadingLabel = 'Loading…',
+  messageClassName,
   children,
 }) {
+  if (loading) {
+    return <p className={messageClassName}>{loadingLabel}</p>
+  }
+
   return (
     <div className={className}>
       {items.map((item) => (

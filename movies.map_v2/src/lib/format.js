@@ -1,3 +1,7 @@
+export function yearFromDate(value) {
+  return value?.slice(0, 4) ?? null
+}
+
 export function formatDate(value) {
   if (!value) return null
   const match = /^(\d{4})-(\d{2})-(\d{2})/.exec(value)

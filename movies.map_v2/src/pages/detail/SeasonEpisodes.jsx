@@ -30,8 +30,8 @@ export default function SeasonEpisodes({ showId, seasons }) {
         <DetailSelect
           label="Season"
           value={seasonNumber ?? ''}
-          onChange={(event) => {
-            setSeasonNumber(Number(event.target.value))
+          onChange={(next) => {
+            setSeasonNumber(Number(next))
             setOpenEpisodeId(null)
           }}
         >

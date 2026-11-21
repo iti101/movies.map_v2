@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import Button from '../components/Button.jsx'
 import OverlayPage from '../components/OverlayPage.jsx'
 import ResultGrid from '../components/ResultGrid.jsx'
 import Select from '../components/Select.jsx'
@@ -48,16 +49,16 @@ function Watchlist({ active, onBack, onSelect, onFindTitle }) {
         </div>
 
         <div className="watchlist__toolbar">
-          <button
-            type="button"
+          <Button
             className="watchlist__create"
+            variant="accent"
             onClick={() => {
               setConfirmDelete(false)
               setCreateOpen(true)
             }}
           >
             Create new list
-          </button>
+          </Button>
 
           {lists.length > 1 && (
             <Select
@@ -84,13 +85,13 @@ function Watchlist({ active, onBack, onSelect, onFindTitle }) {
             Create a list for movie nights, holidays, or any occasion, then add
             titles from a movie or show page.
           </p>
-          <button
-            type="button"
+          <Button
             className="watchlist__create"
+            variant="accent"
             onClick={() => setCreateOpen(true)}
           >
             Create new list
-          </button>
+          </Button>
         </section>
       )}
 

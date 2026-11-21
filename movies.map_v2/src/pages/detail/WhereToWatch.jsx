@@ -25,8 +25,7 @@ export default function WhereToWatch({ title, watchByRegion }) {
   const watch = watchByRegion?.[region]
   const providers = watch?.providers ?? []
 
-  function handleRegionChange(event) {
-    const next = event.target.value
+  function handleRegionChange(next) {
     setRegion(next)
     saveWatchRegion(next)
   }

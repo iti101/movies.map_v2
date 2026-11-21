@@ -1,6 +1,7 @@
 import { useId, useState } from 'react'
 import { listContains } from '../API/watchlist.js'
 import { useWatchlist } from '../context/watchlist-context.js'
+import Button from './Button.jsx'
 import Modal from './Modal.jsx'
 
 function WatchlistModal({ isOpen, onClose, item = null, onPicked }) {
@@ -69,9 +70,9 @@ function WatchlistModal({ isOpen, onClose, item = null, onPicked }) {
               )
             })}
           </ul>
-          <button type="button" className="modal-secondary" onClick={() => setCreating(true)}>
+          <Button className="modal-secondary" variant="outline" onClick={() => setCreating(true)}>
             Create new list
-          </button>
+          </Button>
         </>
       ) : (
         <form onSubmit={handleCreate}>
@@ -98,16 +99,16 @@ function WatchlistModal({ isOpen, onClose, item = null, onPicked }) {
             </p>
           )}
           <div className="modal-actions">
-            <button
-              type="button"
+            <Button
               className="modal-cancel"
+              variant="outline"
               onClick={() => (item ? setCreating(false) : close())}
             >
               Cancel
-            </button>
-            <button type="submit" className="modal-submit">
+            </Button>
+            <Button className="modal-submit" type="submit" variant="accent">
               Create
-            </button>
+            </Button>
           </div>
         </form>
       )}

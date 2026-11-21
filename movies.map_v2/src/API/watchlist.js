@@ -1,3 +1,4 @@
+import { yearFromDate } from '../lib/format.js'
 import { sameMedia } from '../lib/media.js'
 import { readJson, writeJson } from '../lib/storage.js'
 
@@ -53,10 +54,7 @@ function asWatchlistEntry(item) {
     mediaType: item.mediaType,
     title: item.title,
     imagePath: item.imagePath ?? item.posterPath ?? null,
-    year:
-      item.year ??
-      (item.releaseDate || item.firstAirDate)?.slice(0, 4) ??
-      null,
+    year: item.year ?? yearFromDate(item.releaseDate || item.firstAirDate),
   }
 }
 

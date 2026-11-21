@@ -52,11 +52,18 @@ export default function TitleView({ item, onOpen }) {
             <div className="detail__cta">
               <WatchlistButton key={mediaKey(item)} item={item} />
               {item.trailerUrl ? (
-                <a className="detail__trailer" href={item.trailerUrl} target="_blank" rel="noreferrer">
+                <a
+                  className="ui-button ui-button--accent detail__trailer"
+                  href={item.trailerUrl}
+                  target="_blank"
+                  rel="noreferrer"
+                >
                   Watch Trailer
                 </a>
               ) : (
-                <span className="detail__trailer detail__trailer--disabled">No trailer yet</span>
+                <span className="ui-button ui-button--accent detail__trailer detail__trailer--disabled">
+                  No trailer yet
+                </span>
               )}
             </div>
           </div>

@@ -74,35 +74,9 @@
   margin-top: 1.15rem;
 }
 
-.modal-cancel,
-.modal-submit,
-.modal-secondary {
-  padding: 0.65rem 1.1rem;
-  border-radius: 999px;
-  font: 600 0.95rem var(--font-body);
-  cursor: pointer;
-}
-
-.modal-cancel,
-.modal-secondary {
-  border: 1px solid var(--color-border);
-  background: transparent;
-  color: var(--color-text);
-}
-
 .modal-submit {
-  border: none;
-  background: var(--color-accent-btn);
-  color: #f4f6f8;
-}
-
-.modal-submit:hover {
-  background: var(--color-accent-btn-hover);
-}
-
-.modal-cancel:hover,
-.modal-secondary:hover {
-  background: var(--color-control);
+  --button-padding: 0.65rem 1.1rem;
+  --button-size: 0.95rem;
 }
 
 .modal-choices {
@@ -150,10 +124,7 @@
   width: 100%;
 }
 
-.modal-choice:focus-visible,
-.modal-cancel:focus-visible,
-.modal-submit:focus-visible,
-.modal-secondary:focus-visible {
+.modal-choice:focus-visible {
   outline: 2px solid var(--color-focus-ring);
   outline-offset: 3px;
 }

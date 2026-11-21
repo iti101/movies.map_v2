@@ -1,6 +1,4 @@
-function getYear(date) {
-  return date?.slice(0, 4) ?? null
-}
+import { yearFromDate } from '../../lib/format.js'
 
 /** Flatten TMDB’s movie/TV/person shapes into the fields MovieCard expects. */
 export function normalizeItem(item, fallbackType) {
@@ -20,7 +18,7 @@ export function normalizeItem(item, fallbackType) {
     id: item.id,
     mediaType,
     title: item.title || item.name,
-    year: getYear(item.release_date || item.first_air_date),
+    year: yearFromDate(item.release_date || item.first_air_date),
     imagePath: item.poster_path,
     genreIds: item.genre_ids ?? [],
   }
