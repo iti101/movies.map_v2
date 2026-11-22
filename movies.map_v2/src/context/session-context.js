@@ -1,11 +1,6 @@
-import { createContext, useContext } from 'react'
+import { createRequiredContext } from '../lib/context.js'
 
-export const SessionContext = createContext(null)
-
-export function useSession() {
-  const value = useContext(SessionContext)
-  if (!value) {
-    throw new Error('useSession must be used within SessionProvider')
-  }
-  return value
-}
+export const [SessionContext, useSession] = createRequiredContext(
+  'useSession',
+  'SessionProvider',
+)

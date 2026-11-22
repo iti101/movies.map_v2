@@ -1,3 +1,4 @@
+import Button from './Button.jsx'
 import './DidYouMean.css'
 
 function DidYouMean({ suggestion, onAccept }) {
@@ -6,13 +7,13 @@ function DidYouMean({ suggestion, onAccept }) {
   return (
     <p className="did-you-mean" role="status">
       Did you mean{' '}
-      <button
-        type="button"
+      <Button
         className="did-you-mean__btn"
+        variant="link"
         onClick={() => onAccept(suggestion)}
       >
         {suggestion}
-      </button>
+      </Button>
       ?
     </p>
   )

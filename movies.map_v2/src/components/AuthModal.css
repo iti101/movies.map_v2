@@ -3,15 +3,6 @@
   padding: 1.75rem 1.5rem 1.5rem;
 }
 
-.auth-close,
-.auth-visibility,
-.auth-link {
-  padding: 0;
-  border: 0;
-  background: none;
-  cursor: pointer;
-}
-
 .auth-close {
   position: absolute;
   top: 0.85rem;
@@ -152,7 +143,4 @@
 
 .auth-link {
   color: var(--color-text);
-  font: inherit;
-  text-decoration: underline;
-  text-underline-offset: 0.15em;
 }

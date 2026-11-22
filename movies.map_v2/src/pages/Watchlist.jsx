@@ -105,22 +105,22 @@ function Watchlist({ active, onBack, onSelect, onFindTitle }) {
               <p className="watchlist__count">{pluralize(count, 'title')}</p>
             </div>
 
-            <button
-              type="button"
+            <Button
               className={cn('watchlist__delete', confirmDelete && 'watchlist__delete--confirm')}
+              variant="link"
               onClick={handleDeleteList}
               onBlur={() => setConfirmDelete(false)}
             >
               {confirmDelete ? `Delete “${activeList.name}”?` : 'Delete list'}
-            </button>
+            </Button>
           </div>
 
           {count === 0 ? (
             <p className="watchlist__empty-text">
               This list is empty.{' '}
-              <button type="button" className="watchlist__link" onClick={onFindTitle}>
+              <Button variant="link" className="watchlist__link" onClick={onFindTitle}>
                 Find a title
-              </button>{' '}
+              </Button>{' '}
               and tap Add to watchlist.
             </p>
           ) : (

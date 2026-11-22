@@ -1,11 +1,6 @@
-import { createContext, useContext } from 'react'
+import { createRequiredContext } from '../lib/context.js'
 
-export const WatchlistContext = createContext(null)
-
-export function useWatchlist() {
-  const value = useContext(WatchlistContext)
-  if (!value) {
-    throw new Error('useWatchlist must be used within WatchlistProvider')
-  }
-  return value
-}
+export const [WatchlistContext, useWatchlist] = createRequiredContext(
+  'useWatchlist',
+  'WatchlistProvider',
+)

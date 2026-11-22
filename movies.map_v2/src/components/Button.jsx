@@ -18,13 +18,17 @@ function resolveFont(font) {
 const SIZE_PRESETS = new Set(['sm', 'md', 'lg', 'xl'])
 
 /**
- * Shared chip / ghost / solid / accent / outline / icon button.
- * Colors are CSS variables from App.css unless you pass a full color string.
+ * Shared chip / ghost / solid / accent / outline / icon / link control.
+ * Pass `href` to render an `<a>` with the same variants. Colors are CSS
+ * variables from App.css unless you pass a full color string.
  */
 export default function Button({
   children,
   className = '',
   type = 'button',
+  href,
+  target,
+  rel,
   variant = 'chip',
   size = 'md',
   font = 'body',
@@ -35,22 +39,29 @@ export default function Button({
   fontSize,
   active = false,
   round = false,
+  disabled,
   style,
   ...props
 }) {
+  const isLink = Boolean(href) && !disabled
+  const Tag = isLink ? 'a' : 'button'
   const classes = cn(
     'ui-button',
     `ui-button--${variant}`,
-    SIZE_PRESETS.has(size) && `ui-button--${size}`,
+    SIZE_PRESETS.has(size) && variant !== 'link' && `ui-button--${size}`,
     active && 'is-active',
     round && 'ui-button--round',
     className,
   )
 
   return (
-    <button
-      type={type}
+    <Tag
+      type={isLink ? undefined : type}
+      href={isLink ? href : undefined}
+      target={isLink ? target : undefined}
+      rel={isLink ? rel ?? (target === '_blank' ? 'noreferrer' : undefined) : undefined}
       className={classes}
+      disabled={isLink ? undefined : disabled}
       style={{
         '--button-color': toCssColor(color),
         '--button-bg': toCssColor(background),
@@ -65,6 +76,6 @@ export default function Button({
       {...props}
     >
       {children}
-    </button>
+    </Tag>
   )
 }

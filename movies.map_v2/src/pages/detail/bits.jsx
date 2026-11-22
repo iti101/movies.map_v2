@@ -1,4 +1,5 @@
 import { useId } from 'react'
+import Button from '../../components/Button.jsx'
 import MediaImage from '../../components/MediaImage.jsx'
 import ResultGrid from '../../components/ResultGrid.jsx'
 import Select from '../../components/Select.jsx'
@@ -23,13 +24,13 @@ export function PeopleLinks({ people, onOpen }) {
   return people.map((person, index) => (
     <span key={person.id}>
       {index > 0 ? ', ' : ''}
-      <button
-        type="button"
+      <Button
         className="detail__person-link"
+        variant="link"
         onClick={() => onOpen({ mediaType: 'person', id: person.id })}
       >
         {person.name}
-      </button>
+      </Button>
     </span>
   ))
 }

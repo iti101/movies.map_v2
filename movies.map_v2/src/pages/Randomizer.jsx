@@ -103,25 +103,17 @@ function Randomizer({ onSelect }) {
               <ChipRow
                 className="randomizer__chips"
                 items={RANDOMIZER_TYPES}
-                isActive={(option) => type === option.id}
+                selected={type}
                 onSelect={(option) => selectType(option.id)}
               />
             )}
 
             {step.id === 'want' && (
-              <ChipRow
-                {...genreChips}
-                isActive={(genre) => wantGenres.some((entry) => entry.id === genre.id)}
-                onSelect={handleWant}
-              />
+              <ChipRow {...genreChips} selected={wantGenres} onSelect={handleWant} />
             )}
 
             {step.id === 'avoid' && (
-              <ChipRow
-                {...genreChips}
-                isActive={(genre) => avoidGenres.some((entry) => entry.id === genre.id)}
-                onSelect={handleAvoid}
-              />
+              <ChipRow {...genreChips} selected={avoidGenres} onSelect={handleAvoid} />
             )}
 
             {step.id === 'person' && (

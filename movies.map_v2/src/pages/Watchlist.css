@@ -101,14 +101,8 @@
 
 .watchlist__delete {
   padding: 0.35rem 0;
-  border: none;
-  background: transparent;
   color: var(--color-muted);
-  font: inherit;
   font-size: 0.9rem;
-  text-decoration: underline;
-  text-underline-offset: 0.2em;
-  cursor: pointer;
 }
 
 .watchlist__delete:hover,
@@ -117,15 +111,7 @@
 }
 
 .watchlist__link {
-  padding: 0;
-  border: none;
-  background: none;
-  color: var(--color-text);
-  font: inherit;
   font-weight: 500;
-  text-decoration: underline;
-  text-underline-offset: 0.2em;
-  cursor: pointer;
 }
 
 .watchlist__grid {
@@ -170,9 +156,7 @@
   background: rgba(20, 20, 20, 0.9);
 }
 
-.watchlist__delete:focus-visible,
-.watchlist__remove:focus-visible,
-.watchlist__link:focus-visible {
+.watchlist__remove:focus-visible {
   outline: 2px solid var(--color-focus-ring);
   outline-offset: 3px;
 }

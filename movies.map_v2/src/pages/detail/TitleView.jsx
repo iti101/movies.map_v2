@@ -1,3 +1,4 @@
+import Button from '../../components/Button.jsx'
 import MediaImage from '../../components/MediaImage.jsx'
 import WatchlistButton from '../../components/WatchlistButton.jsx'
 import { formatDate, formatRuntime } from '../../lib/format.js'
@@ -52,18 +53,18 @@ export default function TitleView({ item, onOpen }) {
             <div className="detail__cta">
               <WatchlistButton key={mediaKey(item)} item={item} />
               {item.trailerUrl ? (
-                <a
-                  className="ui-button ui-button--accent detail__trailer"
+                <Button
+                  className="detail__trailer"
+                  variant="accent"
                   href={item.trailerUrl}
                   target="_blank"
-                  rel="noreferrer"
                 >
                   Watch Trailer
-                </a>
+                </Button>
               ) : (
-                <span className="ui-button ui-button--accent detail__trailer detail__trailer--disabled">
+                <Button className="detail__trailer detail__trailer--disabled" variant="accent" disabled>
                   No trailer yet
-                </span>
+                </Button>
               )}
             </div>
           </div>

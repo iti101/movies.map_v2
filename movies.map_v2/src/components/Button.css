@@ -88,6 +88,23 @@
   --button-size: 0.95rem;
 }
 
+.ui-button--link {
+  --button-bg: transparent;
+  --button-hover-bg: transparent;
+  --button-border: none;
+  --button-padding: 0;
+  --button-radius: 0;
+  --button-weight: inherit;
+  --button-size: inherit;
+  font: inherit;
+  text-decoration: underline;
+  text-underline-offset: 0.18em;
+}
+
+.ui-button--link:hover:not(:disabled) {
+  background: transparent;
+}
+
 .ui-button--icon {
   --button-bg: transparent;
   --button-hover-bg: var(--button-bg, transparent);

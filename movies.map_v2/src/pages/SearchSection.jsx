@@ -72,7 +72,7 @@ function SearchSection({ onSeeAll, onSelect }) {
         <ChipRow
           className="search-chips"
           items={SEARCH_TYPES}
-          isActive={(option) => type === option.id}
+          selected={type}
           onSelect={(option) => selectType(option.id)}
         >
           <Button active={releaseDateOn} onClick={toggleReleaseDate} disabled={filtersDisabled}>
@@ -102,7 +102,7 @@ function SearchSection({ onSeeAll, onSelect }) {
             loadingLabel="Loading genres…"
             messageClassName="search-message"
             items={genres}
-            isActive={(genre) => selectedGenre?.id === genre.id}
+            selected={selectedGenre}
             onSelect={(genre) =>
               setSelectedGenre((current) => (current?.id === genre.id ? null : genre))
             }

@@ -1,10 +1,7 @@
-import { useEffect, useState } from 'react'
-import { getSearchLabel, getSearchSuggestion, searchKeyOf, searchTmdbAll } from '../API/tmdb.js'
 import OverlayPage from '../components/OverlayPage.jsx'
 import ResultGrid from '../components/ResultGrid.jsx'
 import SearchStatus from '../components/SearchStatus.jsx'
-import { isAbortError } from '../lib/async.js'
-import { pluralize } from '../lib/format.js'
+import { useSeeAllResults } from './search/useSeeAllResults.js'
 import './SearchResultsPage.css'
 
 /**
@@ -12,74 +9,15 @@ import './SearchResultsPage.css'
  * fills in later TMDB pages. If that deeper fetch fails, keep the seed.
  */
 function SearchResultsPage({ search, active, onBack, onSelect }) {
-  const seedKey = searchKeyOf(search)
-  const [queryOverride, setQueryOverride] = useState(null)
-  const activeSearch =
-    queryOverride?.key === seedKey
-      ? { ...search, query: queryOverride.query, results: [], totalPages: 0 }
-      : search
-  const activeKey = searchKeyOf(activeSearch)
-  const seeded = activeSearch.results ?? []
-
-  const [fetched, setFetched] = useState(null)
-  const [suggestion, setSuggestion] = useState('')
-  const [error, setError] = useState({ key: '', value: '' })
-
-  const results = fetched?.key === activeKey ? fetched.items : seeded
-  const activeError = error.key === activeKey ? error.value : ''
-  const status =
-    fetched?.key === activeKey
-      ? fetched.items.length
-        ? 'success'
-        : 'empty'
-      : seeded.length
-        ? 'success'
-        : activeError
-          ? 'error'
-          : 'loading'
-
-  useEffect(() => {
-    const controller = new AbortController()
-    const key = activeKey
-
-    searchTmdbAll({
-      query: activeSearch.query,
-      type: activeSearch.type,
-      year: activeSearch.year,
-      genre: activeSearch.genre,
-      seedItems: activeSearch.results,
-      totalPages: activeSearch.totalPages,
-      signal: controller.signal,
-    })
-      .then(async (items) => {
-        setFetched({ key, items })
-        const nextSuggestion = await getSearchSuggestion({
-          query: activeSearch.query,
-          type: activeSearch.type,
-          year: activeSearch.year,
-          items,
-          signal: controller.signal,
-        })
-        if (!controller.signal.aborted) {
-          setSuggestion(nextSuggestion ?? '')
-        }
-      })
-      .catch((err) => {
-        if (isAbortError(err) || seeded.length) return
-        setError({ key, value: err.message || 'Something went wrong.' })
-      })
-
-    return () => {
-      controller.abort()
-      setSuggestion('')
-    }
-    // activeKey is the serialized search; reading fields from that same render is safe.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [activeKey])
-
-  const label = getSearchLabel(activeSearch)
-  const count = results.length
-  const summary = count > 0 ? `${pluralize(count, 'result')} for “${label}”` : `Results for “${label}”`
+  const {
+    status,
+    error,
+    results,
+    suggestion,
+    label,
+    summary,
+    acceptSuggestion,
+  } = useSeeAllResults(search)
 
   return (
     <OverlayPage
@@ -98,13 +36,13 @@ function SearchResultsPage({ search, active, onBack, onSelect }) {
 
       <SearchStatus
         status={status}
-        error={activeError}
+        error={error}
         label={label}
-        suggestion={status === 'empty' || status === 'success' ? suggestion : ''}
-        onAcceptSuggestion={(nextQuery) => setQueryOverride({ key: seedKey, query: nextQuery })}
+        suggestion={suggestion}
+        onAcceptSuggestion={acceptSuggestion}
       />
 
-      {count > 0 && (
+      {results.length > 0 && (
         <ResultGrid items={results} onSelect={onSelect} className="search-grid results-page__grid" />
       )}
     </OverlayPage>

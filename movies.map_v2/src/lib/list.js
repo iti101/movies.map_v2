@@ -10,8 +10,12 @@ export function uniqueBy(items, keyOf) {
   return unique
 }
 
-export function toggleById(list, item) {
+export function hasId(list, item) {
   return list.some((entry) => entry.id === item.id)
+}
+
+export function toggleById(list, item) {
+  return hasId(list, item)
     ? list.filter((entry) => entry.id !== item.id)
     : [...list, item]
 }

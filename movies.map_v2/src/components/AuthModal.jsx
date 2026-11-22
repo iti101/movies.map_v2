@@ -18,51 +18,38 @@ function EyeIcon({ slashed }) {
   )
 }
 
-function TextField({ id, label, ...props }) {
+function TextField({ id, label, children, ...props }) {
   return (
     <div className="auth-field">
       <label htmlFor={id}>{label}</label>
-      <input id={id} className="auth-input" {...props} />
+      {children ?? <input id={id} className="auth-input" {...props} />}
     </div>
   )
 }
 
-function PasswordField({
-  id,
-  label,
-  value,
-  onChange,
-  placeholder,
-  autoComplete,
-  disabled,
-}) {
+function PasswordField({ id, label, ...props }) {
   const [visible, setVisible] = useState(false)
 
   return (
-    <div className="auth-field">
-      <label htmlFor={id}>{label}</label>
+    <TextField id={id} label={label}>
       <div className="auth-password-wrap">
         <input
           id={id}
           className="auth-input"
           type={visible ? 'text' : 'password'}
-          value={value}
-          onChange={onChange}
-          placeholder={placeholder}
-          autoComplete={autoComplete}
-          disabled={disabled}
+          {...props}
         />
-        <button
+        <Button
           className="auth-visibility"
-          type="button"
+          variant="icon"
           onClick={() => setVisible((current) => !current)}
           aria-label={visible ? 'Hide password' : 'Show password'}
           tabIndex={-1}
         >
           <EyeIcon slashed={!visible} />
-        </button>
+        </Button>
       </div>
-    </div>
+    </TextField>
   )
 }
 
@@ -163,14 +150,9 @@ function AuthModal() {
       labelledBy={titleId}
       dialogClass="auth-dialog"
     >
-      <button
-        className="auth-close"
-        type="button"
-        aria-label="Close"
-        onClick={handleClose}
-      >
+      <Button className="auth-close" variant="icon" aria-label="Close" onClick={handleClose}>
         ×
-      </button>
+      </Button>
 
       <h2 id={titleId} className="auth-title">
         {isSignIn ? 'Sign in' : 'Create account'}
@@ -259,21 +241,21 @@ function AuthModal() {
         {isSignIn ? (
           <p>
             Don&apos;t have an account?{' '}
-            <button type="button" className="auth-link" onClick={() => switchMode('signup')}>
+            <Button variant="link" className="auth-link" onClick={() => switchMode('signup')}>
               Create an account
-            </button>
+            </Button>
           </p>
         ) : (
           <>
             <p>
               Already have an account?{' '}
-              <button type="button" className="auth-link" onClick={() => switchMode('signin')}>
+              <Button variant="link" className="auth-link" onClick={() => switchMode('signin')}>
                 Sign in
-              </button>
+              </Button>
             </p>
-            <button type="button" className="auth-link" onClick={handleClose}>
+            <Button variant="link" className="auth-link" onClick={handleClose}>
               Back to home
-            </button>
+            </Button>
           </>
         )}
       </div>

@@ -7,15 +7,8 @@
 }
 
 .did-you-mean__btn {
-  padding: 0;
-  border: none;
-  background: none;
+  --button-weight: 600;
   color: #5b8fd4;
-  font: inherit;
-  font-weight: 600;
-  text-decoration: underline;
-  text-underline-offset: 0.15em;
-  cursor: pointer;
 }
 
 [data-theme='dark'] .did-you-mean__btn {

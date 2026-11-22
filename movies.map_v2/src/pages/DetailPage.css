@@ -112,14 +112,7 @@
 }
 
 .detail__person-link {
-  padding: 0;
-  border: 0;
-  background: none;
   color: inherit;
-  font: inherit;
-  cursor: pointer;
-  text-decoration: underline;
-  text-underline-offset: 0.18em;
 }
 
 .detail__person-link:hover {
@@ -183,14 +176,15 @@
   font-size: 0.85rem;
 }
 
-.detail__trailer--disabled,
-.detail__trailer--disabled:hover {
+.detail__trailer--disabled:disabled,
+.detail__trailer--disabled:disabled:hover {
   --button-bg: transparent;
   --button-hover-bg: transparent;
   background: transparent;
   color: var(--color-muted);
   border: 1px solid var(--color-border);
   cursor: default;
+  opacity: 1;
 }
 
 .detail__section {

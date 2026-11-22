@@ -1,7 +1,15 @@
 import Button from './Button.jsx'
 
+function matchesSelection(selected, item) {
+  if (selected == null) return false
+  if (Array.isArray(selected)) return selected.some((entry) => matchesSelection(entry, item))
+  if (typeof selected === 'object') return selected.id === item.id
+  return selected === item.id
+}
+
 export default function ChipRow({
   items,
+  selected,
   isActive,
   onSelect,
   className,
@@ -13,6 +21,8 @@ export default function ChipRow({
   messageClassName,
   children,
 }) {
+  const activeFor = isActive ?? ((item) => matchesSelection(selected, item))
+
   if (loading) {
     return <p className={messageClassName}>{loadingLabel}</p>
   }
@@ -22,7 +32,7 @@ export default function ChipRow({
       {items.map((item) => (
         <Button
           key={getKey(item)}
-          active={isActive(item)}
+          active={activeFor(item)}
           onClick={() => onSelect(item)}
           disabled={disabled}
         >
