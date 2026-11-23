@@ -3,7 +3,6 @@ import Button from '../../components/Button.jsx'
 import MediaImage from '../../components/MediaImage.jsx'
 import ResultGrid from '../../components/ResultGrid.jsx'
 import Select from '../../components/Select.jsx'
-import { cn } from '../../lib/format.js'
 
 export function Facts({ facts }) {
   if (!facts.length) return null
@@ -113,7 +112,7 @@ export function Related({ title, items, onOpen, rows = false }) {
       <ResultGrid
         items={items}
         onSelect={onOpen}
-        className={cn('detail__grid', rows && 'detail__grid--rows')}
+        className={rows ? 'poster-grid--rows' : undefined}
       />
     </Section>
   )

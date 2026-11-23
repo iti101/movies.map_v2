@@ -114,11 +114,6 @@
   font-weight: 500;
 }
 
-.watchlist__grid {
-  grid-template-columns: repeat(auto-fill, minmax(9rem, 1fr));
-  gap: 1.4rem 1rem;
-}
-
 .watchlist__tile {
   position: relative;
 }

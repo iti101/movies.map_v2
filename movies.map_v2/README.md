@@ -77,6 +77,8 @@ App
 | Multi-page results overlay | `src/pages/SearchResultsPage.jsx` |
 | Title / person detail | `src/pages/detail/` |
 | Shared overlay / modal / chips | `src/components/` (`OverlayPage` owns the full-screen shell CSS) |
+| Poster grids | `src/components/ResultGrid.css` (`.poster-grid`) |
+| Pill fields | `.ui-field` on year, select, typeahead |
 
 TMDB GETs share an LRU cache and coalesce in-flight requests in `src/API/tmdb/client.js`. Overlay unmounts abort waiting on the result; the network response can still fill the cache. Search and Randomizer cancel the previous in-flight request when a newer one starts.
 
@@ -132,7 +134,7 @@ Novi JWT + profile are stored in `localStorage` (`noviToken`, `noviUser`). Watch
 | `color`, `background`, `hoverBackground` | — | CSS color, or a token name that becomes `var(--color-<name>)`. |
 | `font` | `'body'` | `'body'` → `--font-body`, `'display'` → `--font-display`. |
 
-`OverlayPage`, `Modal`, `ChipRow`, `ResultGrid`, `MediaImage`, `SearchStatus`, and `PersonTypeahead` wrap the repeated overlay, dialog, chip, poster-grid, search-status, and actor-search patterns. Poster `<img>` tags send a TMDB `srcset` so cards can pick `w185` / `w342` / `w500` from the same path.
+`OverlayPage`, `Modal`, `ChipRow`, `ResultGrid`, `MediaImage`, `SearchStatus`, and `PersonTypeahead` wrap the repeated overlay, dialog, chip, poster-grid, search-status, and actor-search patterns. ResultGrid always applies `.poster-grid`, and year/select/typeahead share `.ui-field`. Poster `<img>` tags send a TMDB `srcset` so cards can pick `w185` / `w342` / `w500` from the same path.
 
 ## Constraints and known gaps
 

@@ -125,7 +125,7 @@ function SearchSection({ onSeeAll, onSelect }) {
             <div className="search-results-header">
               <Button onClick={handleSeeAll}>See all</Button>
             </div>
-            <ResultGrid items={results} onSelect={onSelect} />
+            <ResultGrid items={results} onSelect={onSelect} className="poster-grid--compact" />
           </>
         )}
       </div>

@@ -125,7 +125,6 @@ function Watchlist({ active, onBack, onSelect, onFindTitle }) {
             </p>
           ) : (
             <ResultGrid
-              className="watchlist__grid"
               cardClassName="watchlist__tile"
               items={activeList.items}
               onSelect={onSelect}

@@ -111,11 +111,11 @@
   font-weight: 600;
 }
 
-.detail__person-link {
+.ui-button.detail__person-link {
   color: inherit;
 }
 
-.detail__person-link:hover {
+.ui-button.detail__person-link:hover {
   color: var(--color-text-muted);
 }
 
@@ -216,28 +216,10 @@
   white-space: pre-line;
 }
 
-.detail__grid,
 .detail__cast {
   margin: 0;
   padding: 0;
   list-style: none;
-}
-
-.detail__grid {
-  grid-template-columns: repeat(auto-fill, minmax(9rem, 1fr));
-  gap: 1.25rem 1rem;
-}
-
-.detail__grid--rows {
-  grid-template-columns: none;
-  grid-template-rows: repeat(2, auto);
-  grid-auto-flow: column;
-  grid-auto-columns: 9.5rem;
-  overflow-x: auto;
-  padding-bottom: 0.35rem;
-}
-
-.detail__cast {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(7.5rem, 1fr));
   gap: 1rem;

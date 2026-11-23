@@ -1,8 +1,26 @@
 .poster-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
-  gap: 1rem;
+  grid-template-columns: repeat(auto-fill, minmax(9rem, 1fr));
+  gap: 1.25rem 1rem;
   margin: 0;
   padding: 0;
   list-style: none;
+}
+
+.poster-grid--compact {
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: 1rem;
+}
+
+.poster-grid--wide {
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+}
+
+.poster-grid--rows {
+  grid-template-columns: none;
+  grid-template-rows: repeat(2, auto);
+  grid-auto-flow: column;
+  grid-auto-columns: 9.5rem;
+  overflow-x: auto;
+  padding-bottom: 0.35rem;
 }
