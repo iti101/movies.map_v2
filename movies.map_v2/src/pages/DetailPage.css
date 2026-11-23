@@ -224,7 +224,6 @@
 }
 
 .detail__grid {
-  display: grid;
   grid-template-columns: repeat(auto-fill, minmax(9rem, 1fr));
   gap: 1.25rem 1rem;
 }

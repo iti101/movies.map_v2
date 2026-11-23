@@ -14,7 +14,7 @@ function Select({
   return (
     <select
       id={id}
-      className={cn('ui-select', className)}
+      className={cn('ui-field', 'ui-select', className)}
       aria-label={ariaLabel}
       value={value}
       onChange={(event) => onChange(event.target.value)}

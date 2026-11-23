@@ -30,14 +30,21 @@ export function delay(ms, signal) {
       return
     }
 
-    const id = setTimeout(resolve, ms)
-    signal?.addEventListener(
-      'abort',
-      () => {
-        clearTimeout(id)
-        reject(new DOMException('Aborted', 'AbortError'))
-      },
-      { once: true },
-    )
+    const onAbort = () => {
+      cleanup()
+      reject(new DOMException('Aborted', 'AbortError'))
+    }
+
+    const id = setTimeout(() => {
+      cleanup()
+      resolve()
+    }, ms)
+
+    function cleanup() {
+      clearTimeout(id)
+      signal?.removeEventListener('abort', onAbort)
+    }
+
+    signal?.addEventListener('abort', onAbort)
   })
 }

@@ -1,15 +1,17 @@
 import { mediaKey } from '../lib/media.js'
+import { cn } from '../lib/format.js'
 import MovieCard from './MovieCard.jsx'
+import './ResultGrid.css'
 
 export default function ResultGrid({
   items,
   onSelect,
-  className = 'search-grid',
+  className,
   cardClassName,
   renderExtra,
 }) {
   return (
-    <ul className={className}>
+    <ul className={cn('poster-grid', className)}>
       {items.map((item) => (
         <MovieCard
           key={mediaKey(item)}

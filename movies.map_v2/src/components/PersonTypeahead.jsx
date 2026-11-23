@@ -2,6 +2,7 @@ import { useEffect, useId, useRef, useState } from 'react'
 import { searchPeople } from '../API/tmdb.js'
 import { useAsync } from '../hooks/useAsync.js'
 import { useDebouncedValue } from '../hooks/useDebouncedValue.js'
+import './Select.css'
 import './PersonTypeahead.css'
 
 export default function PersonTypeahead({ value, query, onQueryChange, onSelect, onClear }) {
@@ -34,7 +35,7 @@ export default function PersonTypeahead({ value, query, onQueryChange, onSelect,
   return (
     <div className="typeahead" ref={boxRef}>
       {value ? (
-        <div className="typeahead__picked">
+        <div className="ui-field typeahead__picked">
           <span>{value.name}</span>
           <button
             type="button"
@@ -49,7 +50,7 @@ export default function PersonTypeahead({ value, query, onQueryChange, onSelect,
         <>
           <input
             id={fieldId}
-            className="typeahead__input"
+            className="ui-field typeahead__input"
             type="search"
             value={query}
             onChange={(event) => onQueryChange(event.target.value)}

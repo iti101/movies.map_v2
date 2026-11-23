@@ -18,11 +18,12 @@ export function useSeeAllResults(search) {
   const seeded = activeSearch.results ?? []
 
   const [fetched, setFetched] = useState(null)
-  const [suggestion, setSuggestion] = useState('')
+  const [suggestion, setSuggestion] = useState({ key: '', value: '' })
   const [error, setError] = useState({ key: '', value: '' })
 
   const results = fetched?.key === activeKey ? fetched.items : seeded
   const activeError = error.key === activeKey ? error.value : ''
+  const activeSuggestion = suggestion.key === activeKey ? suggestion.value : ''
   const status =
     fetched?.key === activeKey
       ? fetched.items.length
@@ -57,7 +58,7 @@ export function useSeeAllResults(search) {
           signal: controller.signal,
         })
         if (!controller.signal.aborted) {
-          setSuggestion(nextSuggestion ?? '')
+          setSuggestion({ key, value: nextSuggestion ?? '' })
         }
       })
       .catch((err) => {
@@ -67,7 +68,6 @@ export function useSeeAllResults(search) {
 
     return () => {
       controller.abort()
-      setSuggestion('')
     }
     // activeKey is the serialized search; reading fields from that same render is safe.
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -82,7 +82,7 @@ export function useSeeAllResults(search) {
     status,
     error: activeError,
     results,
-    suggestion,
+    suggestion: activeSuggestion,
     label,
     summary,
     acceptSuggestion(nextQuery) {

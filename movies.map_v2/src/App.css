@@ -141,7 +141,7 @@ html[data-theme='light'] {
   overscroll-behavior: contain;
 }
 
-.search-results:has(.search-grid) {
+.search-results:has(.poster-grid) {
   overflow-y: auto;
 }
 
@@ -152,14 +152,5 @@ html[data-theme='light'] {
 
 .search-message-error {
   color: var(--color-error);
-}
-
-.search-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
-  gap: 1rem;
-  margin: 0;
-  padding: 0;
-  list-style: none;
 }
 

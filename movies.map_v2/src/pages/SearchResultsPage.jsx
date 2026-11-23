@@ -43,7 +43,7 @@ function SearchResultsPage({ search, active, onBack, onSelect }) {
       />
 
       {results.length > 0 && (
-        <ResultGrid items={results} onSelect={onSelect} className="search-grid results-page__grid" />
+        <ResultGrid items={results} onSelect={onSelect} className="results-page__grid" />
       )}
     </OverlayPage>
   )

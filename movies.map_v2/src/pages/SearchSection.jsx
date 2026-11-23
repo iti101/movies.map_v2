@@ -6,6 +6,7 @@ import { cn } from '../lib/format.js'
 import { SEARCH_TYPES } from '../lib/media.js'
 import searchIcon from '../assets/search_opsz24.svg'
 import { useSearch } from './search/useSearch.js'
+import '../components/Select.css'
 import './SearchSection.css'
 
 /**
@@ -85,7 +86,7 @@ function SearchSection({ onSeeAll, onSelect }) {
 
         {releaseDateOn && (
           <input
-            className="search-year"
+            className="ui-field search-year"
             type="text"
             inputMode="numeric"
             value={year}
