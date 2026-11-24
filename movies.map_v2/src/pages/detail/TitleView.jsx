@@ -1,10 +1,9 @@
 import Button from '../../components/Button.jsx'
-import MediaImage from '../../components/MediaImage.jsx'
 import WatchlistButton from '../../components/WatchlistButton.jsx'
 import { formatDate, formatRuntime } from '../../lib/format.js'
 import { uniqueBy } from '../../lib/list.js'
 import { mediaKey } from '../../lib/media.js'
-import { Cast, Facts, PeopleLinks, Rating, Related, Section } from './bits.jsx'
+import { Cast, DetailHero, Facts, PeopleLinks, Rating, Related, Section } from './bits.jsx'
 import Reviews from './Reviews.jsx'
 import SeasonEpisodes from './SeasonEpisodes.jsx'
 import WhereToWatch from './WhereToWatch.jsx'
@@ -35,41 +34,31 @@ export default function TitleView({ item, onOpen }) {
 
   return (
     <>
-      <header className="detail__header">
-        <MediaImage
-          className="detail__poster"
-          path={item.posterPath}
-          size="w500"
-          sizes="(max-width: 40rem) 60vw, 17rem"
-          alt={`${item.title} poster`}
-          empty="No poster"
-        />
-        <div className="detail__intro">
-          <h1 id="detail-title" className="detail__title">{item.title}</h1>
-          {item.tagline && <p className="detail__tagline">{item.tagline}</p>}
-          <Facts facts={facts} />
-          <div className="detail__actions">
-            <Rating rating={item.rating} voteCount={item.voteCount} />
-            <div className="detail__cta">
-              <WatchlistButton key={mediaKey(item)} item={item} />
-              {item.trailerUrl ? (
-                <Button
-                  className="detail__trailer"
-                  variant="accent"
-                  href={item.trailerUrl}
-                  target="_blank"
-                >
-                  Watch Trailer
-                </Button>
-              ) : (
-                <Button className="detail__trailer detail__trailer--disabled" variant="accent" disabled>
-                  No trailer yet
-                </Button>
-              )}
-            </div>
+      <DetailHero path={item.posterPath} alt={`${item.title} poster`} empty="No poster">
+        <h1 id="detail-title" className="detail__title">{item.title}</h1>
+        {item.tagline && <p className="detail__tagline">{item.tagline}</p>}
+        <Facts facts={facts} />
+        <div className="detail__actions">
+          <Rating rating={item.rating} voteCount={item.voteCount} />
+          <div className="detail__cta">
+            <WatchlistButton key={mediaKey(item)} item={item} />
+            {item.trailerUrl ? (
+              <Button
+                className="detail__trailer"
+                variant="accent"
+                href={item.trailerUrl}
+                target="_blank"
+              >
+                Watch Trailer
+              </Button>
+            ) : (
+              <Button className="detail__trailer detail__trailer--disabled" variant="accent" disabled>
+                No trailer yet
+              </Button>
+            )}
           </div>
         </div>
-      </header>
+      </DetailHero>
 
       <Section title="Storyline">
         <p className="detail__text">{item.overview || 'No synopsis available yet.'}</p>

@@ -3,6 +3,23 @@ import Button from '../../components/Button.jsx'
 import MediaImage from '../../components/MediaImage.jsx'
 import ResultGrid from '../../components/ResultGrid.jsx'
 import Select from '../../components/Select.jsx'
+import { personRef } from '../../lib/media.js'
+
+export function DetailHero({ path, alt, empty, children }) {
+  return (
+    <header className="detail__header">
+      <MediaImage
+        className="detail__poster"
+        path={path}
+        size="w500"
+        sizes="(max-width: 40rem) 60vw, 17rem"
+        alt={alt}
+        empty={empty}
+      />
+      <div className="detail__intro">{children}</div>
+    </header>
+  )
+}
 
 export function Facts({ facts }) {
   if (!facts.length) return null
@@ -26,7 +43,7 @@ export function PeopleLinks({ people, onOpen }) {
       <Button
         className="detail__person-link"
         variant="link"
-        onClick={() => onOpen({ mediaType: 'person', id: person.id })}
+        onClick={() => onOpen(personRef(person.id))}
       >
         {person.name}
       </Button>
@@ -84,7 +101,7 @@ export function Cast({ people, onOpen }) {
             <button
               type="button"
               className="detail__cast-card"
-              onClick={() => onOpen({ mediaType: 'person', id: member.id })}
+              onClick={() => onOpen(personRef(member.id))}
             >
               <MediaImage
                 className="detail__cast-photo"

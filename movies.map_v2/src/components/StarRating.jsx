@@ -1,5 +1,5 @@
 import { useId, useState } from 'react'
-import { cn } from '../lib/format.js'
+import { cn, pluralize } from '../lib/format.js'
 import './StarRating.css'
 
 function clampHalfStar(value) {
@@ -57,7 +57,7 @@ export default function StarRating({
             type="button"
             className="star-rating__star"
             disabled={!interactive}
-            aria-label={`${starIndex} star${starIndex === 1 ? '' : 's'}`}
+            aria-label={pluralize(starIndex, 'star')}
             aria-checked={interactive ? checked : undefined}
             role={interactive ? 'radio' : undefined}
             tabIndex={interactive ? (starIndex === 1 || checked ? 0 : -1) : undefined}

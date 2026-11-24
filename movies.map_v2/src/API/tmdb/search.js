@@ -25,6 +25,27 @@ function searchOptions(signal) {
   return { signal, errorMessage: SEARCH_ERROR }
 }
 
+function pageParams(page, extra = {}) {
+  return { include_adult: 'false', page, ...extra }
+}
+
+function withYear(params, mediaType, year, movieKey) {
+  if (!year) return params
+  if (mediaType === 'movie') params[movieKey] = year
+  if (mediaType === 'tv') params.first_air_date_year = year
+  return params
+}
+
+function mapPage(data, page, fallbackType) {
+  return toTmdbPage(
+    data,
+    page,
+    (data.results ?? []).map((item) =>
+      normalizeItem(item, fallbackType === 'all' ? item.media_type : fallbackType),
+    ),
+  )
+}
+
 export function isValidYear(value) {
   return /^\d{4}$/.test(value)
 }
@@ -138,22 +159,9 @@ export function applySearchFilters(items, { type, year, genre }) {
 
 /** Text search. Year is sent only for movie/tv — not for “all” (multi) or people. */
 export async function searchTmdb({ query, type, year, page = 1, signal } = {}) {
-  const params = {
-    query,
-    include_adult: 'false',
-    page,
-  }
-  if (year && type === 'movie') params.year = year
-  if (year && type === 'tv') params.first_air_date_year = year
-
+  const params = withYear(pageParams(page, { query }), type, year, 'year')
   const data = await tmdbGet(TMDB_SEARCH[type], params, searchOptions(signal))
-  return toTmdbPage(
-    data,
-    page,
-    (data.results ?? []).map((item) =>
-      normalizeItem(item, type === 'all' ? item.media_type : type),
-    ),
-  )
+  return mapPage(data, page, type)
 }
 
 function genreIds(value) {
@@ -167,13 +175,12 @@ async function discoverByMedia(
   mediaType,
   { year, genre, genres, excludeGenres, personId, page = 1, signal },
 ) {
-  const params = {
-    include_adult: 'false',
-    page,
-    sort_by: 'popularity.desc',
-  }
-  if (year && mediaType === 'movie') params.primary_release_year = year
-  if (year && mediaType === 'tv') params.first_air_date_year = year
+  const params = withYear(
+    pageParams(page, { sort_by: 'popularity.desc' }),
+    mediaType,
+    year,
+    'primary_release_year',
+  )
 
   const include = genreIds(genres?.length ? genres : genre)
   const exclude = genreIds(excludeGenres)
@@ -183,11 +190,7 @@ async function discoverByMedia(
   if (personId) params.with_people = String(personId)
 
   const data = await tmdbGet(TMDB_DISCOVER[mediaType], params, searchOptions(signal))
-  return toTmdbPage(
-    data,
-    page,
-    (data.results ?? []).map((item) => normalizeItem(item, mediaType)),
-  )
+  return mapPage(data, page, mediaType)
 }
 
 /** Discover wrapper: people are unsupported; “all” fetches movie + TV in parallel. */
@@ -281,14 +284,10 @@ export async function searchPeople(query, { signal } = {}) {
   const trimmed = String(query ?? '').trim()
   if (!trimmed) return []
 
-  const data = await tmdbGet(
-    TMDB_SEARCH.person,
-    { query: trimmed, include_adult: 'false', page: 1 },
-    searchOptions(signal),
-  )
-  return (data.results ?? []).slice(0, 6).map((person) => ({
+  const { items } = await searchTmdb({ query: trimmed, type: 'person', signal })
+  return items.slice(0, 6).map((person) => ({
     id: person.id,
-    name: person.name,
-    profilePath: person.profile_path ?? null,
+    name: person.title,
+    profilePath: person.imagePath ?? null,
   }))
 }

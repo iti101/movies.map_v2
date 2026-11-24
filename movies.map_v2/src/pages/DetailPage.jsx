@@ -1,4 +1,3 @@
-import { useEffect } from 'react'
 import { DETAIL_LOADERS, getImageUrl } from '../API/tmdb.js'
 import OverlayPage from '../components/OverlayPage.jsx'
 import { useAsync } from '../hooks/useAsync.js'
@@ -11,10 +10,6 @@ function DetailPage({ mediaType, id, active, onBack, onOpen }) {
   const { status, data: item, error } = useAsync((signal) => {
     if (!loader) throw new Error('Unknown title type.')
     return loader(id, { signal })
-  }, [mediaType, id])
-
-  useEffect(() => {
-    document.querySelector('.detail')?.scrollTo(0, 0)
   }, [mediaType, id])
 
   const backdropUrl = getImageUrl(item?.backdropPath, 'w1280')

@@ -160,12 +160,7 @@
   color: var(--color-text-muted);
 }
 
-.randomizer__chips,
-.randomizer__genre-row {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
-  gap: 0.5rem;
+.randomizer__choices .chip-row {
   max-width: 36rem;
 }
 

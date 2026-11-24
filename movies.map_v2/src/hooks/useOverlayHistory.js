@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { mediaRef } from '../lib/media.js'
 
 function currentState() {
   return window.history.state ?? {}
@@ -41,7 +42,7 @@ export function useOverlayHistory() {
   const openDetail = useCallback(
     (item) => {
       if (!item?.id || !item.mediaType) return
-      const next = { mediaType: item.mediaType, id: item.id }
+      const next = mediaRef(item)
       setDetail(next)
       pushOverlay({ ...currentState(), detail: next })
     },

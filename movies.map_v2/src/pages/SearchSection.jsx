@@ -6,7 +6,7 @@ import { cn } from '../lib/format.js'
 import { SEARCH_TYPES } from '../lib/media.js'
 import searchIcon from '../assets/search_opsz24.svg'
 import { useSearch } from './search/useSearch.js'
-import '../components/Select.css'
+import '../components/Field.css'
 import './SearchSection.css'
 
 /**
@@ -71,7 +71,6 @@ function SearchSection({ onSeeAll, onSelect }) {
         </div>
 
         <ChipRow
-          className="search-chips"
           items={SEARCH_TYPES}
           selected={type}
           onSelect={(option) => selectType(option.id)}
@@ -98,7 +97,6 @@ function SearchSection({ onSeeAll, onSelect }) {
 
         {genreOn && (
           <ChipRow
-            className="search-genres"
             loading={genresLoading}
             loadingLabel="Loading genres…"
             messageClassName="search-message"

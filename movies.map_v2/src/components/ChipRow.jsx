@@ -1,4 +1,6 @@
+import { cn } from '../lib/format.js'
 import Button from './Button.jsx'
+import './ChipRow.css'
 
 function matchesSelection(selected, item) {
   if (selected == null) return false
@@ -28,7 +30,7 @@ export default function ChipRow({
   }
 
   return (
-    <div className={className}>
+    <div className={cn('chip-row', className)}>
       {items.map((item) => (
         <Button
           key={getKey(item)}

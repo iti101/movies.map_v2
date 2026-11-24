@@ -2,7 +2,7 @@ import { useCallback, useState } from 'react'
 import { useSession } from '../context/session-context.js'
 import { useEscape } from '../hooks/useEscape.js'
 import { cn } from '../lib/format.js'
-import { scrollToSection } from '../lib/scroll.js'
+import { scrollToSectionSoon } from '../lib/scroll.js'
 import Button from './Button.jsx'
 import './NavBar.css'
 import loginIcon from '../assets/login_opsz24.svg'
@@ -35,8 +35,7 @@ function NavBar({ theme, onToggleTheme, onNavigate, onOpenWatchlist, onLogout })
   function goTo(sectionId) {
     closeMenu()
     onNavigate?.(sectionId)
-    // Defer scroll so the overlay unmounts first
-    window.setTimeout(() => scrollToSection(sectionId), 0)
+    scrollToSectionSoon(sectionId)
   }
 
   function handleToggleAuth() {

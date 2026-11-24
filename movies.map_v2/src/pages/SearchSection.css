@@ -81,13 +81,6 @@
   filter: invert(1);
 }
 
-.search-chips {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
-  gap: 0.5rem;
-}
-
 .search-year {
   width: 7rem;
   align-self: center;
@@ -97,13 +90,6 @@
 
 .search-year::placeholder {
   color: var(--color-placeholder);
-}
-
-.search-genres {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
-  gap: 0.45rem;
 }
 
 .search-results-header {

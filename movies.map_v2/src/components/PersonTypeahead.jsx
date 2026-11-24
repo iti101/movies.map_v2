@@ -2,7 +2,7 @@ import { useEffect, useId, useRef, useState } from 'react'
 import { searchPeople } from '../API/tmdb.js'
 import { useAsync } from '../hooks/useAsync.js'
 import { useDebouncedValue } from '../hooks/useDebouncedValue.js'
-import './Select.css'
+import './Field.css'
 import './PersonTypeahead.css'
 
 export default function PersonTypeahead({ value, query, onQueryChange, onSelect, onClear }) {

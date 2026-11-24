@@ -9,7 +9,7 @@ import { useSession } from './context/session-context.js'
 import { useOverlayHistory } from './hooks/useOverlayHistory.js'
 import { useSearchHotkey } from './hooks/useSearchHotkey.js'
 import { useTheme } from './hooks/useTheme.js'
-import { scrollToSection } from './lib/scroll.js'
+import { scrollToSection, scrollToSectionSoon } from './lib/scroll.js'
 import Randomizer from './pages/Randomizer.jsx'
 import SearchSection from './pages/SearchSection.jsx'
 
@@ -49,7 +49,7 @@ function AppShell() {
 
   function handleFindTitle() {
     overlays.closeWatchlist()
-    window.setTimeout(() => scrollToSection('search'), 0)
+    scrollToSectionSoon('search')
   }
 
   return (

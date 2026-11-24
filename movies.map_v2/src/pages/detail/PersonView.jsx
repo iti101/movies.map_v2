@@ -1,6 +1,5 @@
-import MediaImage from '../../components/MediaImage.jsx'
 import { formatDate } from '../../lib/format.js'
-import { Facts, Related, Section } from './bits.jsx'
+import { DetailHero, Facts, Related, Section } from './bits.jsx'
 
 export default function PersonView({ person, onOpen }) {
   const facts = [
@@ -11,20 +10,10 @@ export default function PersonView({ person, onOpen }) {
 
   return (
     <>
-      <header className="detail__header">
-        <MediaImage
-          className="detail__poster"
-          path={person.profilePath}
-          size="w500"
-          sizes="(max-width: 40rem) 60vw, 17rem"
-          alt={person.name}
-          empty="No photo"
-        />
-        <div className="detail__intro">
-          <h1 id="detail-title" className="detail__title">{person.name}</h1>
-          <Facts facts={facts} />
-        </div>
-      </header>
+      <DetailHero path={person.profilePath} alt={person.name} empty="No photo">
+        <h1 id="detail-title" className="detail__title">{person.name}</h1>
+        <Facts facts={facts} />
+      </DetailHero>
 
       <Section title="Biography">
         <p className="detail__text detail__text--bio">

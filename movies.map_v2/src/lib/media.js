@@ -8,6 +8,14 @@ export function mediaKey(item) {
   return `${item.mediaType}-${item.id}`
 }
 
+export function mediaRef(item) {
+  return { mediaType: item.mediaType, id: item.id }
+}
+
+export function personRef(id) {
+  return { mediaType: 'person', id }
+}
+
 export function sameMedia(a, b) {
   return Boolean(
     a &&

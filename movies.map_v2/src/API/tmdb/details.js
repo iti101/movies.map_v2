@@ -159,25 +159,21 @@ export async function getTvSeason(showId, seasonNumber, { signal } = {}) {
   }))
 }
 
+function isKnownForCredit(credit) {
+  const mediaType = credit.media_type
+  if (!credit.id || (mediaType !== 'movie' && mediaType !== 'tv')) return false
+  return mediaType !== 'tv' || (credit.episode_count ?? 0) >= 4
+}
+
 export async function getPersonDetails(id, { signal } = {}) {
   const data = await tmdbGet(`/person/${id}`, { append_to_response: 'combined_credits' }, { signal })
-  const seen = new Set()
-  const knownFor = []
-
-  for (const credit of data.combined_credits?.cast ?? []) {
-    const mediaType = credit.media_type
-    if (mediaType !== 'movie' && mediaType !== 'tv') continue
-    if (mediaType === 'tv' && (credit.episode_count ?? 0) < 4) continue
-    const key = mediaKey({ mediaType, id: credit.id })
-    if (!credit.id || seen.has(key)) continue
-    seen.add(key)
-    knownFor.push({
-      ...normalizeItem(credit, mediaType),
+  const knownFor = uniqueBy(
+    (data.combined_credits?.cast ?? []).filter(isKnownForCredit).map((credit) => ({
+      ...normalizeItem(credit, credit.media_type),
       popularity: credit.popularity ?? 0,
-    })
-  }
-
-  knownFor.sort((a, b) => b.popularity - a.popularity)
+    })),
+    mediaKey,
+  ).sort((a, b) => b.popularity - a.popularity)
 
   return {
     id: data.id,
