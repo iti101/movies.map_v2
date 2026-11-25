@@ -1,11 +1,5 @@
 import { useState } from 'react'
-import {
-  applySearchFilters,
-  fetchTmdbPage,
-  getSearchLabel,
-  getSearchSuggestion,
-  isValidYear,
-} from '../../API/tmdb.js'
+import { getSearchLabel, isValidYear, searchPageWithSuggestion } from '../../API/tmdb.js'
 import { useGenres } from '../../hooks/useGenres.js'
 import { useTask } from '../../hooks/useTask.js'
 
@@ -53,17 +47,7 @@ export function useSearch({ onSeeAll } = {}) {
     setSubmitted(nextSubmitted)
     setSuggestion('')
 
-    const result = await run(async (signal) => {
-      const { items, totalPages: pages } = await fetchTmdbPage({ ...nextSubmitted, signal })
-      const filtered = applySearchFilters(items, nextSubmitted)
-      const nextSuggestion =
-        (await getSearchSuggestion({
-          ...nextSubmitted,
-          items,
-          signal,
-        })) ?? ''
-      return { filtered, pages, nextSuggestion }
-    })
+    const result = await run((signal) => searchPageWithSuggestion({ ...nextSubmitted, signal }))
 
     if (result.aborted) return
     if (result.error) {
@@ -71,10 +55,10 @@ export function useSearch({ onSeeAll } = {}) {
       return
     }
 
-    setResults(result.value.filtered)
-    setTotalPages(result.value.pages || 1)
-    setSuggestion(result.value.nextSuggestion)
-    setStatus(result.value.filtered.length === 0 ? 'empty' : 'success')
+    setResults(result.value.items)
+    setTotalPages(result.value.totalPages)
+    setSuggestion(result.value.suggestion)
+    setStatus(result.value.items.length === 0 ? 'empty' : 'success')
   }
 
   function handleSubmit(event) {

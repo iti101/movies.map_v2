@@ -118,20 +118,24 @@ export function getDidYouMeanSuggestion(query, items) {
 
 export async function getSearchSuggestion({ query, type, year, items, signal }) {
   const fromItems = getDidYouMeanSuggestion(query, items)
-  if (fromItems || items?.length) return fromItems ?? null
+  if (fromItems || items?.length) return fromItems ?? ''
 
   const trimmed = query?.trim() ?? ''
-  if (trimmed.length < 5) return null
+  if (trimmed.length < 5) return ''
 
   const stub = trimmed.slice(0, Math.max(4, trimmed.length - 2))
-  if (stub.length < 3 || stub.toLowerCase() === trimmed.toLowerCase()) return null
+  if (stub.length < 3 || stub.toLowerCase() === trimmed.toLowerCase()) return ''
 
   try {
     const fallback = await searchTmdb({ query: stub, type, year, signal })
-    return getDidYouMeanSuggestion(trimmed, fallback.items)
+    return getDidYouMeanSuggestion(trimmed, fallback.items) ?? ''
   } catch {
-    return null
+    return ''
   }
+}
+
+function bothMovieAndTv(run) {
+  return Promise.all([run('movie'), run('tv')])
 }
 
 function toTmdbPage(data, page, items) {
@@ -211,10 +215,7 @@ export async function discoverTmdb({
   const options = { year, genre, genres, excludeGenres, personId, page, signal }
 
   if (type === 'all') {
-    const [movies, shows] = await Promise.all([
-      discoverByMedia('movie', options),
-      discoverByMedia('tv', options),
-    ])
+    const [movies, shows] = await bothMovieAndTv((mediaType) => discoverByMedia(mediaType, options))
     return {
       items: [...movies.items, ...shows.items],
       page,
@@ -232,6 +233,16 @@ export async function fetchTmdbPage({ query, type, year, genre, page = 1, signal
     return searchTmdb({ query: trimmed, type, year, page, signal })
   }
   return discoverTmdb({ type, year, genre, page, signal })
+}
+
+/** First page plus a did-you-mean hint, with the same local year/genre filters as the UI. */
+export async function searchPageWithSuggestion({ query, type, year, genre, signal } = {}) {
+  const { items, totalPages } = await fetchTmdbPage({ query, type, year, genre, signal })
+  return {
+    items: applySearchFilters(items, { type, year, genre }),
+    totalPages: totalPages || 1,
+    suggestion: await getSearchSuggestion({ query, type, year, items, signal }),
+  }
 }
 
 /** Up to 10 pages for “See all”, then the same client-side year/genre filters. */
@@ -264,10 +275,7 @@ export async function searchTmdbAll({
 /** Genre chips. Type “all” merges movie + TV lists (there is no combined TMDB genre endpoint). */
 export async function loadGenres(type, { signal } = {}) {
   if (type === 'all') {
-    const [movies, shows] = await Promise.all([
-      loadGenres('movie', { signal }),
-      loadGenres('tv', { signal }),
-    ])
+    const [movies, shows] = await bothMovieAndTv((mediaType) => loadGenres(mediaType, { signal }))
     const byId = new Map()
     for (const genre of [...movies, ...shows]) {
       if (genre?.id != null) byId.set(genre.id, genre)

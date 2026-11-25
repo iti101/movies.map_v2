@@ -14,6 +14,7 @@ export default function PersonTypeahead({ value, query, onQueryChange, onSelect,
   const { data, status } = useAsync(
     (signal) => (enabled ? searchPeople(trimmed, { signal }) : Promise.resolve([])),
     [trimmed, enabled],
+    { keepPreviousData: true },
   )
   const [dismissedQuery, setDismissedQuery] = useState(null)
   const dismissed = dismissedQuery === trimmed
@@ -29,7 +30,7 @@ export default function PersonTypeahead({ value, query, onQueryChange, onSelect,
 
   const liveHint = !value && query.trim().length >= 2
   const showMatches = liveHint && people.length > 0
-  const showLoading = liveHint && enabled && status === 'loading'
+  const showLoading = liveHint && enabled && status === 'loading' && people.length === 0
   const showEmpty = liveHint && enabled && !dismissed && status === 'success' && people.length === 0
 
   return (

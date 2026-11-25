@@ -9,6 +9,7 @@ export {
   isValidYear,
   loadGenres,
   searchKeyOf,
+  searchPageWithSuggestion,
   searchPeople,
   searchTmdb,
   searchTmdbAll,

@@ -19,6 +19,7 @@ export default function Reviews({ item }) {
   const { status, data, setData: setReviews } = useAsync(
     (signal) => getReviewsForMedia(item.mediaType, item.id, token, { signal }),
     [item.id, item.mediaType, token],
+    { keepPreviousData: true },
   )
   const reviews = data ?? []
 
@@ -42,8 +43,8 @@ export default function Reviews({ item }) {
       return
     }
 
-    const result = await publish(async () => {
-      await createReview(
+    const result = await publish(() =>
+      createReview(
         {
           userId: user.id,
           mediaType: item.mediaType,
@@ -52,9 +53,8 @@ export default function Reviews({ item }) {
           rating,
         },
         token,
-      )
-      return getReviewsForMedia(item.mediaType, item.id, token)
-    })
+      ),
+    )
     if (result.aborted || result.error) return
     setReviews(result.value)
     setText('')

@@ -101,15 +101,24 @@ function score(data) {
   }
 }
 
-export async function getMovieDetails(id, { signal } = {}) {
-  const data = await tmdbGet(
-    `/movie/${id}`,
+const TITLE_APPEND = {
+  movie: 'credits,videos,watch/providers,recommendations,similar',
+  tv: 'aggregate_credits,credits,videos,watch/providers,recommendations,similar',
+}
+
+function fetchTitleBundle(mediaType, id, { signal } = {}) {
+  return tmdbGet(
+    `/${mediaType}/${id}`,
     {
-      append_to_response: 'credits,videos,watch/providers,recommendations,similar',
+      append_to_response: TITLE_APPEND[mediaType],
       include_video_language: 'en-US,en,null',
     },
     { signal },
   )
+}
+
+export async function getMovieDetails(id, options) {
+  const data = await fetchTitleBundle('movie', id, options)
 
   return mapTitle(data, 'movie', {
     tagline: data.tagline || null,
@@ -120,15 +129,8 @@ export async function getMovieDetails(id, { signal } = {}) {
   })
 }
 
-export async function getTvDetails(id, { signal } = {}) {
-  const data = await tmdbGet(
-    `/tv/${id}`,
-    {
-      append_to_response: 'aggregate_credits,credits,videos,watch/providers,recommendations,similar',
-      include_video_language: 'en-US,en,null',
-    },
-    { signal },
-  )
+export async function getTvDetails(id, options) {
+  const data = await fetchTitleBundle('tv', id, options)
   const credits = data.aggregate_credits?.cast?.length ? data.aggregate_credits : data.credits
 
   return mapTitle(data, 'tv', {

@@ -255,13 +255,16 @@ function rememberReview(token, review) {
   )
 }
 
-export async function getReviewsForMedia(mediaType, mediaId, token, { signal } = {}) {
-  const list = await loadAllReviews(token, { signal })
+function reviewsForMedia(list, mediaType, mediaId) {
   return list
     .filter(
       (review) => review.mediaType === mediaType && Number(review.mediaId) === Number(mediaId),
     )
     .sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0))
+}
+
+export async function getReviewsForMedia(mediaType, mediaId, token, { signal } = {}) {
+  return reviewsForMedia(await loadAllReviews(token, { signal }), mediaType, mediaId)
 }
 
 export async function createReview({ userId, mediaType, mediaId, text, rating }, token) {
@@ -280,5 +283,7 @@ export async function createReview({ userId, mediaType, mediaId, text, rating },
       ? created
       : { ...body, ...created, createdAt: created?.createdAt ?? new Date().toISOString() },
   )
-  return created
+  const cached = reviewLists.get(reviewsKey(token))
+  if (cached) return reviewsForMedia(cached, mediaType, mediaId)
+  return getReviewsForMedia(mediaType, mediaId, token)
 }

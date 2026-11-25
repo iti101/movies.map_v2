@@ -1,7 +1,11 @@
 import { useEffect, useState } from 'react'
 import { isAbortError } from '../lib/async.js'
 
-export function useAsync(factory, deps) {
+/**
+ * Load data whenever `deps` change. Pass `{ keepPreviousData: true }` to leave
+ * the last successful value on screen while the next request is in flight.
+ */
+export function useAsync(factory, deps, { keepPreviousData = false } = {}) {
   const [status, setStatus] = useState('loading')
   const [data, setData] = useState(null)
   const [error, setError] = useState('')
@@ -16,7 +20,7 @@ export function useAsync(factory, deps) {
         started = true
         setStatus('loading')
         setError('')
-        setData(null)
+        if (!keepPreviousData) setData(null)
         return factory(controller.signal)
       })
       .then((value) => {
@@ -26,13 +30,13 @@ export function useAsync(factory, deps) {
       })
       .catch((err) => {
         if (controller.signal.aborted || isAbortError(err)) return
-        setData(null)
+        if (!keepPreviousData) setData(null)
         setStatus('error')
         setError(err.message || 'Something went wrong.')
       })
 
     return () => controller.abort()
-    // Factory identity is owned by the caller via deps.
+    // Factory identity (and keepPreviousData) is owned by the caller via deps.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, deps)
 

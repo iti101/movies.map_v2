@@ -58,7 +58,7 @@ export function useSeeAllResults(search) {
           signal: controller.signal,
         })
         if (!controller.signal.aborted) {
-          setSuggestion({ key, value: nextSuggestion ?? '' })
+          setSuggestion({ key, value: nextSuggestion })
         }
       })
       .catch((err) => {

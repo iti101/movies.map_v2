@@ -150,16 +150,18 @@ export function useRandomizer() {
     setIndex((current) => (current + 1) % pool.length)
   }
 
-  function handleWant(genre) {
-    setWantGenres((current) => toggleById(current, genre))
-    setAvoidGenres((current) => current.filter((entry) => entry.id !== genre.id))
+  function pickGenre(setChosen, setOther, genre) {
+    setChosen((current) => toggleById(current, genre))
+    setOther((current) => current.filter((entry) => entry.id !== genre.id))
     resetRoll()
   }
 
+  function handleWant(genre) {
+    pickGenre(setWantGenres, setAvoidGenres, genre)
+  }
+
   function handleAvoid(genre) {
-    setAvoidGenres((current) => toggleById(current, genre))
-    setWantGenres((current) => current.filter((entry) => entry.id !== genre.id))
-    resetRoll()
+    pickGenre(setAvoidGenres, setWantGenres, genre)
   }
 
   function selectType(nextType) {
