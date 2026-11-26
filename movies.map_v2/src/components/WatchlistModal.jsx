@@ -2,10 +2,12 @@ import { useId, useState } from 'react'
 import { listContains } from '../API/watchlist.js'
 import { useWatchlist } from '../context/watchlist-context.js'
 import Button from './Button.jsx'
+import Field from './Field.jsx'
 import Modal from './Modal.jsx'
 
 function WatchlistModal({ isOpen, onClose, item = null, onPicked }) {
   const titleId = useId()
+  const nameId = useId()
   const { lists, createList, addItem } = useWatchlist()
   const [name, setName] = useState('')
   const [error, setError] = useState('')
@@ -80,21 +82,19 @@ function WatchlistModal({ isOpen, onClose, item = null, onPicked }) {
             New list
           </h2>
           <p className="modal-subtitle">Give this collection a name.</p>
-          <label className="modal-label">
-            Name
-            <input
-              className="modal-input"
-              value={name}
-              onChange={(event) => {
-                setName(event.target.value)
-                if (error) setError('')
-              }}
-              maxLength={60}
-              required
-            />
-          </label>
+          <Field
+            id={nameId}
+            label="Name"
+            value={name}
+            onChange={(event) => {
+              setName(event.target.value)
+              if (error) setError('')
+            }}
+            maxLength={60}
+            required
+          />
           {error && (
-            <p className="modal-error" role="alert">
+            <p className="ui-error" role="alert">
               {error}
             </p>
           )}

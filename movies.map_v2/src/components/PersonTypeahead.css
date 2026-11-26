@@ -8,10 +8,6 @@
   width: 100%;
 }
 
-.typeahead__input::placeholder {
-  color: var(--color-placeholder);
-}
-
 .typeahead__picked {
   display: flex;
   align-items: center;

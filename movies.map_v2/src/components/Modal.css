@@ -27,44 +27,11 @@
   color: var(--color-text);
 }
 
-.modal-subtitle,
-.modal-error {
-  margin: 0;
-  font-size: 0.9rem;
-}
-
 .modal-subtitle {
-  margin-bottom: 1rem;
+  margin: 0 0 1rem;
+  font-size: 0.9rem;
   color: var(--color-text-muted);
   line-height: 1.4;
-}
-
-.modal-error {
-  color: var(--color-error);
-}
-
-.modal-label {
-  display: flex;
-  flex-direction: column;
-  gap: 0.4rem;
-  color: var(--color-text);
-  font-size: 0.9rem;
-}
-
-.modal-input {
-  width: 100%;
-  height: 2.75rem;
-  padding: 0 1rem;
-  border: 1px solid transparent;
-  border-radius: 0.85rem;
-  background: var(--color-card);
-  color: var(--color-text);
-  font: 1rem var(--font-body);
-}
-
-.modal-input:focus {
-  outline: 0;
-  border-color: var(--color-text-muted);
 }
 
 .modal-actions {

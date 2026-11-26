@@ -1,6 +1,7 @@
 import { useId, useState } from 'react'
 import { createReview, getReviewsForMedia } from '../../API/novi.js'
 import Button from '../../components/Button.jsx'
+import { fieldClass } from '../../components/field-class.js'
 import StarRating from '../../components/StarRating.jsx'
 import { useSession } from '../../context/session-context.js'
 import { formatDate } from '../../lib/format.js'
@@ -76,7 +77,7 @@ export default function Reviews({ item }) {
             </label>
             <textarea
               id={fieldId}
-              className="detail__review-text"
+              className={fieldClass('area')}
               rows={4}
               maxLength={2000}
               value={text}

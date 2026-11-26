@@ -1,5 +1,7 @@
 import { useId, useState } from 'react'
 import Button from './Button.jsx'
+import Field from './Field.jsx'
+import { fieldClass } from './field-class.js'
 import Modal from './Modal.jsx'
 import { createAccount, login } from '../API/novi.js'
 import { useSession } from '../context/session-context.js'
@@ -18,24 +20,15 @@ function EyeIcon({ slashed }) {
   )
 }
 
-function TextField({ id, label, children, ...props }) {
-  return (
-    <div className="auth-field">
-      <label htmlFor={id}>{label}</label>
-      {children ?? <input id={id} className="auth-input" {...props} />}
-    </div>
-  )
-}
-
 function PasswordField({ id, label, ...props }) {
   const [visible, setVisible] = useState(false)
 
   return (
-    <TextField id={id} label={label}>
+    <Field id={id} label={label}>
       <div className="auth-password-wrap">
         <input
           id={id}
-          className="auth-input"
+          className={fieldClass('tall')}
           type={visible ? 'text' : 'password'}
           {...props}
         />
@@ -49,7 +42,7 @@ function PasswordField({ id, label, ...props }) {
           <EyeIcon slashed={!visible} />
         </Button>
       </div>
-    </TextField>
+    </Field>
   )
 }
 
@@ -166,9 +159,10 @@ function AuthModal() {
 
       <form className="auth-form" onSubmit={handleSubmit}>
         {!isSignIn && (
-          <TextField
+          <Field
             id={usernameId}
             label="Username"
+            variant="tall"
             type="text"
             value={form.username}
             onChange={updateField('username')}
@@ -180,9 +174,10 @@ function AuthModal() {
           />
         )}
 
-        <TextField
+        <Field
           id={emailId}
           label="Email"
+          variant="tall"
           type="email"
           value={form.email}
           onChange={updateField('email')}
@@ -222,7 +217,7 @@ function AuthModal() {
         )}
 
         {error && (
-          <p className="auth-error" role="alert">
+          <p className="ui-error" role="alert">
             {error}
           </p>
         )}

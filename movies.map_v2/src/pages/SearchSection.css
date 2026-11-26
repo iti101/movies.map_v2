@@ -88,10 +88,6 @@
   text-align: center;
 }
 
-.search-year::placeholder {
-  color: var(--color-placeholder);
-}
-
 .search-results-header {
   display: flex;
   justify-content: flex-end;
