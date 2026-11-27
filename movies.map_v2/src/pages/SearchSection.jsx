@@ -43,7 +43,7 @@ function SearchSection({ onSeeAll, onSelect }) {
 
   return (
     <div className={cn('search-section', (hasResults || status === 'empty') && 'search-section--has-results')}>
-      <h2 className="search-title">Search</h2>
+      <h2 className="ui-display ui-display--hero">Search</h2>
 
       <form className="search-form" onSubmit={handleSubmit} role="search">
         <div className="search-bar">

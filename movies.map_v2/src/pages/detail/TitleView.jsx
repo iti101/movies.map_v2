@@ -35,7 +35,7 @@ export default function TitleView({ item, onOpen }) {
   return (
     <>
       <DetailHero path={item.posterPath} alt={`${item.title} poster`} empty="No poster">
-        <h1 id="detail-title" className="detail__title">{item.title}</h1>
+        <h1 id="detail-title" className="ui-display ui-display--page">{item.title}</h1>
         {item.tagline && <p className="detail__tagline">{item.tagline}</p>}
         <Facts facts={facts} />
         <div className="detail__actions">

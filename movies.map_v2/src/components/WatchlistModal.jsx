@@ -48,7 +48,7 @@ function WatchlistModal({ isOpen, onClose, item = null, onPicked }) {
     <Modal open={isOpen} onClose={close} labelledBy={titleId}>
       {picking ? (
         <>
-          <h2 id={titleId} className="modal-title">
+          <h2 id={titleId} className="modal-title ui-display ui-display--dialog">
             Add to a list
           </h2>
           <p className="modal-subtitle">Choose a collection for this title.</p>
@@ -78,7 +78,7 @@ function WatchlistModal({ isOpen, onClose, item = null, onPicked }) {
         </>
       ) : (
         <form onSubmit={handleCreate}>
-          <h2 id={titleId} className="modal-title">
+          <h2 id={titleId} className="modal-title ui-display ui-display--dialog">
             New list
           </h2>
           <p className="modal-subtitle">Give this collection a name.</p>

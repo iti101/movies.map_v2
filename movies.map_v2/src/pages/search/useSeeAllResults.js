@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { getSearchLabel, getSearchSuggestion, searchKeyOf, searchTmdbAll } from '../../API/tmdb.js'
+import { getSearchLabel, searchAllWithSuggestion, searchKeyOf } from '../../API/tmdb.js'
 import { isAbortError } from '../../lib/async.js'
 import { pluralize } from '../../lib/format.js'
 
@@ -39,7 +39,7 @@ export function useSeeAllResults(search) {
     const controller = new AbortController()
     const key = activeKey
 
-    searchTmdbAll({
+    searchAllWithSuggestion({
       query: activeSearch.query,
       type: activeSearch.type,
       year: activeSearch.year,
@@ -48,18 +48,10 @@ export function useSeeAllResults(search) {
       totalPages: activeSearch.totalPages,
       signal: controller.signal,
     })
-      .then(async (items) => {
+      .then(({ items, suggestion: nextSuggestion }) => {
+        if (controller.signal.aborted) return
         setFetched({ key, items })
-        const nextSuggestion = await getSearchSuggestion({
-          query: activeSearch.query,
-          type: activeSearch.type,
-          year: activeSearch.year,
-          items,
-          signal: controller.signal,
-        })
-        if (!controller.signal.aborted) {
-          setSuggestion({ key, value: nextSuggestion })
-        }
+        setSuggestion({ key, value: nextSuggestion })
       })
       .catch((err) => {
         if (isAbortError(err) || seeded.length) return

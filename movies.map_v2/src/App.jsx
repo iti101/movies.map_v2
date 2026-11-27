@@ -1,5 +1,6 @@
 import { useCallback } from 'react'
 import './App.css'
+import './components/DisplayType.css'
 import AppOverlays from './components/AppOverlays.jsx'
 import NavBar from './components/NavBar.jsx'
 import Typewriter from './components/Typewriter.jsx'

@@ -43,7 +43,7 @@ function Watchlist({ active, onBack, onSelect, onFindTitle }) {
       <header className="watchlist__header">
         <div className="watchlist__heading">
           <p className="watchlist__kicker">Your collections</p>
-          <h1 id="watchlist-title" className="watchlist__title">
+          <h1 id="watchlist-title" className="ui-display ui-display--page">
             Watchlist
           </h1>
         </div>
@@ -80,7 +80,7 @@ function Watchlist({ active, onBack, onSelect, onFindTitle }) {
 
       {lists.length === 0 && (
         <section className="watchlist__empty">
-          <h2 className="watchlist__empty-title">No lists yet</h2>
+          <h2 className="ui-display ui-display--dialog">No lists yet</h2>
           <p className="watchlist__empty-text">
             Create a list for movie nights, holidays, or any occasion, then add
             titles from a movie or show page.
@@ -99,7 +99,7 @@ function Watchlist({ active, onBack, onSelect, onFindTitle }) {
         <section className="watchlist__list" aria-labelledby="watchlist-list-name">
           <div className="watchlist__list-header">
             <div>
-              <h2 id="watchlist-list-name" className="watchlist__list-name">
+              <h2 id="watchlist-list-name" className="ui-display ui-display--section">
                 {activeList.name}
               </h2>
               <p className="watchlist__count">{pluralize(count, 'title')}</p>

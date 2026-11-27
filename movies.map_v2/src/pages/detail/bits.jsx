@@ -83,7 +83,7 @@ export function Section({ title, children, extra }) {
   return (
     <section className="detail__section">
       <div className="detail__section-head">
-        <h2 className="detail__section-title">{title}</h2>
+        <h2 className="ui-display ui-display--block">{title}</h2>
         {extra}
       </div>
       {children}

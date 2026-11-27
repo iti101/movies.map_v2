@@ -18,9 +18,10 @@
   color: var(--color-text);
 }
 
-.auth-title {
+.auth-dialog .auth-title {
   margin: 0 1.5rem 1.25rem 0;
-  font: 600 2rem/1.15 var(--font-display);
+  font-size: 2rem;
+  line-height: 1.15;
 }
 
 .auth-dialog:has(.auth-subtitle) .auth-title {

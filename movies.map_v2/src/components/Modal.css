@@ -21,10 +21,8 @@
   box-shadow: 0 24px 60px var(--color-shadow-strong);
 }
 
-.modal-title {
+.modal-dialog .modal-title {
   margin: 0 0 0.35rem;
-  font: 600 1.6rem/1.15 var(--font-display);
-  color: var(--color-text);
 }
 
 .modal-subtitle {

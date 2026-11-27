@@ -73,17 +73,6 @@
   min-width: 0;
 }
 
-.detail__title,
-.detail__section-title {
-  font-family: var(--font-display);
-  font-weight: 600;
-  line-height: 1.05;
-}
-
-.detail__title {
-  font-size: clamp(2rem, 5vw, 3.25rem);
-}
-
 .detail__tagline {
   font-size: 1.05rem;
   font-style: italic;
@@ -199,10 +188,6 @@
   align-items: center;
   justify-content: space-between;
   gap: 0.75rem 1.25rem;
-}
-
-.detail__section-title {
-  font-size: 1.5rem;
 }
 
 .detail__text {

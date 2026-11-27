@@ -272,6 +272,33 @@ export async function searchTmdbAll({
   return applySearchFilters(items, { type, year, genre })
 }
 
+/** All pages plus a did-you-mean hint, matching searchPageWithSuggestion. */
+export async function searchAllWithSuggestion({
+  query,
+  type,
+  year,
+  genre,
+  seedItems,
+  totalPages,
+  maxPages,
+  signal,
+} = {}) {
+  const items = await searchTmdbAll({
+    query,
+    type,
+    year,
+    genre,
+    seedItems,
+    totalPages,
+    maxPages,
+    signal,
+  })
+  return {
+    items,
+    suggestion: await getSearchSuggestion({ query, type, year, items, signal }),
+  }
+}
+
 /** Genre chips. Type “all” merges movie + TV lists (there is no combined TMDB genre endpoint). */
 export async function loadGenres(type, { signal } = {}) {
   if (type === 'all') {

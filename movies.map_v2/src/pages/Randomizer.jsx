@@ -11,7 +11,9 @@ function Randomizer({ onSelect }) {
   return (
     <div className={cn('randomizer', hasResult && 'randomizer--has-pick')}>
       <header className="randomizer__intro">
-        <h2 className="randomizer__title">Randomizer</h2>
+        <h2 className={cn('ui-display', hasResult ? 'ui-display--page' : 'ui-display--feature')}>
+          Randomizer
+        </h2>
         <p className="randomizer__lead">
           {hasResult
             ? 'Here’s a pick from your filters. Browse nearby titles or roll again.'

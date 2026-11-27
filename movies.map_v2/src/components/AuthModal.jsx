@@ -147,7 +147,7 @@ function AuthModal() {
         ×
       </Button>
 
-      <h2 id={titleId} className="auth-title">
+      <h2 id={titleId} className="auth-title ui-display">
         {isSignIn ? 'Sign in' : 'Create account'}
       </h2>
 

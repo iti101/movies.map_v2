@@ -15,20 +15,6 @@
   gap: 0.45rem;
 }
 
-.randomizer__title {
-  margin: 0;
-  font-family: var(--font-display);
-  font-weight: 600;
-  font-size: clamp(2.6rem, 8vw, 4.75rem);
-  letter-spacing: 0.01em;
-  line-height: 1;
-  color: var(--color-text);
-}
-
-.randomizer--has-pick .randomizer__title {
-  font-size: clamp(2rem, 5.5vw, 3.25rem);
-}
-
 .randomizer__lead {
   margin: 0;
   max-width: 28rem;
@@ -144,15 +130,6 @@
   color: var(--color-faint);
 }
 
-.randomizer__panel-title {
-  margin: 0;
-  font-family: var(--font-display);
-  font-size: clamp(1.45rem, 4vw, 2rem);
-  font-weight: 600;
-  line-height: 1.15;
-  color: var(--color-text);
-}
-
 .randomizer__panel-hint {
   margin: 0;
   font-size: 0.95rem;
@@ -257,15 +234,6 @@
 .randomizer__result {
   min-height: 2rem;
   width: 100%;
-}
-
-.randomizer__message {
-  margin: 0;
-  color: var(--color-text-muted);
-}
-
-.randomizer__message--error {
-  color: var(--color-error);
 }
 
 .randomizer__suggestion {

@@ -30,7 +30,7 @@ export default function SetupPanel({ randomizer }) {
   const genreChips = {
     loading: genresLoading,
     loadingLabel: 'Loading genres…',
-    messageClassName: 'randomizer__message',
+    messageClassName: 'search-message',
     items: genres,
   }
 
@@ -44,7 +44,7 @@ export default function SetupPanel({ randomizer }) {
         <p className="randomizer__panel-kicker">
           Step {step.number} of {STEPS.length}
         </p>
-        <h3 id={`randomizer-step-${step.id}`} className="randomizer__panel-title">
+        <h3 id={`randomizer-step-${step.id}`} className="ui-display ui-display--section">
           {step.title}
         </h3>
         <p className="randomizer__panel-hint">{step.hint}</p>

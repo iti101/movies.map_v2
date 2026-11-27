@@ -8,6 +8,7 @@ export {
   getSearchSuggestion,
   isValidYear,
   loadGenres,
+  searchAllWithSuggestion,
   searchKeyOf,
   searchPageWithSuggestion,
   searchPeople,

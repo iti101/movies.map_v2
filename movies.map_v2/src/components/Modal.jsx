@@ -1,13 +1,14 @@
 import { useEffect, useRef } from 'react'
 import { useEscape } from '../hooks/useEscape.js'
+import { cn } from '../lib/format.js'
 import './Modal.css'
 
 export default function Modal({
   open,
   onClose,
   labelledBy,
-  overlayClass = 'modal-overlay',
-  dialogClass = 'modal-dialog',
+  overlayClass,
+  dialogClass,
   children,
 }) {
   const dialogRef = useRef(null)
@@ -35,10 +36,10 @@ export default function Modal({
   if (!open) return null
 
   return (
-    <div className={overlayClass} onClick={onClose}>
+    <div className={cn('modal-overlay', overlayClass)} onClick={onClose}>
       <div
         ref={dialogRef}
-        className={dialogClass}
+        className={cn('modal-dialog', dialogClass)}
         role="dialog"
         aria-modal="true"
         aria-labelledby={labelledBy}

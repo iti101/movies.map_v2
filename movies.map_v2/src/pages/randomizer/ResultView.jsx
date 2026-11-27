@@ -53,11 +53,11 @@ export default function ResultView({ randomizer, onSelect }) {
 
       <div className="randomizer__result">
         {status === 'error' && (
-          <p className="randomizer__message randomizer__message--error">{error}</p>
+          <p className="search-message search-message-error">{error}</p>
         )}
 
         {status === 'empty' && (
-          <p className="randomizer__message">
+          <p className="search-message">
             Nothing matched. Loosen a filter and try again.
           </p>
         )}

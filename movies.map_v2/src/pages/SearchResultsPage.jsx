@@ -4,10 +4,7 @@ import SearchStatus from '../components/SearchStatus.jsx'
 import { useSeeAllResults } from './search/useSeeAllResults.js'
 import './SearchResultsPage.css'
 
-/**
- * Full-screen “See all” overlay. Shows the first page immediately, then
- * fills in later TMDB pages. If that deeper fetch fails, keep the seed.
- */
+/** Full-screen “See all” overlay. Seed-then-fill lives in useSeeAllResults. */
 function SearchResultsPage({ search, active, onBack, onSelect }) {
   const {
     status,
@@ -28,7 +25,7 @@ function SearchResultsPage({ search, active, onBack, onSelect }) {
       labelledBy="results-title"
     >
       <header className="results-page__header">
-        <h1 id="results-title" className="results-page__title">
+        <h1 id="results-title" className="ui-display ui-display--feature">
           Results
         </h1>
         <p className="results-page__query">{summary}</p>

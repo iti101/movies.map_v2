@@ -9,11 +9,7 @@
 
 .typewriter {
   display: inline;
-  margin: 0;
-  font-family: var(--font-display);
-  font-weight: 600;
   font-size: inherit;
-  letter-spacing: 0.01em;
   line-height: 1.2;
   white-space: nowrap;
   color: inherit;

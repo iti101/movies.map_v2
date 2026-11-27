@@ -11,7 +11,7 @@ export default function PersonView({ person, onOpen }) {
   return (
     <>
       <DetailHero path={person.profilePath} alt={person.name} empty="No photo">
-        <h1 id="detail-title" className="detail__title">{person.name}</h1>
+        <h1 id="detail-title" className="ui-display ui-display--page">{person.name}</h1>
         <Facts facts={facts} />
       </DetailHero>
 

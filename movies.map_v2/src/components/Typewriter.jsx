@@ -86,7 +86,7 @@ function Typewriter() {
   return (
     <div className="intro" aria-label="Movies.map">
       {phase === 'typing' && (
-        <h1 className="typewriter" aria-label={FINAL}>
+        <h1 className="typewriter ui-display" aria-label={FINAL}>
           {text}
           <span className="typewriter__cursor" aria-hidden="true">
             |
