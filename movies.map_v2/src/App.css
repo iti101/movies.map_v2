@@ -145,12 +145,12 @@ html[data-theme='light'] {
   overflow-y: auto;
 }
 
-.search-message {
+.ui-status {
   margin: 0;
   color: var(--color-text-muted);
 }
 
-.search-message-error {
+.ui-status--error {
   color: var(--color-error);
 }
 

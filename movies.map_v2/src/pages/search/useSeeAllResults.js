@@ -1,6 +1,6 @@
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import { getSearchLabel, searchAllWithSuggestion, searchKeyOf } from '../../API/tmdb.js'
-import { isAbortError } from '../../lib/async.js'
+import { useAsync } from '../../hooks/useAsync.js'
 import { pluralize } from '../../lib/format.js'
 
 /**
@@ -17,53 +17,31 @@ export function useSeeAllResults(search) {
   const activeKey = searchKeyOf(activeSearch)
   const seeded = activeSearch.results ?? []
 
-  const [fetched, setFetched] = useState(null)
-  const [suggestion, setSuggestion] = useState({ key: '', value: '' })
-  const [error, setError] = useState({ key: '', value: '' })
+  // Seeded hits stay on screen while later pages load, and if that fetch fails.
+  const { data, error, status: fetchStatus } = useAsync(
+    (signal) =>
+      searchAllWithSuggestion({
+        query: activeSearch.query,
+        type: activeSearch.type,
+        year: activeSearch.year,
+        genre: activeSearch.genre,
+        seedItems: activeSearch.results,
+        totalPages: activeSearch.totalPages,
+        signal,
+      }),
+    [activeKey],
+  )
 
-  const results = fetched?.key === activeKey ? fetched.items : seeded
-  const activeError = error.key === activeKey ? error.value : ''
-  const activeSuggestion = suggestion.key === activeKey ? suggestion.value : ''
-  const status =
-    fetched?.key === activeKey
-      ? fetched.items.length
-        ? 'success'
-        : 'empty'
-      : seeded.length
-        ? 'success'
-        : activeError
-          ? 'error'
-          : 'loading'
-
-  useEffect(() => {
-    const controller = new AbortController()
-    const key = activeKey
-
-    searchAllWithSuggestion({
-      query: activeSearch.query,
-      type: activeSearch.type,
-      year: activeSearch.year,
-      genre: activeSearch.genre,
-      seedItems: activeSearch.results,
-      totalPages: activeSearch.totalPages,
-      signal: controller.signal,
-    })
-      .then(({ items, suggestion: nextSuggestion }) => {
-        if (controller.signal.aborted) return
-        setFetched({ key, items })
-        setSuggestion({ key, value: nextSuggestion })
-      })
-      .catch((err) => {
-        if (isAbortError(err) || seeded.length) return
-        setError({ key, value: err.message || 'Something went wrong.' })
-      })
-
-    return () => {
-      controller.abort()
-    }
-    // activeKey is the serialized search; reading fields from that same render is safe.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [activeKey])
+  const results = data?.items ?? seeded
+  const status = data
+    ? results.length
+      ? 'success'
+      : 'empty'
+    : seeded.length
+      ? 'success'
+      : fetchStatus === 'error'
+        ? 'error'
+        : 'loading'
 
   const label = getSearchLabel(activeSearch)
   const count = results.length
@@ -72,9 +50,9 @@ export function useSeeAllResults(search) {
 
   return {
     status,
-    error: activeError,
+    error: seeded.length ? '' : error,
     results,
-    suggestion: activeSuggestion,
+    suggestion: data?.suggestion ?? '',
     label,
     summary,
     acceptSuggestion(nextQuery) {

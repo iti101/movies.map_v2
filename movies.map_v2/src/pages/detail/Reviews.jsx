@@ -3,6 +3,7 @@ import { createReview, getReviewsForMedia } from '../../API/novi.js'
 import Button from '../../components/Button.jsx'
 import { fieldClass } from '../../components/field-class.js'
 import StarRating from '../../components/StarRating.jsx'
+import StatusCopy from '../../components/StatusCopy.jsx'
 import { useSession } from '../../context/session-context.js'
 import { formatDate } from '../../lib/format.js'
 import { useAsync } from '../../hooks/useAsync.js'
@@ -89,14 +90,20 @@ export default function Reviews({ item }) {
             </Button>
           </div>
         )}
-        {formError && <p className="detail__status detail__status--error">{formError}</p>}
+        {formError && (
+          <p className="ui-status ui-status--error" role="alert">
+            {formError}
+          </p>
+        )}
       </div>
 
-      {status === 'loading' ? (
-        <p className="detail__text">Loading reviews…</p>
-      ) : reviews.length === 0 ? (
-        <p className="detail__text">No reviews yet.</p>
-      ) : (
+      <StatusCopy
+        status={status === 'loading' ? 'loading' : reviews.length === 0 ? 'empty' : 'success'}
+        loading="Loading reviews…"
+        empty="No reviews yet."
+        className="detail__text"
+      />
+      {status !== 'loading' && reviews.length > 0 && (
         <ul className="detail__reviews">
           {reviews.map((review) => {
             const isOwn = user?.id != null && Number(review.userId) === Number(user.id)

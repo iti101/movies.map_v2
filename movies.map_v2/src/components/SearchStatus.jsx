@@ -1,4 +1,5 @@
 import DidYouMean from './DidYouMean.jsx'
+import StatusCopy from './StatusCopy.jsx'
 
 export default function SearchStatus({
   status,
@@ -6,17 +7,17 @@ export default function SearchStatus({
   label,
   suggestion,
   onAcceptSuggestion,
-  loadingText = 'Searching…',
+  loading = 'Searching…',
+  empty,
 }) {
   return (
     <>
-      {status === 'loading' && <p className="search-message">{loadingText}</p>}
-      {status === 'error' && (
-        <p className="search-message search-message-error">{error}</p>
-      )}
-      {status === 'empty' && (
-        <p className="search-message">No results found for “{label}”.</p>
-      )}
+      <StatusCopy
+        status={status}
+        error={error}
+        loading={loading}
+        empty={empty ?? (label ? `No results found for “${label}”.` : undefined)}
+      />
       {(status === 'empty' || status === 'success') && (
         <DidYouMean suggestion={suggestion} onAccept={onAcceptSuggestion} />
       )}

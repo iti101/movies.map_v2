@@ -30,11 +30,6 @@
 .detail__status {
   margin: 2rem 0;
   text-align: center;
-  color: var(--color-muted);
-}
-
-.detail__status--error {
-  color: var(--color-error);
 }
 
 .detail__header {

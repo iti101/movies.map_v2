@@ -1,5 +1,6 @@
 import { DETAIL_LOADERS, getImageUrl } from '../API/tmdb.js'
 import OverlayPage from '../components/OverlayPage.jsx'
+import StatusCopy from '../components/StatusCopy.jsx'
 import { useAsync } from '../hooks/useAsync.js'
 import PersonView from './detail/PersonView.jsx'
 import TitleView from './detail/TitleView.jsx'
@@ -31,8 +32,7 @@ function DetailPage({ mediaType, id, active, onBack, onOpen }) {
         ) : null
       }
     >
-      {status === 'loading' && <p className="detail__status">Loading…</p>}
-      {status === 'error' && <p className="detail__status detail__status--error">{error}</p>}
+      <StatusCopy status={status} error={error} className="detail__status" />
       {item && mediaType === 'person' && <PersonView person={item} onOpen={onOpen} />}
       {item && mediaType !== 'person' && <TitleView item={item} onOpen={onOpen} />}
     </OverlayPage>

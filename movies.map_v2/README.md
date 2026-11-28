@@ -134,7 +134,7 @@ Novi JWT + profile are stored in `localStorage` (`noviToken`, `noviUser`). Watch
 | `color`, `background`, `hoverBackground` | — | CSS color, or a token name that becomes `var(--color-<name>)`. |
 | `font` | `'body'` | `'body'` → `--font-body`, `'display'` → `--font-display`. |
 
-`OverlayPage`, `Modal`, `ChipRow`, `ResultGrid`, `MediaImage`, `SearchStatus`, and `PersonTypeahead` wrap the repeated overlay, dialog, chip, poster-grid, search-status, and actor-search patterns. ResultGrid always applies `.poster-grid`, and year/select/typeahead share `.ui-field`. Poster `<img>` tags send a TMDB `srcset` so cards can pick `w185` / `w342` / `w500` from the same path.
+`OverlayPage`, `Modal`, `ChipRow`, `ResultGrid`, `MediaImage`, `SearchStatus`, `StatusCopy`, and `PersonTypeahead` wrap the repeated overlay, dialog, chip, poster-grid, search-status, and actor-search patterns. ResultGrid always applies `.poster-grid`, year/select/typeahead share `.ui-field`, and loading / error / empty copy share `.ui-status`. Poster `<img>` tags send a TMDB `srcset` so cards can pick `w185` / `w342` / `w500` from the same path.
 
 ## Constraints and known gaps
 

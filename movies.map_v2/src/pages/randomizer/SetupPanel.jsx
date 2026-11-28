@@ -30,7 +30,7 @@ export default function SetupPanel({ randomizer }) {
   const genreChips = {
     loading: genresLoading,
     loadingLabel: 'Loading genres…',
-    messageClassName: 'search-message',
+    messageClassName: 'ui-status',
     items: genres,
   }
 

@@ -99,7 +99,7 @@ function SearchSection({ onSeeAll, onSelect }) {
           <ChipRow
             loading={genresLoading}
             loadingLabel="Loading genres…"
-            messageClassName="search-message"
+            messageClassName="ui-status"
             items={genres}
             selected={selectedGenre}
             onSelect={(genre) =>

@@ -1,5 +1,6 @@
 import Button from '../../components/Button.jsx'
 import MovieCard from '../../components/MovieCard.jsx'
+import StatusCopy from '../../components/StatusCopy.jsx'
 import { cn } from '../../lib/format.js'
 import { STEPS } from './useRandomizer.js'
 
@@ -52,15 +53,11 @@ export default function ResultView({ randomizer, onSelect }) {
       </ul>
 
       <div className="randomizer__result">
-        {status === 'error' && (
-          <p className="search-message search-message-error">{error}</p>
-        )}
-
-        {status === 'empty' && (
-          <p className="search-message">
-            Nothing matched. Loosen a filter and try again.
-          </p>
-        )}
+        <StatusCopy
+          status={status}
+          error={error}
+          empty="Nothing matched. Loosen a filter and try again."
+        />
 
         {status === 'success' && pick && (
           <div className="randomizer__suggestion">

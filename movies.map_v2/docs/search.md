@@ -74,7 +74,7 @@ TMDB does not accept the same params on every endpoint, so some filters are serv
 `SearchResultsPage`:
 
 1. Renders the seeded first page immediately when it is non-empty.
-2. Calls `searchAllWithSuggestion` with that seed so page 1 is not fetched again. Later pages (2..min(totalPages, 10)) load in parallel, then a Did you mean hint is computed from the merged list.
+2. `useSeeAllResults` loads through `useAsync` and calls `searchAllWithSuggestion` with that seed so page 1 is not fetched again. Later pages (2..min(totalPages, 10)) load in parallel, then a Did you mean hint is computed from the merged list.
 3. Replaces the list with the full filtered set.
 4. If the multi-page fetch fails **and** seeded results exist, it keeps the seed and does not show an error.
 5. Accepting a Did you mean suggestion starts a fresh fetch (no seed).

@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { getTvSeason } from '../../API/tmdb.js'
+import StatusCopy from '../../components/StatusCopy.jsx'
 import { cn, formatDate, formatRuntime, pluralize } from '../../lib/format.js'
 import { useAsync } from '../../hooks/useAsync.js'
 import { useEscape } from '../../hooks/useEscape.js'
@@ -43,11 +44,13 @@ export default function SeasonEpisodes({ showId, seasons }) {
         </DetailSelect>
       }
     >
-      {status === 'loading' && <p className="detail__text">Loading episodes…</p>}
-      {status === 'error' && <p className="detail__status detail__status--error">{error}</p>}
-      {status === 'success' && episodes.length === 0 && (
-        <p className="detail__text">No episodes listed for this season.</p>
-      )}
+      <StatusCopy
+        status={status === 'success' && episodes.length === 0 ? 'empty' : status}
+        error={error}
+        loading="Loading episodes…"
+        empty="No episodes listed for this season."
+        className={status === 'error' ? 'detail__status' : 'detail__text'}
+      />
       {status === 'success' && episodes.length > 0 && (
         <ol className="detail__episodes">
           {episodes.map((episode) => {
